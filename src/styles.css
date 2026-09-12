@@ -1,0 +1,160 @@
+* { box-sizing: border-box; }
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #161616;
+  background: #f4f2ed;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button { font: inherit; }
+
+.app-shell { min-height: 100vh; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 28px;
+  background: #fff;
+  border-bottom: 1px solid #dedbd3;
+}
+
+.topbar h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.05em; }
+.eyebrow, .section-kicker { margin: 0 0 5px; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+.subtitle { margin: 2px 0 0; color: #62605b; }
+
+.teacher-button,
+.stage-actions button,
+.stage-footer button,
+.replay-button,
+.tab {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.workspace {
+  min-height: calc(100vh - 112px);
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(210px, 260px);
+  gap: 1px;
+  background: #dedbd3;
+}
+
+.library, .stage-panel, .story-panel { background: #f8f7f3; padding: 20px; }
+.stage-panel { background: #fff; display: flex; flex-direction: column; gap: 16px; }
+
+.category-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+.tab { padding-inline: 7px; font-size: .72rem; }
+.tab.active { background: #161616; color: #fff; border-color: #161616; }
+
+.asset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+
+.asset-card {
+  aspect-ratio: 1 / 1.06;
+  border: 1px solid #d7d3ca;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.asset-symbol { font-size: 2.6rem; line-height: 1; }
+.asset-label { font-size: .72rem; font-weight: 850; }
+
+.verb-preview { margin-top: 24px; }
+.verb-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.verb-list span { padding: 6px 8px; border-radius: 8px; background: #ebe8e0; font-size: .68rem; font-weight: 800; }
+
+.stage-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.stage-heading h2, .story-panel h2 { margin: 0; font-size: 1rem; }
+.stage-actions { display: flex; gap: 8px; }
+
+.stage {
+  min-height: 430px;
+  flex: 1;
+  border: 2px dashed #d6d1c6;
+  border-radius: 20px;
+  background: linear-gradient(#fff, #fbfaf7);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.empty-state { text-align: center; color: #8b877e; }
+.empty-state span { font-size: 3rem; font-weight: 200; }
+.empty-state p { font-size: .75rem; font-weight: 850; letter-spacing: .08em; }
+
+.scene-strip { width: 100%; display: flex; flex-wrap: wrap; align-items: end; justify-content: center; gap: 24px; padding: 30px; }
+.scene-item { display: grid; justify-items: center; gap: 7px; }
+.scene-item span { font-size: clamp(3rem, 8vw, 6rem); }
+.scene-item small { font-weight: 850; }
+
+.stage-footer { display: flex; flex-wrap: wrap; gap: 8px; }
+.stage-footer button { flex: 1 1 105px; }
+
+.story-empty {
+  margin-top: 16px;
+  min-height: 150px;
+  border: 1px dashed #cbc7bd;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 16px;
+  color: #8d8980;
+}
+
+.story-empty span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+}
+
+.story-empty p { margin: 0; font-size: .7rem; font-weight: 800; }
+.replay-button { width: 100%; margin-top: 12px; }
+
+button:disabled { opacity: .42; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 220px 1fr; }
+  .story-panel { display: none; }
+}
+
+@media (max-width: 640px) {
+  .topbar { padding: 16px; align-items: flex-start; }
+  .teacher-button { font-size: .7rem; padding: 8px; }
+
+  .workspace { display: flex; flex-direction: column; }
+  .stage-panel { order: 1; padding: 14px; }
+  .library { order: 2; padding: 14px; border-top: 1px solid #dedbd3; }
+
+  .stage { min-height: 52vh; }
+  .stage-heading { flex-direction: column; }
+  .stage-actions { width: 100%; }
+  .stage-actions button { flex: 1; }
+
+  .asset-grid { grid-template-columns: repeat(3, 1fr); }
+  .asset-symbol { font-size: 2.2rem; }
+  .asset-label { font-size: .62rem; }
+
+  .verb-preview { display: none; }
+}
