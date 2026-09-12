@@ -7,9 +7,41 @@ export type SceneAsset = {
   symbol: string;
 };
 
+export type RequiredRole = 'actor' | 'object' | 'targetPerson' | 'destination' | 'seat';
+
 export type VerbRule = {
   id: string;
   label: string;
-  requires: Array<'actor' | 'object' | 'targetPerson' | 'destination' | 'seat'>;
+  requires: RequiredRole[];
   description: string;
 };
+
+export type Posture = 'standing' | 'sitting' | 'sleeping';
+
+export type EntityState = SceneAsset & {
+  instanceId: string;
+  posture?: Posture;
+  ownerId?: string;
+  locationId?: string;
+  consumed?: boolean;
+  activity?: string;
+};
+
+export type SceneState = {
+  id: string;
+  entities: EntityState[];
+  actionLabel?: string;
+};
+
+export type ActionDraft = {
+  verbId: string;
+  actorId?: string;
+  objectId?: string;
+  targetPersonId?: string;
+  destinationId?: string;
+  seatId?: string;
+};
+
+export type ActionExecution =
+  | { ok: true; scene: SceneState }
+  | { ok: false; error: string };
