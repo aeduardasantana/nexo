@@ -70,15 +70,13 @@ export default function App() {
 
   function addToScene(asset: SceneAsset) {
     const entity = toEntity(asset);
-    const nextScene: SceneState = {
+    const editedScene: SceneState = {
       ...currentScene,
-      id: crypto.randomUUID(),
       entities: [...currentScene.entities, entity],
-      actionLabel: undefined,
     };
-    const nextHistory = [...history.slice(0, historyIndex + 1), nextScene];
-    setHistory(nextHistory);
-    setHistoryIndex(nextHistory.length - 1);
+    setHistory((current) =>
+      current.map((scene, index) => index === historyIndex ? editedScene : scene),
+    );
     setCompareMode('now');
     setFeedback(null);
   }
