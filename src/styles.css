@@ -549,3 +549,152 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-column: auto;
   }
 }
+
+
+.verb-button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.verb-button > span {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.verb-button > small {
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+.visual-sentence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sentence-slot {
+  min-width: 110px;
+  min-height: 74px;
+  border: 1px solid #cbc6bc;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: 10px;
+  text-align: center;
+}
+
+.sentence-slot.action-slot > span {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.slot-label {
+  font-size: .58rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  color: #77736b;
+}
+
+.sentence-slot strong {
+  font-size: .74rem;
+}
+
+.sentence-arrow {
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  color: #77736b;
+}
+
+.visual-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.visual-picker > section {
+  display: grid;
+  gap: 7px;
+}
+
+.picker-title {
+  font-size: .64rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+
+.picker-options {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.visual-option {
+  min-width: 86px;
+  min-height: 92px;
+  border: 1px solid #d1ccc2;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.visual-option > span {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.visual-option > small {
+  font-size: .6rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.visual-option.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.visual-execute {
+  width: 100%;
+  margin-top: 12px;
+  min-height: 52px;
+  font-size: .9rem;
+}
+
+@media (max-width: 640px) {
+  .visual-sentence {
+    gap: 5px;
+  }
+
+  .sentence-slot {
+    min-width: 82px;
+    min-height: 66px;
+    padding: 7px;
+  }
+
+  .sentence-arrow {
+    font-size: 1rem;
+  }
+
+  .visual-option {
+    min-width: 78px;
+    min-height: 84px;
+  }
+
+  .visual-option > span {
+    font-size: 1.8rem;
+  }
+}
