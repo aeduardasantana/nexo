@@ -339,3 +339,139 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     min-width: 74px;
   }
 }
+
+
+.compare-stage {
+  min-height: 430px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.compare-stage > section {
+  border: 2px dashed #d6d1c6;
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compare-stage > section > strong {
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+
+.compare-arrow {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  color: #77736b;
+}
+
+.mini-stage {
+  flex: 1;
+  min-height: 330px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: center;
+  gap: 14px;
+}
+
+.mini-entity {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.mini-entity span {
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.mini-entity small {
+  font-size: .58rem;
+  font-weight: 800;
+}
+
+.stage.is-replaying {
+  outline: 3px solid #161616;
+  outline-offset: 3px;
+}
+
+.story-card {
+  grid-template-columns: 34px 1fr;
+}
+
+.scene-number {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.story-card-content {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.scene-thumbnail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-height: 24px;
+}
+
+.scene-thumbnail span {
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .story-panel {
+    display: block;
+    grid-column: 1 / -1;
+    border-top: 1px solid #dedbd3;
+  }
+
+  .story-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+
+  .story-card {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 640px) {
+  .compare-stage {
+    min-height: 52vh;
+    grid-template-columns: 1fr;
+  }
+
+  .compare-arrow {
+    transform: rotate(90deg);
+    min-height: 28px;
+  }
+
+  .mini-stage {
+    min-height: 180px;
+  }
+
+  .story-panel {
+    order: 3;
+    padding: 14px;
+  }
+
+  .story-card {
+    min-width: 145px;
+  }
+}
