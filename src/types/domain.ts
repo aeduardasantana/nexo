@@ -45,3 +45,21 @@ export type ActionDraft = {
 export type ActionExecution =
   | { ok: true; scene: SceneState }
   | { ok: false; error: string };
+
+export type ActivityMode = 'free' | 'directed';
+
+export type DirectedActivity = {
+  instruction: string;
+  expectedVerbId?: string;
+  allowUnknown: boolean;
+  allowNotUnderstood: boolean;
+};
+
+export type MediationEventType = 'correct' | 'error' | 'unknown' | 'not_understood';
+
+export type MediationEvent = {
+  id: string;
+  type: MediationEventType;
+  label: string;
+  createdAt: string;
+};
