@@ -10,6 +10,9 @@ import type {
   SceneAsset,
   SceneState,
   VerbRule,
+  ActivityMode,
+  DirectedActivity,
+  MediationEvent,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -47,6 +50,14 @@ export default function App() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after' | 'compare'>('now');
   const [isReplaying, setIsReplaying] = useState(false);
+  const [teacherOpen, setTeacherOpen] = useState(false);
+  const [activityMode, setActivityMode] = useState<ActivityMode>('free');
+  const [directedActivity, setDirectedActivity] = useState<DirectedActivity>({
+    instruction: 'ESCOLHA A AÇÃO',
+    allowUnknown: true,
+    allowNotUnderstood: true,
+  });
+  const [mediationEvents, setMediationEvents] = useState<MediationEvent[]>([]);
   const replayTimer = useRef<number | null>(null);
 
   const currentScene = history[historyIndex];
@@ -105,9 +116,30 @@ export default function App() {
       return;
     }
 
+    if (
+      activityMode === 'directed' &&
+      directedActivity.expectedVerbId &&
+      selectedRule.id !== directedActivity.expectedVerbId
+    ) {
+      setFeedback('❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        label: selectedRule.label,
+        createdAt: new Date().toISOString(),
+      }]);
+      return;
+    }
+
     const result = executeAction(currentScene, draft, selectedRule);
     if (!result.ok) {
       setFeedback(`❌ ERRADO — ${result.error}`);
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        label: result.error,
+        createdAt: new Date().toISOString(),
+      }]);
       return;
     }
 
@@ -116,6 +148,12 @@ export default function App() {
     setHistoryIndex(nextHistory.length - 1);
     setCompareMode('now');
     setFeedback(`✓ ${selectedRule.label}`);
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'correct',
+      label: selectedRule.label,
+      createdAt: new Date().toISOString(),
+    }]);
     setDraft({ verbId: '' });
   }
 
@@ -201,8 +239,56 @@ export default function App() {
           <h1>NEXO</h1>
           <p className="subtitle">Sistema Visual de Ação e Narrativa</p>
         </div>
-        <button className="teacher-button" type="button">MODO PROFESSORA</button>
+        <button className="teacher-button" type="button" onClick={() => setTeacherOpen((open) => !open)}>
+          {teacherOpen ? 'FECHAR PROFESSORA' : 'MODO PROFESSORA'}
+        </button>
       </header>
+
+      {teacherOpen && (
+        <section className="teacher-panel">
+          <div>
+            <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
+            <h2>MODO PROFESSORA</h2>
+          </div>
+
+          <label>
+            <span>TIPO DE ATIVIDADE</span>
+            <select value={activityMode} onChange={(event) => setActivityMode(event.target.value as ActivityMode)}>
+              <option value="free">LIVRE</option>
+              <option value="directed">DIRIGIDA</option>
+            </select>
+          </label>
+
+          {activityMode === 'directed' && (
+            <>
+              <label>
+                <span>INSTRUÇÃO</span>
+                <input
+                  value={directedActivity.instruction}
+                  onChange={(event) => setDirectedActivity((current) => ({ ...current, instruction: event.target.value.toUpperCase() }))}
+                />
+              </label>
+              <label>
+                <span>RESPOSTA ESPERADA</span>
+                <select
+                  value={directedActivity.expectedVerbId ?? ''}
+                  onChange={(event) => setDirectedActivity((current) => ({ ...current, expectedVerbId: event.target.value || undefined }))}
+                >
+                  <option value="">SEM RESPOSTA ÚNICA</option>
+                  {verbRules.map((verb) => <option key={verb.id} value={verb.id}>{verb.label}</option>)}
+                </select>
+              </label>
+            </>
+          )}
+
+          <div className="teacher-stats">
+            <span>CORRETAS {mediationEvents.filter((event) => event.type === 'correct').length}</span>
+            <span>ERROS {mediationEvents.filter((event) => event.type === 'error').length}</span>
+            <span>NÃO SEI {mediationEvents.filter((event) => event.type === 'unknown').length}</span>
+            <span>NÃO ENTENDI {mediationEvents.filter((event) => event.type === 'not_understood').length}</span>
+          </div>
+        </section>
+      )}
 
       <section className="workspace">
         <aside className="library">
@@ -245,8 +331,12 @@ export default function App() {
         <section className="stage-panel">
           <div className="stage-heading">
             <div>
-              <p className="section-kicker">CENÁRIO</p>
-              <h2>{displayedScene.actionLabel ? displayedScene.actionLabel : 'CONSTRUA A CENA'}</h2>
+              <p className="section-kicker">{activityMode === 'directed' ? 'ATIVIDADE DIRIGIDA' : 'CENÁRIO'}</p>
+              <h2>
+                {activityMode === 'directed'
+                  ? directedActivity.instruction
+                  : (displayedScene.actionLabel ? displayedScene.actionLabel : 'CONSTRUA A CENA')}
+              </h2>
             </div>
             <div className="stage-actions">
               <button type="button" onClick={undo} disabled={historyIndex === 0}>↶ VOLTAR</button>
@@ -368,9 +458,34 @@ export default function App() {
             <button type="button" className={compareMode === 'now' ? 'active' : ''} onClick={() => setCompareMode('now')}>AGORA</button>
             <button type="button" className={compareMode === 'after' ? 'active' : ''} onClick={() => setCompareMode('after')}>DEPOIS</button>
             <button type="button" className={compareMode === 'compare' ? 'active' : ''} onClick={() => setCompareMode('compare')}>ANTES × DEPOIS</button>
-            <button type="button" onClick={() => setFeedback('❌ ERRADO')}>❌ ERRADO</button>
-            <button type="button" onClick={() => setFeedback('NÃO SEI')}>NÃO SEI</button>
-            <button type="button" onClick={() => setFeedback('NÃO ENTENDI')}>NÃO ENTENDI</button>
+            <button type="button" onClick={() => {
+              setFeedback('❌ ERRADO');
+              setMediationEvents((events) => [...events, {
+                id: crypto.randomUUID(),
+                type: 'error',
+                label: 'ERRADO',
+                createdAt: new Date().toISOString(),
+              }]);
+            }}>❌ ERRADO</button>
+            <button type="button" onClick={() => {
+              setFeedback('NÃO SEI');
+              setMediationEvents((events) => [...events, {
+                id: crypto.randomUUID(),
+                type: 'unknown',
+                label: 'NÃO SEI',
+                createdAt: new Date().toISOString(),
+              }]);
+            }}>NÃO SEI</button>
+            <button type="button" onClick={() => {
+              setFeedback('NÃO ENTENDI — MOSTRE NOVAMENTE');
+              setCompareMode('before');
+              setMediationEvents((events) => [...events, {
+                id: crypto.randomUUID(),
+                type: 'not_understood',
+                label: 'NÃO ENTENDI',
+                createdAt: new Date().toISOString(),
+              }]);
+            }}>NÃO ENTENDI</button>
           </footer>
         </section>
 
