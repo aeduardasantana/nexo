@@ -321,7 +321,8 @@ export default function App() {
                   className={draft.verbId === verb.id ? 'verb-button active' : 'verb-button'}
                   onClick={() => selectVerb(verb)}
                 >
-                  {verb.label}
+                  <span aria-hidden="true">{verb.symbol}</span>
+                  <small>{verb.label}</small>
                 </button>
               ))}
             </div>
@@ -393,61 +394,152 @@ export default function App() {
             </div>
 
             {selectedRule && (
-              <div className="builder-fields">
-                <label>
-                  <span>QUEM</span>
-                  <select value={draft.actorId ?? ''} onChange={(event) => updateDraft('actorId', event.target.value || undefined)}>
-                    <option value="">?</option>
-                    {people.map((person) => <option key={person.instanceId} value={person.instanceId}>{person.label}</option>)}
-                  </select>
-                </label>
+              <>
+                <div className="visual-sentence" aria-label="Prévia visual da ação">
+                  <div className="sentence-slot">
+                    <span className="slot-label">QUEM</span>
+                    <strong>{findLabel(currentScene, draft.actorId)}</strong>
+                  </div>
+                  <div className="sentence-arrow">→</div>
+                  <div className="sentence-slot action-slot">
+                    <span aria-hidden="true">{selectedRule.symbol}</span>
+                    <strong>{selectedRule.label}</strong>
+                  </div>
+                  {selectedRule.requires.includes('object') && (
+                    <>
+                      <div className="sentence-arrow">→</div>
+                      <div className="sentence-slot">
+                        <span className="slot-label">OBJETO</span>
+                        <strong>{findLabel(currentScene, draft.objectId)}</strong>
+                      </div>
+                    </>
+                  )}
+                  {selectedRule.requires.includes('targetPerson') && (
+                    <>
+                      <div className="sentence-arrow">→</div>
+                      <div className="sentence-slot">
+                        <span className="slot-label">PARA QUEM</span>
+                        <strong>{findLabel(currentScene, draft.targetPersonId)}</strong>
+                      </div>
+                    </>
+                  )}
+                  {selectedRule.requires.includes('destination') && (
+                    <>
+                      <div className="sentence-arrow">→</div>
+                      <div className="sentence-slot">
+                        <span className="slot-label">PARA ONDE</span>
+                        <strong>{findLabel(currentScene, draft.destinationId)}</strong>
+                      </div>
+                    </>
+                  )}
+                  {selectedRule.requires.includes('seat') && (
+                    <>
+                      <div className="sentence-arrow">→</div>
+                      <div className="sentence-slot">
+                        <span className="slot-label">ONDE</span>
+                        <strong>{findLabel(currentScene, draft.seatId)}</strong>
+                      </div>
+                    </>
+                  )}
+                </div>
 
-                {selectedRule.requires.includes('object') && (
-                  <label>
-                    <span>OBJETO</span>
-                    <select value={draft.objectId ?? ''} onChange={(event) => updateDraft('objectId', event.target.value || undefined)}>
-                      <option value="">?</option>
-                      {objects.filter((object) => !object.consumed).map((object) => (
-                        <option key={object.instanceId} value={object.instanceId}>{object.label}</option>
+                <div className="visual-picker">
+                  <section>
+                    <span className="picker-title">QUEM</span>
+                    <div className="picker-options">
+                      {people.map((person) => (
+                        <button
+                          type="button"
+                          key={person.instanceId}
+                          className={draft.actorId === person.instanceId ? 'visual-option active' : 'visual-option'}
+                          onClick={() => updateDraft('actorId', person.instanceId)}
+                        >
+                          <span>{person.symbol}</span>
+                          <small>{person.label}</small>
+                        </button>
                       ))}
-                    </select>
-                  </label>
-                )}
+                    </div>
+                  </section>
 
-                {selectedRule.requires.includes('targetPerson') && (
-                  <label>
-                    <span>PARA QUEM</span>
-                    <select value={draft.targetPersonId ?? ''} onChange={(event) => updateDraft('targetPersonId', event.target.value || undefined)}>
-                      <option value="">?</option>
-                      {people.map((person) => <option key={person.instanceId} value={person.instanceId}>{person.label}</option>)}
-                    </select>
-                  </label>
-                )}
+                  {selectedRule.requires.includes('object') && (
+                    <section>
+                      <span className="picker-title">OBJETO</span>
+                      <div className="picker-options">
+                        {objects.filter((object) => !object.consumed).map((object) => (
+                          <button
+                            type="button"
+                            key={object.instanceId}
+                            className={draft.objectId === object.instanceId ? 'visual-option active' : 'visual-option'}
+                            onClick={() => updateDraft('objectId', object.instanceId)}
+                          >
+                            <span>{object.symbol}</span>
+                            <small>{object.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                {selectedRule.requires.includes('destination') && (
-                  <label>
-                    <span>PARA ONDE</span>
-                    <select value={draft.destinationId ?? ''} onChange={(event) => updateDraft('destinationId', event.target.value || undefined)}>
-                      <option value="">?</option>
-                      {placesAndSeats.map((item) => <option key={item.instanceId} value={item.instanceId}>{item.label}</option>)}
-                    </select>
-                  </label>
-                )}
+                  {selectedRule.requires.includes('targetPerson') && (
+                    <section>
+                      <span className="picker-title">PARA QUEM</span>
+                      <div className="picker-options">
+                        {people.map((person) => (
+                          <button
+                            type="button"
+                            key={person.instanceId}
+                            className={draft.targetPersonId === person.instanceId ? 'visual-option active' : 'visual-option'}
+                            onClick={() => updateDraft('targetPersonId', person.instanceId)}
+                          >
+                            <span>{person.symbol}</span>
+                            <small>{person.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                {selectedRule.requires.includes('seat') && (
-                  <label>
-                    <span>ONDE</span>
-                    <select value={draft.seatId ?? ''} onChange={(event) => updateDraft('seatId', event.target.value || undefined)}>
-                      <option value="">?</option>
-                      {placesAndSeats.filter((item) => ['CADEIRA', 'SOFÁ', 'CAMA'].includes(item.label)).map((item) => (
-                        <option key={item.instanceId} value={item.instanceId}>{item.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+                  {selectedRule.requires.includes('destination') && (
+                    <section>
+                      <span className="picker-title">PARA ONDE</span>
+                      <div className="picker-options">
+                        {placesAndSeats.map((item) => (
+                          <button
+                            type="button"
+                            key={item.instanceId}
+                            className={draft.destinationId === item.instanceId ? 'visual-option active' : 'visual-option'}
+                            onClick={() => updateDraft('destinationId', item.instanceId)}
+                          >
+                            <span>{item.symbol}</span>
+                            <small>{item.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                <button className="execute-button" type="button" onClick={runAction}>▶ FAZER</button>
-              </div>
+                  {selectedRule.requires.includes('seat') && (
+                    <section>
+                      <span className="picker-title">ONDE</span>
+                      <div className="picker-options">
+                        {placesAndSeats.filter((item) => ['CADEIRA', 'SOFÁ', 'CAMA'].includes(item.label)).map((item) => (
+                          <button
+                            type="button"
+                            key={item.instanceId}
+                            className={draft.seatId === item.instanceId ? 'visual-option active' : 'visual-option'}
+                            onClick={() => updateDraft('seatId', item.instanceId)}
+                          >
+                            <span>{item.symbol}</span>
+                            <small>{item.label}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+
+                <button className="execute-button visual-execute" type="button" onClick={runAction}>▶ FAZER</button>
+              </>
             )}
 
             {feedback && <div className={feedback.startsWith('❌') ? 'feedback error' : 'feedback success'}>{feedback}</div>}
