@@ -12,6 +12,7 @@ export type RequiredRole = 'actor' | 'object' | 'targetPerson' | 'destination' |
 export type VerbRule = {
   id: string;
   label: string;
+  symbol: string;
   requires: RequiredRole[];
   description: string;
 };
