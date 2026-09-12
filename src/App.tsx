@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
 import { assets } from './data/assets';
 import { verbRules } from './data/verbs';
@@ -45,7 +45,9 @@ export default function App() {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [draft, setDraft] = useState<ActionDraft>({ verbId: '' });
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after'>('now');
+  const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after' | 'compare'>('now');
+  const [isReplaying, setIsReplaying] = useState(false);
+  const replayTimer = useRef<number | null>(null);
 
   const currentScene = history[historyIndex];
   const beforeScene = history[Math.max(0, historyIndex - 1)];
@@ -54,6 +56,12 @@ export default function App() {
     compareMode === 'before' ? beforeScene :
     compareMode === 'after' ? afterScene :
     currentScene;
+
+  useEffect(() => {
+    return () => {
+      if (replayTimer.current !== null) window.clearInterval(replayTimer.current);
+    };
+  }, []);
 
   const visibleAssets = useMemo(
     () => assets.filter((item) => item.category === category),
@@ -125,7 +133,34 @@ export default function App() {
     setFeedback(null);
   }
 
+  function stopReplay() {
+    if (replayTimer.current !== null) {
+      window.clearInterval(replayTimer.current);
+      replayTimer.current = null;
+    }
+    setIsReplaying(false);
+  }
+
+  function replayStory() {
+    if (history.length <= 1) return;
+    stopReplay();
+    setCompareMode('now');
+    setHistoryIndex(1);
+    setIsReplaying(true);
+
+    let index = 1;
+    replayTimer.current = window.setInterval(() => {
+      index += 1;
+      if (index >= history.length) {
+        stopReplay();
+        return;
+      }
+      setHistoryIndex(index);
+    }, 1400);
+  }
+
   function clearStory() {
+    stopReplay();
     setHistory([initialScene]);
     setHistoryIndex(0);
     setDraft({ verbId: '' });
@@ -220,18 +255,46 @@ export default function App() {
             </div>
           </div>
 
-          <div className="stage" aria-live="polite">
-            {displayedScene.entities.filter((entity) => !entity.consumed).length === 0 ? (
-              <div className="empty-state">
-                <span>＋</span>
-                <p>ESCOLHA UMA ILUSTRAÇÃO</p>
-              </div>
-            ) : (
-              <div className="scene-strip">
-                {displayedScene.entities.filter((entity) => !entity.consumed).map(renderEntity)}
-              </div>
-            )}
-          </div>
+          {compareMode === 'compare' ? (
+            <div className="compare-stage" aria-live="polite">
+              <section>
+                <strong>ANTES</strong>
+                <div className="mini-stage">
+                  {beforeScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <div className="mini-entity" key={entity.instanceId}>
+                      <span>{entity.symbol}</span>
+                      <small>{entity.label}</small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <div className="compare-arrow" aria-hidden="true">→</div>
+              <section>
+                <strong>DEPOIS</strong>
+                <div className="mini-stage">
+                  {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <div className="mini-entity" key={entity.instanceId}>
+                      <span>{entity.symbol}</span>
+                      <small>{entity.label}</small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div className={isReplaying ? 'stage is-replaying' : 'stage'} aria-live="polite">
+              {displayedScene.entities.filter((entity) => !entity.consumed).length === 0 ? (
+                <div className="empty-state">
+                  <span>＋</span>
+                  <p>ESCOLHA UMA ILUSTRAÇÃO</p>
+                </div>
+              ) : (
+                <div className="scene-strip">
+                  {displayedScene.entities.filter((entity) => !entity.consumed).map(renderEntity)}
+                </div>
+              )}
+            </div>
+          )}
 
           <section className="action-builder">
             <div className="builder-title">
@@ -304,6 +367,7 @@ export default function App() {
             <button type="button" className={compareMode === 'before' ? 'active' : ''} onClick={() => setCompareMode('before')}>ANTES</button>
             <button type="button" className={compareMode === 'now' ? 'active' : ''} onClick={() => setCompareMode('now')}>AGORA</button>
             <button type="button" className={compareMode === 'after' ? 'active' : ''} onClick={() => setCompareMode('after')}>DEPOIS</button>
+            <button type="button" className={compareMode === 'compare' ? 'active' : ''} onClick={() => setCompareMode('compare')}>ANTES × DEPOIS</button>
             <button type="button" onClick={() => setFeedback('❌ ERRADO')}>❌ ERRADO</button>
             <button type="button" onClick={() => setFeedback('NÃO SEI')}>NÃO SEI</button>
             <button type="button" onClick={() => setFeedback('NÃO ENTENDI')}>NÃO ENTENDI</button>
@@ -320,12 +384,21 @@ export default function App() {
                 type="button"
                 className={historyIndex === index + 1 ? 'story-card active' : 'story-card'}
                 onClick={() => {
+                  stopReplay();
                   setHistoryIndex(index + 1);
                   setCompareMode('now');
                 }}
               >
-                <span>{index + 1}</span>
-                <strong>{scene.actionLabel ?? 'CENA'}</strong>
+                <span className="scene-number">{index + 1}</span>
+                <div className="story-card-content">
+                  <strong>{scene.actionLabel ?? 'CENA'}</strong>
+                  <div className="scene-thumbnail" aria-hidden="true">
+                    {scene.entities
+                      .filter((entity) => !entity.consumed)
+                      .slice(0, 6)
+                      .map((entity) => <span key={entity.instanceId}>{entity.symbol}</span>)}
+                  </div>
+                </div>
               </button>
             ))}
             {history.length === 1 && (
@@ -335,7 +408,14 @@ export default function App() {
               </div>
             )}
           </div>
-          <button className="replay-button" type="button" disabled={history.length <= 1}>▶ REPRODUZIR</button>
+          <button
+            className="replay-button"
+            type="button"
+            disabled={history.length <= 1}
+            onClick={isReplaying ? stopReplay : replayStory}
+          >
+            {isReplaying ? '■ PARAR' : '▶ REPRODUZIR'}
+          </button>
         </aside>
       </section>
 
