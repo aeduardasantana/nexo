@@ -1,3 +1,4 @@
+// @signature edufertanapo
 export type AssetCategory = 'person' | 'object' | 'place' | 'animal' | 'verb' | 'time';
 
 export type SceneAsset = {
@@ -21,6 +22,8 @@ export type Posture = 'standing' | 'sitting' | 'sleeping';
 
 export type EntityState = SceneAsset & {
   instanceId: string;
+  x: number;
+  y: number;
   posture?: Posture;
   ownerId?: string;
   locationId?: string;
