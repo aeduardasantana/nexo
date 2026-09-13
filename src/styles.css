@@ -2348,3 +2348,151 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.hidden-info-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f3f0e8;
+}
+
+.hidden-info-config {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.hidden-info-config label {
+  display: grid;
+  gap: 5px;
+}
+
+.hidden-info-config label span,
+.hidden-witnesses > span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.hidden-info-config select {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.hidden-witnesses {
+  margin-top: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.hidden-witnesses > div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.hidden-witnesses button {
+  min-width: 112px;
+  min-height: 102px;
+  border: 1px solid #d1ccc2;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.hidden-witnesses button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.hidden-witnesses button strong {
+  font-size: .64rem;
+}
+
+.hidden-witnesses button small {
+  font-size: .54rem;
+  font-weight: 800;
+}
+
+.hidden-info-start {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.hidden-info-question {
+  margin-top: 12px;
+  border: 1px solid #cbc5bb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.hidden-info-question > strong {
+  font-size: .82rem;
+}
+
+.hidden-info-question > div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.hidden-info-question button {
+  min-width: 96px;
+  min-height: 92px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.hidden-info-question span {
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+.hidden-info-summary {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hidden-info-summary span {
+  border: 1px solid #d1ccc2;
+  border-radius: 999px;
+  background: #fff;
+  padding: 6px 9px;
+  font-size: .6rem;
+  font-weight: 850;
+}
+
+@media (max-width: 640px) {
+  .hidden-info-config {
+    grid-template-columns: 1fr;
+  }
+}
