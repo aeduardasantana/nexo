@@ -24,6 +24,7 @@ import type {
   WeeklyEvent,
   WeekTask,
   NarrativeTask,
+  CausalTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -98,6 +99,9 @@ export default function App() {
   const [narrativeTask, setNarrativeTask] = useState<NarrativeTask>({ kind: 'first', sceneIds: [] });
   const [narrativeTaskActive, setNarrativeTaskActive] = useState(false);
   const [narrativeAnswer, setNarrativeAnswer] = useState<string[]>([]);
+  const [causalTask, setCausalTask] = useState<CausalTask>({ kind: 'what_after' });
+  const [causalTaskActive, setCausalTaskActive] = useState(false);
+  const [causalAnswer, setCausalAnswer] = useState<string[]>([]);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -325,6 +329,77 @@ export default function App() {
         setNarrativeTaskActive(false);
       } else {
         setNarrativeAnswer([]);
+      }
+    }
+  }
+
+  function startCausalTask() {
+    if (!causalTask.problemSceneId || !causalTask.actionSceneId || !causalTask.resultSceneId) {
+      setFeedback('DEFINA PROBLEMA, AÇÃO E RESULTADO');
+      return;
+    }
+    setCausalAnswer([]);
+    setCausalTaskActive(true);
+    setFeedback(null);
+  }
+
+  function causalQuestion() {
+    if (causalTask.kind === 'what_after') return 'O QUE ACONTECEU DEPOIS DISSO?';
+    if (causalTask.kind === 'what_result') return 'QUAL FOI O RESULTADO?';
+    return 'MONTE: PROBLEMA → AÇÃO → RESULTADO';
+  }
+
+  function answerCausalScene(sceneId: string) {
+    if (!causalTaskActive) return;
+
+    if (causalTask.kind === 'what_after') {
+      const correct = sceneId === causalTask.actionSceneId;
+      setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: correct ? 'correct' : 'error',
+        label: 'CAUSA E CONSEQUÊNCIA — DEPOIS',
+        createdAt: new Date().toISOString(),
+      }]);
+      if (correct) setCausalTaskActive(false);
+      return;
+    }
+
+    if (causalTask.kind === 'what_result') {
+      const correct = sceneId === causalTask.resultSceneId;
+      setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: correct ? 'correct' : 'error',
+        label: 'CAUSA E CONSEQUÊNCIA — RESULTADO',
+        createdAt: new Date().toISOString(),
+      }]);
+      if (correct) setCausalTaskActive(false);
+      return;
+    }
+
+    if (causalAnswer.includes(sceneId)) return;
+    const nextAnswer = [...causalAnswer, sceneId];
+    setCausalAnswer(nextAnswer);
+
+    if (nextAnswer.length === 3) {
+      const expected = [
+        causalTask.problemSceneId,
+        causalTask.actionSceneId,
+        causalTask.resultSceneId,
+      ];
+      const correct = nextAnswer.every((id, index) => id === expected[index]);
+      setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: correct ? 'correct' : 'error',
+        label: 'CAUSA E CONSEQUÊNCIA — CADEIA',
+        createdAt: new Date().toISOString(),
+      }]);
+      if (correct) {
+        setCausalTaskActive(false);
+      } else {
+        setCausalAnswer([]);
       }
     }
   }
@@ -599,6 +674,8 @@ export default function App() {
     setWeekTaskActive(false);
     setNarrativeTaskActive(false);
     setNarrativeAnswer([]);
+    setCausalTaskActive(false);
+    setCausalAnswer([]);
     setCompareMode('now');
   }
 
@@ -821,6 +898,122 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="causal-task-builder">
+            <div className="builder-title">
+              <p className="section-kicker">CAUSA E CONSEQUÊNCIA</p>
+              <strong>PROBLEMA → AÇÃO → RESULTADO</strong>
+            </div>
+
+            <div className="causal-config">
+              <label>
+                <span>PROBLEMA</span>
+                <select
+                  value={causalTask.problemSceneId ?? ''}
+                  onChange={(event) => setCausalTask((current) => ({
+                    ...current,
+                    problemSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>AÇÃO</span>
+                <select
+                  value={causalTask.actionSceneId ?? ''}
+                  onChange={(event) => setCausalTask((current) => ({
+                    ...current,
+                    actionSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>RESULTADO</span>
+                <select
+                  value={causalTask.resultSceneId ?? ''}
+                  onChange={(event) => setCausalTask((current) => ({
+                    ...current,
+                    resultSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>PERGUNTA</span>
+                <select
+                  value={causalTask.kind}
+                  onChange={(event) => setCausalTask((current) => ({
+                    ...current,
+                    kind: event.target.value as CausalTask['kind'],
+                  }))}
+                >
+                  <option value="what_after">O QUE ACONTECEU DEPOIS?</option>
+                  <option value="what_result">QUAL FOI O RESULTADO?</option>
+                  <option value="build_chain">MONTAR PROBLEMA → AÇÃO → RESULTADO</option>
+                </select>
+              </label>
+            </div>
+
+            <button className="causal-start" type="button" onClick={startCausalTask}>
+              {causalTaskActive ? 'REINICIAR ATIVIDADE' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {causalTaskActive && (
+              <>
+                <div className="causal-question">
+                  <strong>{causalQuestion()}</strong>
+                  {causalTask.kind === 'build_chain' && (
+                    <span>{causalAnswer.length}/3 SELECIONADAS</span>
+                  )}
+                </div>
+
+                <div className="causal-options">
+                  {[causalTask.problemSceneId, causalTask.actionSceneId, causalTask.resultSceneId]
+                    .filter((id): id is string => Boolean(id))
+                    .map((sceneId) => {
+                      const scene = history.find((item) => item.id === sceneId);
+                      if (!scene) return null;
+                      const order = causalAnswer.indexOf(sceneId);
+                      return (
+                        <button
+                          type="button"
+                          className={order >= 0 ? 'causal-option selected' : 'causal-option'}
+                          key={sceneId}
+                          onClick={() => answerCausalScene(sceneId)}
+                        >
+                          {order >= 0 && <span className="order-number">{order + 1}</span>}
+                          <strong>{scene.actionLabel ?? 'CENA'}</strong>
+                          <div className="narrative-thumb">
+                            {scene.entities
+                              .filter((entity) => !entity.consumed)
+                              .slice(0, 4)
+                              .map((entity) => (
+                                <AssetVisual key={entity.instanceId} asset={entity} size={38} />
+                              ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </>
+            )}
+          </section>
 
           <section className="narrative-task-builder">
             <div className="builder-title">
