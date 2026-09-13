@@ -19,6 +19,7 @@ import type {
   SpatialRelation,
   SpatialTask,
   TemporalDay,
+  TemporalEvent,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -80,6 +81,10 @@ export default function App() {
   const [spatialTaskActive, setSpatialTaskActive] = useState(false);
   const [temporalTaskActive, setTemporalTaskActive] = useState(false);
   const [expectedTemporalDay, setExpectedTemporalDay] = useState<TemporalDay>('today');
+  const [temporalEvents, setTemporalEvents] = useState<TemporalEvent[]>([]);
+  const [newTemporalEventLabel, setNewTemporalEventLabel] = useState('');
+  const [newTemporalEventDay, setNewTemporalEventDay] = useState<TemporalDay>('today');
+  const [temporalEventQuestionId, setTemporalEventQuestionId] = useState<string | null>(null);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -145,6 +150,53 @@ export default function App() {
     if (day === 'yesterday') return '←';
     if (day === 'tomorrow') return '→';
     return '●';
+  }
+
+  function addTemporalEvent() {
+    const label = newTemporalEventLabel.trim().toUpperCase();
+    if (!label) {
+      setFeedback('DIGITE O NOME DO EVENTO');
+      return;
+    }
+    const symbols: Record<TemporalDay, string> = {
+      yesterday: '←',
+      today: '●',
+      tomorrow: '→',
+    };
+    setTemporalEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      label,
+      day: newTemporalEventDay,
+      symbol: symbols[newTemporalEventDay],
+    }]);
+    setNewTemporalEventLabel('');
+    setFeedback(null);
+  }
+
+  function answerTemporalEvent(day: TemporalDay) {
+    if (!temporalEventQuestionId) return;
+    const event = temporalEvents.find((item) => item.id === temporalEventQuestionId);
+    if (!event) return;
+    const correct = event.day === day;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `EVENTO ${event.label} — ${temporalLabel(day)}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setTemporalEventQuestionId(null);
+  }
+
+  function getCalendarDate(day: TemporalDay) {
+    const date = new Date();
+    if (day === 'yesterday') date.setDate(date.getDate() - 1);
+    if (day === 'tomorrow') date.setDate(date.getDate() + 1);
+    return new Intl.DateTimeFormat('pt-BR', {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+    }).format(date).toUpperCase();
   }
 
   function validateTemporalTask(day: TemporalDay) {
@@ -386,6 +438,7 @@ export default function App() {
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
     setTemporalTaskActive(false);
+    setTemporalEventQuestionId(null);
     setCompareMode('now');
   }
 
@@ -608,6 +661,75 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="calendar-builder">
+            <div className="builder-title">
+              <p className="section-kicker">CALENDÁRIO VISUAL</p>
+              <strong>EVENTOS REAIS</strong>
+            </div>
+
+            <div className="calendar-columns">
+              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
+                <section className="calendar-day" key={day}>
+                  <header>
+                    <span>{temporalSymbol(day)}</span>
+                    <strong>{temporalLabel(day)}</strong>
+                    <small>{getCalendarDate(day)}</small>
+                  </header>
+                  <div className="calendar-events">
+                    {temporalEvents.filter((event) => event.day === day).map((event) => (
+                      <button
+                        type="button"
+                        className={temporalEventQuestionId === event.id ? 'calendar-event active' : 'calendar-event'}
+                        key={event.id}
+                        onClick={() => setTemporalEventQuestionId(event.id)}
+                      >
+                        <span>{event.symbol}</span>
+                        <strong>{event.label}</strong>
+                      </button>
+                    ))}
+                    {temporalEvents.every((event) => event.day !== day) && (
+                      <div className="calendar-empty">SEM EVENTO</div>
+                    )}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <div className="calendar-create">
+              <label>
+                <span>EVENTO</span>
+                <input
+                  value={newTemporalEventLabel}
+                  onChange={(event) => setNewTemporalEventLabel(event.target.value)}
+                  placeholder="EX.: IGREJA"
+                />
+              </label>
+              <label>
+                <span>QUANDO</span>
+                <select value={newTemporalEventDay} onChange={(event) => setNewTemporalEventDay(event.target.value as TemporalDay)}>
+                  <option value="yesterday">ONTEM</option>
+                  <option value="today">HOJE</option>
+                  <option value="tomorrow">AMANHÃ</option>
+                </select>
+              </label>
+              <button type="button" onClick={addTemporalEvent}>＋ ADICIONAR</button>
+            </div>
+
+            {temporalEventQuestionId && (
+              <div className="calendar-question">
+                <strong>QUANDO É/FOI {temporalEvents.find((event) => event.id === temporalEventQuestionId)?.label}?</strong>
+                <div>
+                  {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
+                    <button type="button" key={day} onClick={() => answerTemporalEvent(day)}>
+                      <span>{temporalSymbol(day)}</span>
+                      {temporalLabel(day)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
 
           <section className="temporal-builder">
             <div className="builder-title">
