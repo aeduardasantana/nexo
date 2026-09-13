@@ -2496,3 +2496,150 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.relocation-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f2efe7;
+}
+
+.relocation-config {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.relocation-config label {
+  display: grid;
+  gap: 5px;
+}
+
+.relocation-config label span,
+.relocation-witnesses > span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.relocation-config select {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.relocation-witnesses {
+  margin-top: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.relocation-witnesses > div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.relocation-witnesses button {
+  min-width: 132px;
+  min-height: 108px;
+  border: 1px solid #d1ccc2;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.relocation-witnesses button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.relocation-witnesses button strong {
+  font-size: .64rem;
+}
+
+.relocation-witnesses button small {
+  font-size: .52rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.relocation-start {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.relocation-question {
+  margin-top: 12px;
+  border: 1px solid #cbc5bb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.relocation-question > strong {
+  font-size: .82rem;
+}
+
+.relocation-question > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.relocation-question button {
+  min-height: 70px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.relocation-summary {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.relocation-summary span {
+  border: 1px solid #d1ccc2;
+  border-radius: 999px;
+  background: #fff;
+  padding: 6px 9px;
+  font-size: .6rem;
+  font-weight: 850;
+}
+
+@media (max-width: 900px) {
+  .relocation-config {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .relocation-config,
+  .relocation-question > div {
+    grid-template-columns: 1fr;
+  }
+}
