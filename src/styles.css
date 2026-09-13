@@ -2643,3 +2643,148 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.relocation-start-row {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.relocation-start.sequence {
+  background: #fff;
+  color: #161616;
+  border-color: #161616;
+}
+
+.relocation-sequence {
+  margin-top: 12px;
+  border: 1px solid #c9c5bc;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.sequence-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sequence-step {
+  min-height: 54px;
+  border: 1px solid #d2cdc3;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  text-align: center;
+  background: #faf9f6;
+}
+
+.sequence-step strong {
+  font-size: .62rem;
+}
+
+.sequence-step.active {
+  outline: 2px solid #161616;
+  outline-offset: 2px;
+}
+
+.sequence-step.done {
+  background: #ecefe9;
+  border-color: #bfc8b8;
+}
+
+.sequence-question {
+  display: grid;
+  gap: 10px;
+}
+
+.sequence-question > strong {
+  text-align: center;
+  font-size: .82rem;
+}
+
+.sequence-location-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sequence-location-options button,
+.sequence-check {
+  min-height: 64px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.sequence-witness-options {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.sequence-witness-options button {
+  min-width: 96px;
+  min-height: 90px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.sequence-witness-options button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.sequence-witness-options span {
+  font-size: .6rem;
+  font-weight: 850;
+}
+
+.sequence-check {
+  width: 100%;
+  background: #161616;
+  color: #fff;
+}
+
+.sequence-complete {
+  border: 1px solid #bfc8b8;
+  border-radius: 10px;
+  background: #ecefe9;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.sequence-complete strong {
+  font-size: .76rem;
+}
+
+.sequence-complete span {
+  font-size: .58rem;
+  font-weight: 800;
+  color: #66635c;
+}
+
+@media (max-width: 640px) {
+  .relocation-start-row,
+  .sequence-progress,
+  .sequence-location-options {
+    grid-template-columns: 1fr;
+  }
+}
