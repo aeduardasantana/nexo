@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import type {
   ActionDraft,
   ActionExecution,
@@ -8,6 +9,11 @@ import type {
 
 function cloneEntities(entities: EntityState[]): EntityState[] {
   return entities.map((entity) => ({ ...entity }));
+}
+
+function moveNear(source: EntityState, target: EntityState, offsetX = -10, offsetY = 0) {
+  source.x = Math.max(4, Math.min(92, target.x + offsetX));
+  source.y = Math.max(8, Math.min(88, target.y + offsetY));
 }
 
 export function validateAction(
@@ -64,54 +70,86 @@ export function executeAction(
   const entities = cloneEntities(scene.entities);
   const actor = entities.find((entity) => entity.instanceId === draft.actorId)!;
   const object = entities.find((entity) => entity.instanceId === draft.objectId);
+  const targetPerson = entities.find((entity) => entity.instanceId === draft.targetPersonId);
+  const destination = entities.find((entity) => entity.instanceId === draft.destinationId);
+  const seat = entities.find((entity) => entity.instanceId === draft.seatId);
 
-  actor.activity = undefined;
+  for (const entity of entities) entity.activity = undefined;
 
   switch (rule.id) {
     case 'walk':
+      actor.x = Math.min(88, actor.x + 18);
       actor.activity = 'walking';
       break;
     case 'go':
-      actor.locationId = draft.destinationId;
+      if (destination) {
+        moveNear(actor, destination, -12, 2);
+        actor.locationId = destination.instanceId;
+      }
       actor.activity = 'going';
       break;
     case 'sit':
-      actor.posture = 'sitting';
-      actor.locationId = draft.seatId;
+      if (seat) {
+        actor.x = seat.x;
+        actor.y = Math.max(8, seat.y - 5);
+        actor.posture = 'sitting';
+        actor.locationId = seat.instanceId;
+      }
       break;
     case 'stand':
       actor.posture = 'standing';
       actor.locationId = undefined;
+      actor.y = Math.max(8, actor.y - 8);
       break;
     case 'take':
       if (object) {
+        moveNear(actor, object, -10, 0);
         object.ownerId = actor.instanceId;
         object.locationId = undefined;
+        object.x = actor.x + 7;
+        object.y = actor.y - 2;
       }
       actor.activity = 'taking';
       break;
     case 'give':
-      if (object) object.ownerId = draft.targetPersonId;
+      if (object && targetPerson) {
+        object.ownerId = targetPerson.instanceId;
+        object.x = targetPerson.x + 7;
+        object.y = targetPerson.y - 2;
+        moveNear(actor, targetPerson, -18, 0);
+      }
       actor.activity = 'giving';
       break;
     case 'put':
-      if (object) {
+      if (object && destination) {
         object.ownerId = undefined;
-        object.locationId = draft.destinationId;
+        object.locationId = destination.instanceId;
+        object.x = destination.x;
+        object.y = Math.max(8, destination.y - 8);
       }
       actor.activity = 'putting';
       break;
     case 'eat':
-      if (object) object.consumed = true;
+      if (object) {
+        moveNear(actor, object, -8, 0);
+        object.consumed = true;
+      }
       actor.activity = 'eating';
       break;
     case 'drink':
-      if (object) object.consumed = true;
+      if (object) {
+        moveNear(actor, object, -8, 0);
+        object.consumed = true;
+      }
       actor.activity = 'drinking';
       break;
     case 'sleep':
       actor.posture = 'sleeping';
       actor.activity = 'sleeping';
+      if (seat && seat.label === 'CAMA') {
+        actor.x = seat.x;
+        actor.y = seat.y;
+      }
       break;
     default:
       return { ok: false, error: 'AÇÃO NÃO IMPLEMENTADA' };
