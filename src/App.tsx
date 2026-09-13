@@ -34,6 +34,7 @@ import type {
   AccessState,
   AccessTask,
   HiddenInfoTask,
+  RelocationPerspectiveTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -122,6 +123,8 @@ export default function App() {
   const [accessTaskActive, setAccessTaskActive] = useState(false);
   const [hiddenInfoTask, setHiddenInfoTask] = useState<HiddenInfoTask>({ witnessPersonIds: [] });
   const [hiddenInfoTaskActive, setHiddenInfoTaskActive] = useState(false);
+  const [relocationTask, setRelocationTask] = useState<RelocationPerspectiveTask>({ sawMovePersonIds: [] });
+  const [relocationTaskActive, setRelocationTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -656,6 +659,48 @@ export default function App() {
     if (correct) setHiddenInfoTaskActive(false);
   }
 
+  function toggleSawMove(personId: string) {
+    setRelocationTask((current) => ({
+      ...current,
+      sawMovePersonIds: current.sawMovePersonIds.includes(personId)
+        ? current.sawMovePersonIds.filter((id) => id !== personId)
+        : [...current.sawMovePersonIds, personId],
+    }));
+  }
+
+  function startRelocationTask() {
+    if (!relocationTask.objectId || !relocationTask.initialLocationId || !relocationTask.currentLocationId || !relocationTask.referencePersonId) {
+      setFeedback('CONFIGURE OBJETO, LOCAIS E PESSOA');
+      return;
+    }
+    if (relocationTask.initialLocationId === relocationTask.currentLocationId) {
+      setFeedback('O LOCAL INICIAL E O ATUAL PRECISAM SER DIFERENTES');
+      return;
+    }
+    setRelocationTaskActive(true);
+    setFeedback(null);
+  }
+
+  function expectedSearchLocationForPerson(personId: string) {
+    return relocationTask.sawMovePersonIds.includes(personId)
+      ? relocationTask.currentLocationId
+      : relocationTask.initialLocationId;
+  }
+
+  function answerRelocationTask(locationId: string) {
+    if (!relocationTaskActive || !relocationTask.referencePersonId) return;
+    const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
+    const correct = locationId === expected;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: 'MUDANÇA DE LOCAL — ONDE TEM BASE PARA PROCURAR',
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setRelocationTaskActive(false);
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -932,6 +977,7 @@ export default function App() {
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
     setHiddenInfoTaskActive(false);
+    setRelocationTaskActive(false);
     setCompareMode('now');
   }
 
@@ -1154,6 +1200,135 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="relocation-builder">
+            <div className="builder-title">
+              <p className="section-kicker">MUDANÇA DE LOCAL</p>
+              <strong>INFORMAÇÃO DIFERENTE ENTRE PESSOAS</strong>
+            </div>
+
+            <div className="relocation-config">
+              <label>
+                <span>OBJETO</span>
+                <select
+                  value={relocationTask.objectId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    objectId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {objects.filter((object) => !object.consumed).map((object) => (
+                    <option key={object.instanceId} value={object.instanceId}>{object.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL INICIAL</span>
+                <select
+                  value={relocationTask.initialLocationId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    initialLocationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL ATUAL</span>
+                <select
+                  value={relocationTask.currentLocationId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    currentLocationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>PESSOA DA PERGUNTA</span>
+                <select
+                  value={relocationTask.referencePersonId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    referencePersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="relocation-witnesses">
+              <span>QUEM VIU O OBJETO MUDAR DE LOCAL?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = relocationTask.sawMovePersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleSawMove(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU A MUDANÇA' : 'NÃO VIU A MUDANÇA'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button className="relocation-start" type="button" onClick={startRelocationTask}>
+              {relocationTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {relocationTaskActive && relocationTask.referencePersonId && (
+              <div className="relocation-question">
+                <strong>
+                  ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
+                </strong>
+                <div>
+                  {[relocationTask.initialLocationId, relocationTask.currentLocationId]
+                    .filter((id): id is string => Boolean(id))
+                    .map((locationId) => (
+                      <button type="button" key={locationId} onClick={() => answerRelocationTask(locationId)}>
+                        <span>{findLabel(currentScene, locationId)}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <div className="relocation-summary">
+              <span>ANTES: {findLabel(currentScene, relocationTask.initialLocationId)}</span>
+              <span>AGORA: {findLabel(currentScene, relocationTask.currentLocationId)}</span>
+              <span>
+                VIU A MUDANÇA: {relocationTask.sawMovePersonIds.length
+                  ? relocationTask.sawMovePersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+            </div>
+
+            <p className="access-note">
+              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA RECEBE O LOCAL ATUAL; QUEM NÃO VIU MANTÉM O ÚLTIMO LOCAL DISPONÍVEL.
+            </p>
+          </section>
 
           <section className="hidden-info-builder">
             <div className="builder-title">
