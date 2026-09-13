@@ -67,3 +67,14 @@ export type MediationEvent = {
   label: string;
   createdAt: string;
 };
+
+
+export type SpatialRelation = 'near' | 'far' | 'above' | 'below' | 'inside' | 'outside';
+
+export type SpatialRelationResult = {
+  type: SpatialRelation;
+  label: string;
+  subjectId: string;
+  referenceId: string;
+  matched: boolean;
+};
