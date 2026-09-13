@@ -5,6 +5,7 @@ import { AssetVisual, VerbVisual } from './components/Visuals';
 import { assets } from './data/assets';
 import { verbRules } from './data/verbs';
 import { executeAction } from './features/actionEngine';
+import { detectRelations, evaluateRelation } from './features/spatialRelations';
 import type {
   ActionDraft,
   AssetCategory,
@@ -15,6 +16,7 @@ import type {
   ActivityMode,
   DirectedActivity,
   MediationEvent,
+  SpatialRelation,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -66,6 +68,8 @@ export default function App() {
   const [mediationEvents, setMediationEvents] = useState<MediationEvent[]>([]);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [draggingEntityId, setDraggingEntityId] = useState<string | null>(null);
+  const [relationReferenceId, setRelationReferenceId] = useState<string | null>(null);
+  const [relationType, setRelationType] = useState<SpatialRelation>('near');
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -95,6 +99,16 @@ export default function App() {
   );
 
   const selectedRule = verbRules.find((verb) => verb.id === draft.verbId);
+  const selectedEntity = currentScene.entities.find((entity) => entity.instanceId === selectedEntityId);
+  const relationReference = currentScene.entities.find((entity) => entity.instanceId === relationReferenceId);
+  const detectedRelations =
+    selectedEntity && relationReference
+      ? detectRelations(selectedEntity, relationReference)
+      : [];
+  const relationCheck =
+    selectedEntity && relationReference
+      ? evaluateRelation(selectedEntity, relationReference, relationType)
+      : null;
 
   function addToScene(asset: SceneAsset) {
     const entity = toEntity(asset, currentScene.entities.length);
@@ -268,6 +282,7 @@ export default function App() {
     setFeedback(null);
     setSelectedEntityId(null);
     setDraggingEntityId(null);
+    setRelationReferenceId(null);
     setCompareMode('now');
   }
 
@@ -475,10 +490,60 @@ export default function App() {
                   {selectedEntityId && historyIndex === history.length - 1 && (
                     <div className="move-hint">ARRASTE OU TOQUE NO LOCAL</div>
                   )}
+                  {selectedEntity && relationReference && (
+                    <div className="relation-badge">
+                      {detectedRelations.length > 0
+                        ? detectedRelations.map((relation) => relation.label).join(' • ')
+                        : 'SEM RELAÇÃO MARCADA'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
+
+          <section className="relation-builder">
+            <div className="builder-title">
+              <p className="section-kicker">RELAÇÃO ESPACIAL</p>
+              <strong>COMPARE DOIS ELEMENTOS</strong>
+            </div>
+            <div className="relation-controls">
+              <label>
+                <span>ELEMENTO 1</span>
+                <select value={selectedEntityId ?? ''} onChange={(event) => setSelectedEntityId(event.target.value || null)}>
+                  <option value="">?</option>
+                  {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <option key={entity.instanceId} value={entity.instanceId}>{entity.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>RELAÇÃO</span>
+                <select value={relationType} onChange={(event) => setRelationType(event.target.value as SpatialRelation)}>
+                  <option value="near">PERTO</option>
+                  <option value="far">LONGE</option>
+                  <option value="above">EM CIMA</option>
+                  <option value="below">EMBAIXO</option>
+                  <option value="inside">DENTRO</option>
+                  <option value="outside">FORA</option>
+                </select>
+              </label>
+              <label>
+                <span>ELEMENTO 2</span>
+                <select value={relationReferenceId ?? ''} onChange={(event) => setRelationReferenceId(event.target.value || null)}>
+                  <option value="">?</option>
+                  {currentScene.entities.filter((entity) => !entity.consumed && entity.instanceId !== selectedEntityId).map((entity) => (
+                    <option key={entity.instanceId} value={entity.instanceId}>{entity.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {relationCheck && (
+              <div className={relationCheck.matched ? 'relation-result matched' : 'relation-result'}>
+                {relationCheck.matched ? '✓' : '✕'} {relationCheck.label}
+              </div>
+            )}
+          </section>
 
           <section className="action-builder">
             <div className="builder-title">
