@@ -23,6 +23,7 @@ import type {
   Weekday,
   WeeklyEvent,
   WeekTask,
+  NarrativeTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -94,6 +95,9 @@ export default function App() {
   const [newWeeklyEventRecurring, setNewWeeklyEventRecurring] = useState(true);
   const [weekTask, setWeekTask] = useState<WeekTask>({ kind: 'today' });
   const [weekTaskActive, setWeekTaskActive] = useState(false);
+  const [narrativeTask, setNarrativeTask] = useState<NarrativeTask>({ kind: 'first', sceneIds: [] });
+  const [narrativeTaskActive, setNarrativeTaskActive] = useState(false);
+  const [narrativeAnswer, setNarrativeAnswer] = useState<string[]>([]);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -258,6 +262,71 @@ export default function App() {
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setWeekTaskActive(false);
+  }
+
+  function availableNarrativeScenes() {
+    return history.slice(1);
+  }
+
+  function startNarrativeTask() {
+    const scenes = availableNarrativeScenes().slice(0, 3);
+    if (scenes.length < 2) {
+      setFeedback('CRIE PELO MENOS DUAS CENAS NA HISTÓRIA');
+      return;
+    }
+    setNarrativeTask((current) => ({
+      ...current,
+      sceneIds: scenes.map((scene) => scene.id),
+    }));
+    setNarrativeAnswer([]);
+    setNarrativeTaskActive(true);
+    setFeedback(null);
+  }
+
+  function narrativeQuestion() {
+    if (narrativeTask.kind === 'first') return 'O QUE ACONTECEU PRIMEIRO?';
+    if (narrativeTask.kind === 'next') return 'O QUE ACONTECEU DEPOIS?';
+    return 'COLOQUE AS CENAS NA ORDEM';
+  }
+
+  function answerNarrativeScene(sceneId: string) {
+    if (!narrativeTaskActive) return;
+    const orderedIds = narrativeTask.sceneIds;
+    if (orderedIds.length < 2) return;
+
+    if (narrativeTask.kind === 'first' || narrativeTask.kind === 'next') {
+      const expected = narrativeTask.kind === 'first' ? orderedIds[0] : orderedIds[1];
+      const correct = sceneId === expected;
+      setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: correct ? 'correct' : 'error',
+        label: narrativeTask.kind === 'first' ? 'NARRATIVA PRIMEIRO' : 'NARRATIVA DEPOIS',
+        createdAt: new Date().toISOString(),
+      }]);
+      if (correct) setNarrativeTaskActive(false);
+      return;
+    }
+
+    if (narrativeAnswer.includes(sceneId)) return;
+    const nextAnswer = [...narrativeAnswer, sceneId];
+    setNarrativeAnswer(nextAnswer);
+
+    if (nextAnswer.length === orderedIds.length) {
+      const correct = nextAnswer.every((id, index) => id === orderedIds[index]);
+      setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: correct ? 'correct' : 'error',
+        label: 'NARRATIVA ORDEM',
+        createdAt: new Date().toISOString(),
+      }]);
+      if (correct) {
+        setNarrativeTaskActive(false);
+      } else {
+        setNarrativeAnswer([]);
+      }
+    }
   }
 
   function addWeeklyEvent() {
@@ -528,6 +597,8 @@ export default function App() {
     setTemporalTaskActive(false);
     setTemporalEventQuestionId(null);
     setWeekTaskActive(false);
+    setNarrativeTaskActive(false);
+    setNarrativeAnswer([]);
     setCompareMode('now');
   }
 
@@ -750,6 +821,82 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="narrative-task-builder">
+            <div className="builder-title">
+              <p className="section-kicker">NARRATIVA TEMPORAL</p>
+              <strong>PRIMEIRO → DEPOIS → SEQUÊNCIA</strong>
+            </div>
+
+            <div className="narrative-task-config">
+              <label>
+                <span>ATIVIDADE</span>
+                <select
+                  value={narrativeTask.kind}
+                  onChange={(event) => setNarrativeTask({
+                    kind: event.target.value as NarrativeTask['kind'],
+                    sceneIds: narrativeTask.sceneIds,
+                  })}
+                >
+                  <option value="first">O QUE ACONTECEU PRIMEIRO?</option>
+                  <option value="next">O QUE ACONTECEU DEPOIS?</option>
+                  <option value="order">ORDENAR 2–3 CENAS</option>
+                </select>
+              </label>
+              <button type="button" onClick={startNarrativeTask}>
+                {narrativeTaskActive ? 'REINICIAR' : 'INICIAR'}
+              </button>
+            </div>
+
+            {narrativeTaskActive && (
+              <>
+                <div className="narrative-question">
+                  <strong>{narrativeQuestion()}</strong>
+                  {narrativeTask.kind === 'order' && (
+                    <span>{narrativeAnswer.length}/{narrativeTask.sceneIds.length} SELECIONADAS</span>
+                  )}
+                </div>
+
+                <div className="narrative-options">
+                  {narrativeTask.sceneIds.map((sceneId, index) => {
+                    const scene = history.find((item) => item.id === sceneId);
+                    if (!scene) return null;
+                    const selectedOrder = narrativeAnswer.indexOf(sceneId);
+                    return (
+                      <button
+                        type="button"
+                        key={sceneId}
+                        className={selectedOrder >= 0 ? 'narrative-option selected' : 'narrative-option'}
+                        onClick={() => answerNarrativeScene(sceneId)}
+                      >
+                        {selectedOrder >= 0 && <span className="order-number">{selectedOrder + 1}</span>}
+                        <strong>CENA {index + 1}</strong>
+                        <small>{scene.actionLabel ?? 'AÇÃO'}</small>
+                        <div className="narrative-thumb">
+                          {scene.entities
+                            .filter((entity) => !entity.consumed)
+                            .slice(0, 4)
+                            .map((entity) => (
+                              <AssetVisual key={entity.instanceId} asset={entity} size={38} />
+                            ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {narrativeTask.kind === 'order' && narrativeAnswer.length > 0 && (
+                  <button
+                    type="button"
+                    className="narrative-reset"
+                    onClick={() => setNarrativeAnswer([])}
+                  >
+                    LIMPAR ORDEM
+                  </button>
+                )}
+              </>
+            )}
+          </section>
 
           <section className="week-builder">
             <div className="builder-title">
