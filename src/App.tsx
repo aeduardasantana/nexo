@@ -20,6 +20,8 @@ import type {
   SpatialTask,
   TemporalDay,
   TemporalEvent,
+  Weekday,
+  WeeklyEvent,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -85,6 +87,10 @@ export default function App() {
   const [newTemporalEventLabel, setNewTemporalEventLabel] = useState('');
   const [newTemporalEventDay, setNewTemporalEventDay] = useState<TemporalDay>('today');
   const [temporalEventQuestionId, setTemporalEventQuestionId] = useState<string | null>(null);
+  const [weeklyEvents, setWeeklyEvents] = useState<WeeklyEvent[]>([]);
+  const [newWeeklyEventLabel, setNewWeeklyEventLabel] = useState('');
+  const [newWeeklyEventDay, setNewWeeklyEventDay] = useState<Weekday>(2);
+  const [newWeeklyEventRecurring, setNewWeeklyEventRecurring] = useState(true);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -186,6 +192,43 @@ export default function App() {
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setTemporalEventQuestionId(null);
+  }
+
+  function weekdayLabel(day: Weekday) {
+    return ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'][day];
+  }
+
+  function getWeekDays() {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const start = new Date(today);
+    start.setDate(today.getDate() - currentDay);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return {
+        weekday: index as Weekday,
+        date,
+        isToday: date.toDateString() === today.toDateString(),
+      };
+    });
+  }
+
+  function addWeeklyEvent() {
+    const label = newWeeklyEventLabel.trim().toUpperCase();
+    if (!label) {
+      setFeedback('DIGITE O NOME DO EVENTO SEMANAL');
+      return;
+    }
+    setWeeklyEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      label,
+      weekday: newWeeklyEventDay,
+      recurring: newWeeklyEventRecurring,
+    }]);
+    setNewWeeklyEventLabel('');
+    setFeedback(null);
   }
 
   function getCalendarDate(day: TemporalDay) {
@@ -661,6 +704,73 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="week-builder">
+            <div className="builder-title">
+              <p className="section-kicker">SEMANA VISUAL</p>
+              <strong>DOMINGO → SÁBADO</strong>
+            </div>
+
+            <div className="week-grid">
+              {getWeekDays().map(({ weekday, date, isToday }) => (
+                <section className={isToday ? 'week-day today' : 'week-day'} key={weekday}>
+                  <header>
+                    <strong>{weekdayLabel(weekday)}</strong>
+                    <span>{String(date.getDate()).padStart(2, '0')}/{String(date.getMonth() + 1).padStart(2, '0')}</span>
+                    {isToday && <small>HOJE</small>}
+                  </header>
+                  <div className="week-events">
+                    {weeklyEvents
+                      .filter((event) => event.weekday === weekday)
+                      .map((event) => (
+                        <div className="week-event" key={event.id}>
+                          <strong>{event.label}</strong>
+                          {event.recurring && <small>SEMANAL</small>}
+                        </div>
+                      ))}
+                    {weeklyEvents.every((event) => event.weekday !== weekday) && (
+                      <div className="week-empty">—</div>
+                    )}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <div className="week-create">
+              <label>
+                <span>EVENTO SEMANAL</span>
+                <input
+                  value={newWeeklyEventLabel}
+                  onChange={(event) => setNewWeeklyEventLabel(event.target.value)}
+                  placeholder="EX.: ENCONTRO"
+                />
+              </label>
+              <label>
+                <span>DIA</span>
+                <select
+                  value={newWeeklyEventDay}
+                  onChange={(event) => setNewWeeklyEventDay(Number(event.target.value) as Weekday)}
+                >
+                  <option value={0}>DOMINGO</option>
+                  <option value={1}>SEGUNDA</option>
+                  <option value={2}>TERÇA</option>
+                  <option value={3}>QUARTA</option>
+                  <option value={4}>QUINTA</option>
+                  <option value={5}>SEXTA</option>
+                  <option value={6}>SÁBADO</option>
+                </select>
+              </label>
+              <label className="week-check">
+                <input
+                  type="checkbox"
+                  checked={newWeeklyEventRecurring}
+                  onChange={(event) => setNewWeeklyEventRecurring(event.target.checked)}
+                />
+                <span>REPETIR TODA SEMANA</span>
+              </label>
+              <button type="button" onClick={addWeeklyEvent}>＋ ADICIONAR</button>
+            </div>
+          </section>
 
           <section className="calendar-builder">
             <div className="builder-title">
