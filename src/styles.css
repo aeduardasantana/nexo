@@ -1959,3 +1959,109 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.mental-state-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f4f1ea;
+}
+
+.mental-config {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.mental-config label {
+  display: grid;
+  gap: 5px;
+}
+
+.mental-config label span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.mental-config select,
+.mental-config input {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.mental-actions {
+  margin-top: 10px;
+}
+
+.mental-actions button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.mental-choice {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mental-choice button {
+  min-height: 94px;
+  border: 1px solid #c9c5bc;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.mental-choice button span {
+  font-size: 1.5rem;
+}
+
+.mental-choice button strong {
+  font-size: .78rem;
+}
+
+.mental-summary {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.mental-summary span {
+  padding: 7px 9px;
+  border: 1px solid #d1ccc2;
+  border-radius: 999px;
+  background: #fff;
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+@media (max-width: 900px) {
+  .mental-config {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .mental-config,
+  .mental-choice {
+    grid-template-columns: 1fr;
+  }
+}
