@@ -33,6 +33,7 @@ import type {
   InformationAccess,
   AccessState,
   AccessTask,
+  HiddenInfoTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -119,6 +120,8 @@ export default function App() {
   const [informationAccess, setInformationAccess] = useState<InformationAccess[]>([]);
   const [accessTask, setAccessTask] = useState<AccessTask>({ kind: 'who_saw' });
   const [accessTaskActive, setAccessTaskActive] = useState(false);
+  const [hiddenInfoTask, setHiddenInfoTask] = useState<HiddenInfoTask>({ witnessPersonIds: [] });
+  const [hiddenInfoTaskActive, setHiddenInfoTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -618,6 +621,41 @@ export default function App() {
     if (correct) setAccessTaskActive(false);
   }
 
+  function toggleHiddenWitness(personId: string) {
+    setHiddenInfoTask((current) => ({
+      ...current,
+      witnessPersonIds: current.witnessPersonIds.includes(personId)
+        ? current.witnessPersonIds.filter((id) => id !== personId)
+        : [...current.witnessPersonIds, personId],
+    }));
+  }
+
+  function startHiddenInfoTask() {
+    if (!hiddenInfoTask.sceneId || !hiddenInfoTask.objectId || !hiddenInfoTask.locationId) {
+      setFeedback('CONFIGURE CENA, OBJETO E LOCAL');
+      return;
+    }
+    if (hiddenInfoTask.witnessPersonIds.length === 0) {
+      setFeedback('MARQUE QUEM VIU A COLOCAÇÃO');
+      return;
+    }
+    setHiddenInfoTaskActive(true);
+    setFeedback(null);
+  }
+
+  function answerHiddenInfoTask(personId: string) {
+    if (!hiddenInfoTaskActive) return;
+    const correct = hiddenInfoTask.witnessPersonIds.includes(personId);
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: 'INFORMAÇÃO OCULTA — BASE PARA SABER',
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setHiddenInfoTaskActive(false);
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -893,6 +931,7 @@ export default function App() {
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
+    setHiddenInfoTaskActive(false);
     setCompareMode('now');
   }
 
@@ -1115,6 +1154,118 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="hidden-info-builder">
+            <div className="builder-title">
+              <p className="section-kicker">INFORMAÇÃO PRIVADA</p>
+              <strong>QUEM VIU ONDE O OBJETO FOI COLOCADO?</strong>
+            </div>
+
+            <div className="hidden-info-config">
+              <label>
+                <span>CENA</span>
+                <select
+                  value={hiddenInfoTask.sceneId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    sceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>OBJETO</span>
+                <select
+                  value={hiddenInfoTask.objectId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    objectId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {objects.filter((object) => !object.consumed).map((object) => (
+                    <option key={object.instanceId} value={object.instanceId}>{object.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL</span>
+                <select
+                  value={hiddenInfoTask.locationId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    locationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="hidden-witnesses">
+              <span>QUEM VIU A COLOCAÇÃO?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = hiddenInfoTask.witnessPersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleHiddenWitness(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU' : 'NÃO MARCADO'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button className="hidden-info-start" type="button" onClick={startHiddenInfoTask}>
+              {hiddenInfoTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {hiddenInfoTaskActive && (
+              <div className="hidden-info-question">
+                <strong>
+                  QUEM TEM BASE PARA SABER ONDE ESTÁ {findLabel(currentScene, hiddenInfoTask.objectId)}?
+                </strong>
+                <div>
+                  {people.map((person) => (
+                    <button type="button" key={person.instanceId} onClick={() => answerHiddenInfoTask(person.instanceId)}>
+                      <AssetVisual asset={person} size={46} />
+                      <span>{person.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="hidden-info-summary">
+              <span>OBJETO: {findLabel(currentScene, hiddenInfoTask.objectId)}</span>
+              <span>LOCAL: {findLabel(currentScene, hiddenInfoTask.locationId)}</span>
+              <span>
+                VIRAM: {hiddenInfoTask.witnessPersonIds.length
+                  ? hiddenInfoTask.witnessPersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+            </div>
+
+            <p className="access-note">
+              A RESPOSTA CORRETA É BASEADA EM QUEM TEVE ACESSO À COLOCAÇÃO. O SISTEMA NÃO AFIRMA CONHECIMENTO INTERNO ALÉM DISSO.
+            </p>
+          </section>
 
           <section className="access-builder">
             <div className="builder-title">
