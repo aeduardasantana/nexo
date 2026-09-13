@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
 import { AssetVisual, VerbVisual } from './components/Visuals';
@@ -30,10 +31,14 @@ const initialScene: SceneState = {
   entities: [],
 };
 
-function toEntity(asset: SceneAsset): EntityState {
+function toEntity(asset: SceneAsset, index: number): EntityState {
+  const columns = [18, 40, 62, 80];
+  const rows = [70, 48, 28];
   return {
     ...asset,
     instanceId: crypto.randomUUID(),
+    x: columns[index % columns.length],
+    y: rows[Math.floor(index / columns.length) % rows.length],
     posture: asset.category === 'person' ? 'standing' : undefined,
   };
 }
@@ -89,7 +94,7 @@ export default function App() {
   const selectedRule = verbRules.find((verb) => verb.id === draft.verbId);
 
   function addToScene(asset: SceneAsset) {
-    const entity = toEntity(asset);
+    const entity = toEntity(asset, currentScene.entities.length);
     const editedScene: SceneState = {
       ...currentScene,
       entities: [...currentScene.entities, entity],
@@ -220,6 +225,7 @@ export default function App() {
           entity.posture === 'sleeping' ? 'is-sleeping' : '',
         ].join(' ')}
         key={entity.instanceId}
+        style={{ left: `${entity.x}%`, top: `${entity.y}%` }}
       >
         <AssetVisual asset={entity} size={92} className={entity.activity ? `activity-${entity.activity}` : ''} />
         <small>{entity.label}</small>
@@ -353,8 +359,8 @@ export default function App() {
                 <strong>ANTES</strong>
                 <div className="mini-stage">
                   {beforeScene.entities.filter((entity) => !entity.consumed).map((entity) => (
-                    <div className="mini-entity" key={entity.instanceId}>
-                      <span>{entity.symbol}</span>
+                    <div className="mini-entity" key={entity.instanceId} style={{ left: `${entity.x}%`, top: `${entity.y}%` }}>
+                      <AssetVisual asset={entity} size={50} />
                       <small>{entity.label}</small>
                     </div>
                   ))}
@@ -365,8 +371,8 @@ export default function App() {
                 <strong>DEPOIS</strong>
                 <div className="mini-stage">
                   {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
-                    <div className="mini-entity" key={entity.instanceId}>
-                      <span>{entity.symbol}</span>
+                    <div className="mini-entity" key={entity.instanceId} style={{ left: `${entity.x}%`, top: `${entity.y}%` }}>
+                      <AssetVisual asset={entity} size={50} />
                       <small>{entity.label}</small>
                     </div>
                   ))}
@@ -381,7 +387,8 @@ export default function App() {
                   <p>ESCOLHA UMA ILUSTRAÇÃO</p>
                 </div>
               ) : (
-                <div className="scene-strip">
+                <div className="spatial-scene">
+                  <div className="ground-line" aria-hidden="true" />
                   {displayedScene.entities.filter((entity) => !entity.consumed).map(renderEntity)}
                 </div>
               )}
