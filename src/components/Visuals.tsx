@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import type { SceneAsset, VerbRule } from '../types/domain';
 
 type AssetVisualProps = {
