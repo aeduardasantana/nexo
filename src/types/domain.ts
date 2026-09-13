@@ -145,3 +145,26 @@ export type CausalTask = {
   actionSceneId?: string;
   resultSceneId?: string;
 };
+
+
+export type MentalStateKind = 'want' | 'know' | 'understand' | 'like';
+
+export type MentalStateValue = 'yes' | 'no';
+
+export type MentalState = {
+  id: string;
+  personId: string;
+  kind: MentalStateKind;
+  value: MentalStateValue;
+  targetLabel?: string;
+};
+
+export type MentalTaskKind = 'identify' | 'choose_self';
+
+export type MentalTask = {
+  kind: MentalTaskKind;
+  personId?: string;
+  expectedKind?: MentalStateKind;
+  expectedValue?: MentalStateValue;
+  targetLabel?: string;
+};
