@@ -2065,3 +2065,120 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.perspective-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f3f1ea;
+}
+
+.perspective-config {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.perspective-config label {
+  display: grid;
+  gap: 5px;
+}
+
+.perspective-config label span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.perspective-config select,
+.perspective-config input {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.perspective-start {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.perspective-question {
+  margin-top: 12px;
+  border: 1px solid #cbc5bb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.perspective-question > strong {
+  font-size: .82rem;
+}
+
+.perspective-answers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.perspective-answers button {
+  min-height: 72px;
+  border: 1px solid #c9c5bc;
+  border-radius: 11px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.perspective-declarations {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.perspective-declarations > div {
+  border: 1px solid #d1ccc2;
+  border-radius: 11px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.perspective-declarations strong {
+  font-size: .7rem;
+}
+
+.perspective-declarations span {
+  font-size: .62rem;
+  font-weight: 800;
+  color: #6f6b63;
+}
+
+@media (max-width: 900px) {
+  .perspective-config {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .perspective-config,
+  .perspective-answers,
+  .perspective-declarations {
+    grid-template-columns: 1fr;
+  }
+}
