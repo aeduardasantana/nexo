@@ -1066,3 +1066,96 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     text-align: center;
   }
 }
+
+
+.spatial-task-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f3f0e9;
+}
+
+.spatial-task-preview {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed #c9c3b8;
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+}
+
+.spatial-task-preview strong {
+  font-size: .72rem;
+  letter-spacing: .05em;
+}
+
+.spatial-task-preview span {
+  padding: 6px 9px;
+  border-radius: 9px;
+  background: #ece8df;
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.spatial-task-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.spatial-task-actions button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.spatial-task-actions button:first-child {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.identify-options {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 12px;
+  padding-bottom: 4px;
+}
+
+.identify-options button {
+  min-width: 92px;
+  min-height: 96px;
+  border: 1px solid #d1ccc2;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.identify-options span {
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+@media (max-width: 640px) {
+  .spatial-task-actions {
+    flex-direction: column;
+  }
+
+  .spatial-task-preview {
+    justify-content: flex-start;
+  }
+}
