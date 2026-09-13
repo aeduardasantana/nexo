@@ -78,3 +78,14 @@ export type SpatialRelationResult = {
   referenceId: string;
   matched: boolean;
 };
+
+
+export type SpatialTaskKind = 'place' | 'identify';
+
+export type SpatialTask = {
+  kind: SpatialTaskKind;
+  subjectId?: string;
+  relation: SpatialRelation;
+  referenceId?: string;
+  instruction: string;
+};
