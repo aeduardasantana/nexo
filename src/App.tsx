@@ -29,6 +29,7 @@ import type {
   MentalStateKind,
   MentalStateValue,
   MentalTask,
+  PerspectiveTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -110,6 +111,8 @@ export default function App() {
   const [mentalTask, setMentalTask] = useState<MentalTask>({ kind: 'choose_self' });
   const [mentalTaskActive, setMentalTaskActive] = useState(false);
   const [mentalTargetLabel, setMentalTargetLabel] = useState('');
+  const [perspectiveTask, setPerspectiveTask] = useState<PerspectiveTask>({ kind: 'same_different' });
+  const [perspectiveTaskActive, setPerspectiveTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -471,6 +474,94 @@ export default function App() {
     if (correct) setMentalTaskActive(false);
   }
 
+  function getDeclaredMentalState(personId?: string, kind?: MentalStateKind, targetLabel?: string) {
+    if (!personId || !kind) return undefined;
+    return mentalStates.find((state) =>
+      state.personId === personId &&
+      state.kind === kind &&
+      (state.targetLabel ?? '') === (targetLabel?.trim().toUpperCase() ?? ''),
+    );
+  }
+
+  function perspectiveQuestion() {
+    const selfName = findLabel(currentScene, perspectiveTask.selfPersonId);
+    const otherName = findLabel(currentScene, perspectiveTask.otherPersonId);
+    const kind = perspectiveTask.stateKind;
+    if (!kind) return 'ESCOLHA UM CONCEITO';
+    const label = mentalLabel(kind, 'yes').replace('QUERO', 'QUERER').replace('SEI', 'SABER').replace('ENTENDI', 'ENTENDER').replace('GOSTO', 'GOSTAR');
+    if (perspectiveTask.kind === 'same_different') {
+      return `${selfName} E ${otherName}: ${label} É IGUAL OU DIFERENTE?`;
+    }
+    return `O QUE ${otherName} DECLAROU SOBRE ${perspectiveTask.targetLabel || 'ISSO'}?`;
+  }
+
+  function startPerspectiveTask() {
+    if (!perspectiveTask.selfPersonId || !perspectiveTask.otherPersonId || !perspectiveTask.stateKind) {
+      setFeedback('ESCOLHA DUAS PESSOAS E UM CONCEITO');
+      return;
+    }
+    const selfState = getDeclaredMentalState(
+      perspectiveTask.selfPersonId,
+      perspectiveTask.stateKind,
+      perspectiveTask.targetLabel,
+    );
+    const otherState = getDeclaredMentalState(
+      perspectiveTask.otherPersonId,
+      perspectiveTask.stateKind,
+      perspectiveTask.targetLabel,
+    );
+    if (!selfState || !otherState) {
+      setFeedback('FALTAM ESTADOS DECLARADOS DAS DUAS PESSOAS');
+      return;
+    }
+    setPerspectiveTaskActive(true);
+    setFeedback(null);
+  }
+
+  function answerPerspectiveSameDifferent(answer: 'same' | 'different') {
+    if (!perspectiveTaskActive || !perspectiveTask.stateKind) return;
+    const selfState = getDeclaredMentalState(
+      perspectiveTask.selfPersonId,
+      perspectiveTask.stateKind,
+      perspectiveTask.targetLabel,
+    );
+    const otherState = getDeclaredMentalState(
+      perspectiveTask.otherPersonId,
+      perspectiveTask.stateKind,
+      perspectiveTask.targetLabel,
+    );
+    if (!selfState || !otherState) return;
+    const expected = selfState.value === otherState.value ? 'same' : 'different';
+    const correct = answer === expected;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `PERSPECTIVA ${answer === 'same' ? 'IGUAL' : 'DIFERENTE'}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setPerspectiveTaskActive(false);
+  }
+
+  function answerPerspectiveOther(value: MentalStateValue) {
+    if (!perspectiveTaskActive || !perspectiveTask.stateKind) return;
+    const otherState = getDeclaredMentalState(
+      perspectiveTask.otherPersonId,
+      perspectiveTask.stateKind,
+      perspectiveTask.targetLabel,
+    );
+    if (!otherState) return;
+    const correct = value === otherState.value;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `PERSPECTIVA OUTRO — ${mentalLabel(perspectiveTask.stateKind!, value)}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setPerspectiveTaskActive(false);
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -744,6 +835,7 @@ export default function App() {
     setCausalTaskActive(false);
     setCausalAnswer([]);
     setMentalTaskActive(false);
+    setPerspectiveTaskActive(false);
     setCompareMode('now');
   }
 
@@ -966,6 +1058,139 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="perspective-builder">
+            <div className="builder-title">
+              <p className="section-kicker">EU × OUTRO</p>
+              <strong>PERSPECTIVA E DISTINÇÃO ENTRE PESSOAS</strong>
+            </div>
+
+            <div className="perspective-config">
+              <label>
+                <span>EU</span>
+                <select
+                  value={perspectiveTask.selfPersonId ?? ''}
+                  onChange={(event) => setPerspectiveTask((current) => ({
+                    ...current,
+                    selfPersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>OUTRO</span>
+                <select
+                  value={perspectiveTask.otherPersonId ?? ''}
+                  onChange={(event) => setPerspectiveTask((current) => ({
+                    ...current,
+                    otherPersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people
+                    .filter((person) => person.instanceId !== perspectiveTask.selfPersonId)
+                    .map((person) => (
+                      <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                    ))}
+                </select>
+              </label>
+
+              <label>
+                <span>CONCEITO</span>
+                <select
+                  value={perspectiveTask.stateKind ?? ''}
+                  onChange={(event) => setPerspectiveTask((current) => ({
+                    ...current,
+                    stateKind: (event.target.value || undefined) as MentalStateKind | undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  <option value="want">QUERER</option>
+                  <option value="know">SABER</option>
+                  <option value="understand">ENTENDER</option>
+                  <option value="like">GOSTAR</option>
+                </select>
+              </label>
+
+              <label>
+                <span>SOBRE</span>
+                <input
+                  value={perspectiveTask.targetLabel ?? ''}
+                  onChange={(event) => setPerspectiveTask((current) => ({
+                    ...current,
+                    targetLabel: event.target.value.toUpperCase(),
+                  }))}
+                  placeholder="EX.: CROCHÊ"
+                />
+              </label>
+
+              <label>
+                <span>ATIVIDADE</span>
+                <select
+                  value={perspectiveTask.kind}
+                  onChange={(event) => setPerspectiveTask((current) => ({
+                    ...current,
+                    kind: event.target.value as PerspectiveTask['kind'],
+                  }))}
+                >
+                  <option value="same_different">IGUAL OU DIFERENTE?</option>
+                  <option value="other_state">O QUE O OUTRO DECLAROU?</option>
+                </select>
+              </label>
+            </div>
+
+            <button className="perspective-start" type="button" onClick={startPerspectiveTask}>
+              {perspectiveTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {perspectiveTaskActive && (
+              <div className="perspective-question">
+                <strong>{perspectiveQuestion()}</strong>
+                {perspectiveTask.kind === 'same_different' ? (
+                  <div className="perspective-answers">
+                    <button type="button" onClick={() => answerPerspectiveSameDifferent('same')}>IGUAL</button>
+                    <button type="button" onClick={() => answerPerspectiveSameDifferent('different')}>DIFERENTE</button>
+                  </div>
+                ) : (
+                  <div className="perspective-answers">
+                    <button type="button" onClick={() => answerPerspectiveOther('yes')}>
+                      {perspectiveTask.stateKind ? mentalLabel(perspectiveTask.stateKind, 'yes') : 'SIM'}
+                    </button>
+                    <button type="button" onClick={() => answerPerspectiveOther('no')}>
+                      {perspectiveTask.stateKind ? mentalLabel(perspectiveTask.stateKind, 'no') : 'NÃO'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {perspectiveTask.selfPersonId && perspectiveTask.otherPersonId && perspectiveTask.stateKind && (
+              <div className="perspective-declarations">
+                {[perspectiveTask.selfPersonId, perspectiveTask.otherPersonId].map((personId) => {
+                  const state = getDeclaredMentalState(
+                    personId,
+                    perspectiveTask.stateKind,
+                    perspectiveTask.targetLabel,
+                  );
+                  return (
+                    <div key={personId}>
+                      <strong>{findLabel(currentScene, personId)}</strong>
+                      <span>
+                        {state
+                          ? `${mentalLabel(state.kind, state.value)}${state.targetLabel ? ` — ${state.targetLabel}` : ''}`
+                          : 'SEM DECLARAÇÃO'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
 
           <section className="mental-state-builder">
             <div className="builder-title">
