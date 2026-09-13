@@ -168,3 +168,14 @@ export type MentalTask = {
   expectedValue?: MentalStateValue;
   targetLabel?: string;
 };
+
+
+export type PerspectiveTaskKind = 'same_different' | 'other_state';
+
+export type PerspectiveTask = {
+  kind: PerspectiveTaskKind;
+  selfPersonId?: string;
+  otherPersonId?: string;
+  stateKind?: MentalStateKind;
+  targetLabel?: string;
+};
