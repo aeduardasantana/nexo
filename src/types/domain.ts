@@ -197,3 +197,11 @@ export type AccessTask = {
   sceneId?: string;
   expectedPersonId?: string;
 };
+
+
+export type HiddenInfoTask = {
+  sceneId?: string;
+  objectId?: string;
+  locationId?: string;
+  witnessPersonIds: string[];
+};
