@@ -179,3 +179,21 @@ export type PerspectiveTask = {
   stateKind?: MentalStateKind;
   targetLabel?: string;
 };
+
+
+export type AccessState = 'saw' | 'did_not_see';
+
+export type InformationAccess = {
+  id: string;
+  personId: string;
+  sceneId: string;
+  state: AccessState;
+};
+
+export type AccessTaskKind = 'who_saw' | 'who_knows';
+
+export type AccessTask = {
+  kind: AccessTaskKind;
+  sceneId?: string;
+  expectedPersonId?: string;
+};
