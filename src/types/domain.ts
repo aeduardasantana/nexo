@@ -31,10 +31,13 @@ export type EntityState = SceneAsset & {
   activity?: string;
 };
 
+export type TemporalDay = 'yesterday' | 'today' | 'tomorrow';
+
 export type SceneState = {
   id: string;
   entities: EntityState[];
   actionLabel?: string;
+  temporalDay?: TemporalDay;
 };
 
 export type ActionDraft = {
