@@ -133,3 +133,15 @@ export type NarrativeTask = {
   kind: NarrativeTaskKind;
   sceneIds: string[];
 };
+
+
+export type CausalRole = 'problem' | 'action' | 'result';
+
+export type CausalTaskKind = 'what_after' | 'what_result' | 'build_chain';
+
+export type CausalTask = {
+  kind: CausalTaskKind;
+  problemSceneId?: string;
+  actionSceneId?: string;
+  resultSceneId?: string;
+};
