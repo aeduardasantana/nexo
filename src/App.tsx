@@ -64,6 +64,9 @@ export default function App() {
     allowNotUnderstood: true,
   });
   const [mediationEvents, setMediationEvents] = useState<MediationEvent[]>([]);
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const [draggingEntityId, setDraggingEntityId] = useState<string | null>(null);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
   const currentScene = history[historyIndex];
@@ -104,6 +107,60 @@ export default function App() {
     );
     setCompareMode('now');
     setFeedback(null);
+  }
+
+  function updateEntityPosition(instanceId: string, x: number, y: number) {
+    if (historyIndex !== history.length - 1) {
+      setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA EDITAR');
+      return;
+    }
+
+    const nextX = Math.max(5, Math.min(95, x));
+    const nextY = Math.max(8, Math.min(88, y));
+
+    setHistory((current) =>
+      current.map((scene, index) =>
+        index === historyIndex
+          ? {
+              ...scene,
+              entities: scene.entities.map((entity) =>
+                entity.instanceId === instanceId
+                  ? { ...entity, x: nextX, y: nextY, ownerId: undefined, locationId: undefined }
+                  : entity,
+              ),
+            }
+          : scene,
+      ),
+    );
+  }
+
+  function pointerToPercent(clientX: number, clientY: number) {
+    const rect = sceneRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return {
+      x: ((clientX - rect.left) / rect.width) * 100,
+      y: ((clientY - rect.top) / rect.height) * 100,
+    };
+  }
+
+  function handleScenePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!draggingEntityId) return;
+    const point = pointerToPercent(event.clientX, event.clientY);
+    if (!point) return;
+    updateEntityPosition(draggingEntityId, point.x, point.y);
+  }
+
+  function handleScenePointerUp() {
+    setDraggingEntityId(null);
+  }
+
+  function handleSceneBackgroundPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!selectedEntityId || draggingEntityId) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('.scene-item')) return;
+    const point = pointerToPercent(event.clientX, event.clientY);
+    if (!point) return;
+    updateEntityPosition(selectedEntityId, point.x, point.y);
   }
 
   function selectVerb(rule: VerbRule) {
@@ -209,6 +266,8 @@ export default function App() {
     setHistoryIndex(0);
     setDraft({ verbId: '' });
     setFeedback(null);
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
     setCompareMode('now');
   }
 
@@ -220,12 +279,28 @@ export default function App() {
       <div
         className={[
           'scene-item',
+          selectedEntityId === entity.instanceId ? 'is-selected' : '',
+          draggingEntityId === entity.instanceId ? 'is-dragging' : '',
           entity.consumed ? 'is-consumed' : '',
           entity.posture === 'sitting' ? 'is-sitting' : '',
           entity.posture === 'sleeping' ? 'is-sleeping' : '',
         ].join(' ')}
         key={entity.instanceId}
         style={{ left: `${entity.x}%`, top: `${entity.y}%` }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          setSelectedEntityId(entity.instanceId);
+          if (historyIndex === history.length - 1) {
+            setDraggingEntityId(entity.instanceId);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+          setDraggingEntityId(null);
+        }}
       >
         <AssetVisual asset={entity} size={92} className={entity.activity ? `activity-${entity.activity}` : ''} />
         <small>{entity.label}</small>
@@ -387,9 +462,19 @@ export default function App() {
                   <p>ESCOLHA UMA ILUSTRAÇÃO</p>
                 </div>
               ) : (
-                <div className="spatial-scene">
+                <div
+                  className="spatial-scene"
+                  ref={sceneRef}
+                  onPointerMove={handleScenePointerMove}
+                  onPointerUp={handleScenePointerUp}
+                  onPointerCancel={handleScenePointerUp}
+                  onPointerDown={handleSceneBackgroundPointerDown}
+                >
                   <div className="ground-line" aria-hidden="true" />
                   {displayedScene.entities.filter((entity) => !entity.consumed).map(renderEntity)}
+                  {selectedEntityId && historyIndex === history.length - 1 && (
+                    <div className="move-hint">ARRASTE OU TOQUE NO LOCAL</div>
+                  )}
                 </div>
               )}
             </div>
