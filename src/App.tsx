@@ -36,6 +36,9 @@ import type {
   HiddenInfoTask,
   RelocationPerspectiveTask,
   RelocationSequenceState,
+  ActivitySupportConfig,
+  MediationAssessment,
+  MediationLevel,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -132,6 +135,12 @@ export default function App() {
   });
   const [relocationSequenceActive, setRelocationSequenceActive] = useState(false);
   const [sequenceWitnessAnswer, setSequenceWitnessAnswer] = useState<string[]>([]);
+  const [supportConfig, setSupportConfig] = useState<ActivitySupportConfig>({
+    difficulty: 1,
+    optionCount: 2,
+    useDistractors: false,
+  });
+  const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -178,6 +187,27 @@ export default function App() {
     spatialTaskSubject && spatialTaskReference
       ? evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation)
       : null;
+
+  function mediationLevelLabel(level: MediationLevel) {
+    if (level === 0) return 'NÃO DEMONSTRADO';
+    if (level === 1) return 'APÓS MODELAGEM';
+    if (level === 2) return 'COM PISTA / MEDIAÇÃO';
+    return 'ESPONTÂNEO';
+  }
+
+  function registerMediationAssessment(level: MediationLevel) {
+    const latestEvent = mediationEvents.at(-1);
+    setMediationAssessments((items) => [...items, {
+      id: crypto.randomUUID(),
+      sourceEventId: latestEvent?.id,
+      level,
+      difficulty: supportConfig.difficulty,
+      optionCount: supportConfig.optionCount,
+      useDistractors: supportConfig.useDistractors,
+      createdAt: new Date().toISOString(),
+    }]);
+    setFeedback(`MEDIAÇÃO ${level} — ${mediationLevelLabel(level)}`);
+  }
 
   function setSceneTemporalDay(day: TemporalDay) {
     setHistory((current) =>
@@ -1072,6 +1102,7 @@ export default function App() {
     setRelocationSequenceActive(false);
     setRelocationSequence({ step: 'current_location', completedSteps: [] });
     setSequenceWitnessAnswer([]);
+    setMediationAssessments([]);
     setCompareMode('now');
   }
 
@@ -1171,11 +1202,67 @@ export default function App() {
             </>
           )}
 
+          <div className="teacher-support">
+            <label>
+              <span>DIFICULDADE</span>
+              <select
+                value={supportConfig.difficulty}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  difficulty: Number(event.target.value) as ActivitySupportConfig['difficulty'],
+                }))}
+              >
+                <option value={1}>NÍVEL 1</option>
+                <option value={2}>NÍVEL 2</option>
+                <option value={3}>NÍVEL 3</option>
+              </select>
+            </label>
+
+            <label>
+              <span>OPÇÕES</span>
+              <select
+                value={supportConfig.optionCount}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  optionCount: Number(event.target.value) as ActivitySupportConfig['optionCount'],
+                }))}
+              >
+                <option value={2}>2 OPÇÕES</option>
+                <option value={3}>3 OPÇÕES</option>
+                <option value={4}>4 OPÇÕES</option>
+              </select>
+            </label>
+
+            <label className="teacher-check">
+              <input
+                type="checkbox"
+                checked={supportConfig.useDistractors}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  useDistractors: event.target.checked,
+                }))}
+              />
+              <span>USAR DISTRATORES</span>
+            </label>
+          </div>
+
           <div className="teacher-stats">
             <span>CORRETAS {mediationEvents.filter((event) => event.type === 'correct').length}</span>
             <span>ERROS {mediationEvents.filter((event) => event.type === 'error').length}</span>
             <span>NÃO SEI {mediationEvents.filter((event) => event.type === 'unknown').length}</span>
             <span>NÃO ENTENDI {mediationEvents.filter((event) => event.type === 'not_understood').length}</span>
+          </div>
+
+          <div className="mediation-scale">
+            <span>REGISTRAR MEDIAÇÃO 0–3</span>
+            <div>
+              {([0, 1, 2, 3] as MediationLevel[]).map((level) => (
+                <button type="button" key={level} onClick={() => registerMediationAssessment(level)}>
+                  <strong>{level}</strong>
+                  <small>{mediationLevelLabel(level)}</small>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       )}
