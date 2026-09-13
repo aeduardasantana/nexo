@@ -100,3 +100,13 @@ export type TemporalEvent = {
   day: TemporalDay;
   symbol: string;
 };
+
+
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type WeeklyEvent = {
+  id: string;
+  label: string;
+  weekday: Weekday;
+  recurring: boolean;
+};
