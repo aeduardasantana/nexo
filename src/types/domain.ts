@@ -205,3 +205,12 @@ export type HiddenInfoTask = {
   locationId?: string;
   witnessPersonIds: string[];
 };
+
+
+export type RelocationPerspectiveTask = {
+  objectId?: string;
+  initialLocationId?: string;
+  currentLocationId?: string;
+  sawMovePersonIds: string[];
+  referencePersonId?: string;
+};
