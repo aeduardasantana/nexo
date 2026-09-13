@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import type { SceneAsset } from '../types/domain';
 import { AssetVisual } from './Visuals';
 
