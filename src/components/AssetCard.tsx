@@ -1,4 +1,5 @@
 import type { SceneAsset } from '../types/domain';
+import { AssetVisual } from './Visuals';
 
 type Props = {
   asset: SceneAsset;
@@ -8,7 +9,7 @@ type Props = {
 export default function AssetCard({ asset, onSelect }: Props) {
   return (
     <button className="asset-card" type="button" onClick={() => onSelect(asset)}>
-      <span className="asset-symbol" aria-hidden="true">{asset.symbol}</span>
+      <AssetVisual asset={asset} size={70} />
       <span className="asset-label">{asset.label}</span>
     </button>
   );
