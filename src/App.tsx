@@ -17,6 +17,7 @@ import type {
   DirectedActivity,
   MediationEvent,
   SpatialRelation,
+  SpatialTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -70,6 +71,12 @@ export default function App() {
   const [draggingEntityId, setDraggingEntityId] = useState<string | null>(null);
   const [relationReferenceId, setRelationReferenceId] = useState<string | null>(null);
   const [relationType, setRelationType] = useState<SpatialRelation>('near');
+  const [spatialTask, setSpatialTask] = useState<SpatialTask>({
+    kind: 'place',
+    relation: 'near',
+    instruction: 'COLOQUE O ELEMENTO NO LUGAR CERTO',
+  });
+  const [spatialTaskActive, setSpatialTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -108,6 +115,13 @@ export default function App() {
   const relationCheck =
     selectedEntity && relationReference
       ? evaluateRelation(selectedEntity, relationReference, relationType)
+      : null;
+
+  const spatialTaskSubject = currentScene.entities.find((entity) => entity.instanceId === spatialTask.subjectId);
+  const spatialTaskReference = currentScene.entities.find((entity) => entity.instanceId === spatialTask.referenceId);
+  const spatialTaskCheck =
+    spatialTaskSubject && spatialTaskReference
+      ? evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation)
       : null;
 
   function addToScene(asset: SceneAsset) {
@@ -175,6 +189,57 @@ export default function App() {
     const point = pointerToPercent(event.clientX, event.clientY);
     if (!point) return;
     updateEntityPosition(selectedEntityId, point.x, point.y);
+  }
+
+  function startSpatialTask() {
+    if (!spatialTask.subjectId || !spatialTask.referenceId) {
+      setFeedback('ESCOLHA OS DOIS ELEMENTOS DA ATIVIDADE');
+      return;
+    }
+    setSpatialTaskActive(true);
+    setSelectedEntityId(spatialTask.kind === 'place' ? spatialTask.subjectId : null);
+    setFeedback(null);
+  }
+
+  function validateSpatialTask() {
+    if (!spatialTaskSubject || !spatialTaskReference) {
+      setFeedback('ATIVIDADE INCOMPLETA');
+      return;
+    }
+
+    const result = evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation);
+    const correct = result.matched;
+
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `RELAÇÃO ${result.label}`,
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (correct) setSpatialTaskActive(false);
+  }
+
+  function chooseSpatialAnswer(instanceId: string) {
+    if (!spatialTaskActive || spatialTask.kind !== 'identify') return;
+    const candidate = currentScene.entities.find((entity) => entity.instanceId === instanceId);
+    const reference = spatialTaskReference;
+    if (!candidate || !reference) return;
+
+    const result = evaluateRelation(candidate, reference, spatialTask.relation);
+    const correct = result.matched;
+
+    setSelectedEntityId(instanceId);
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `IDENTIFICAR ${result.label}`,
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (correct) setSpatialTaskActive(false);
   }
 
   function selectVerb(rule: VerbRule) {
@@ -283,6 +348,7 @@ export default function App() {
     setSelectedEntityId(null);
     setDraggingEntityId(null);
     setRelationReferenceId(null);
+    setSpatialTaskActive(false);
     setCompareMode('now');
   }
 
@@ -304,6 +370,10 @@ export default function App() {
         style={{ left: `${entity.x}%`, top: `${entity.y}%` }}
         onPointerDown={(event) => {
           event.stopPropagation();
+          if (spatialTaskActive && spatialTask.kind === 'identify') {
+            chooseSpatialAnswer(entity.instanceId);
+            return;
+          }
           setSelectedEntityId(entity.instanceId);
           if (historyIndex === history.length - 1) {
             setDraggingEntityId(entity.instanceId);
@@ -501,6 +571,136 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="spatial-task-builder">
+            <div className="builder-title">
+              <p className="section-kicker">ATIVIDADE ESPACIAL DIRIGIDA</p>
+              <strong>{spatialTaskActive ? spatialTask.instruction : 'CONFIGURAR ATIVIDADE'}</strong>
+            </div>
+
+            <div className="relation-controls">
+              <label>
+                <span>TIPO</span>
+                <select
+                  value={spatialTask.kind}
+                  onChange={(event) => setSpatialTask((current) => ({
+                    ...current,
+                    kind: event.target.value as SpatialTask['kind'],
+                  }))}
+                >
+                  <option value="place">COLOCAR</option>
+                  <option value="identify">IDENTIFICAR</option>
+                </select>
+              </label>
+
+              <label>
+                <span>{spatialTask.kind === 'place' ? 'MOVER' : 'RESPOSTA-ALVO'}</span>
+                <select
+                  value={spatialTask.subjectId ?? ''}
+                  onChange={(event) => setSpatialTask((current) => ({
+                    ...current,
+                    subjectId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <option key={entity.instanceId} value={entity.instanceId}>{entity.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>RELAÇÃO</span>
+                <select
+                  value={spatialTask.relation}
+                  onChange={(event) => setSpatialTask((current) => ({
+                    ...current,
+                    relation: event.target.value as SpatialRelation,
+                  }))}
+                >
+                  <option value="near">PERTO</option>
+                  <option value="far">LONGE</option>
+                  <option value="above">EM CIMA</option>
+                  <option value="below">EMBAIXO</option>
+                  <option value="inside">DENTRO</option>
+                  <option value="outside">FORA</option>
+                </select>
+              </label>
+
+              <label>
+                <span>REFERÊNCIA</span>
+                <select
+                  value={spatialTask.referenceId ?? ''}
+                  onChange={(event) => setSpatialTask((current) => ({
+                    ...current,
+                    referenceId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {currentScene.entities
+                    .filter((entity) => !entity.consumed && entity.instanceId !== spatialTask.subjectId)
+                    .map((entity) => (
+                      <option key={entity.instanceId} value={entity.instanceId}>{entity.label}</option>
+                    ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="spatial-task-preview">
+              {spatialTask.kind === 'place' ? (
+                <>
+                  <strong>COLOQUE</strong>
+                  <span>{findLabel(currentScene, spatialTask.subjectId)}</span>
+                  <strong>{spatialTask.relation === 'near' ? 'PERTO DE' :
+                    spatialTask.relation === 'far' ? 'LONGE DE' :
+                    spatialTask.relation === 'above' ? 'EM CIMA DE' :
+                    spatialTask.relation === 'below' ? 'EMBAIXO DE' :
+                    spatialTask.relation === 'inside' ? 'DENTRO DE' : 'FORA DE'}</strong>
+                  <span>{findLabel(currentScene, spatialTask.referenceId)}</span>
+                </>
+              ) : (
+                <>
+                  <strong>QUEM/O QUE ESTÁ</strong>
+                  <span>{spatialTask.relation === 'near' ? 'PERTO DE' :
+                    spatialTask.relation === 'far' ? 'LONGE DE' :
+                    spatialTask.relation === 'above' ? 'EM CIMA DE' :
+                    spatialTask.relation === 'below' ? 'EMBAIXO DE' :
+                    spatialTask.relation === 'inside' ? 'DENTRO DE' : 'FORA DE'}</span>
+                  <span>{findLabel(currentScene, spatialTask.referenceId)}</span>
+                </>
+              )}
+            </div>
+
+            <div className="spatial-task-actions">
+              <button type="button" onClick={startSpatialTask}>
+                {spatialTaskActive ? 'REINICIAR ATIVIDADE' : 'INICIAR ATIVIDADE'}
+              </button>
+              {spatialTask.kind === 'place' && (
+                <button type="button" disabled={!spatialTaskActive} onClick={validateSpatialTask}>
+                  VERIFICAR
+                </button>
+              )}
+            </div>
+
+            {spatialTaskActive && spatialTask.kind === 'identify' && (
+              <div className="identify-options">
+                {currentScene.entities
+                  .filter((entity) => !entity.consumed && entity.instanceId !== spatialTask.referenceId)
+                  .map((entity) => (
+                    <button type="button" key={entity.instanceId} onClick={() => chooseSpatialAnswer(entity.instanceId)}>
+                      <AssetVisual asset={entity} size={46} />
+                      <span>{entity.label}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            {spatialTaskCheck && spatialTask.kind === 'place' && spatialTaskActive && (
+              <div className={spatialTaskCheck.matched ? 'relation-result matched' : 'relation-result'}>
+                POSIÇÃO ATUAL: {spatialTaskCheck.matched ? 'CORRESPONDE' : 'AINDA NÃO CORRESPONDE'}
+              </div>
+            )}
+          </section>
 
           <section className="relation-builder">
             <div className="builder-title">
