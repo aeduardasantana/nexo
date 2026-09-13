@@ -35,6 +35,7 @@ import type {
   AccessTask,
   HiddenInfoTask,
   RelocationPerspectiveTask,
+  RelocationSequenceState,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -125,6 +126,12 @@ export default function App() {
   const [hiddenInfoTaskActive, setHiddenInfoTaskActive] = useState(false);
   const [relocationTask, setRelocationTask] = useState<RelocationPerspectiveTask>({ sawMovePersonIds: [] });
   const [relocationTaskActive, setRelocationTaskActive] = useState(false);
+  const [relocationSequence, setRelocationSequence] = useState<RelocationSequenceState>({
+    step: 'current_location',
+    completedSteps: [],
+  });
+  const [relocationSequenceActive, setRelocationSequenceActive] = useState(false);
+  const [sequenceWitnessAnswer, setSequenceWitnessAnswer] = useState<string[]>([]);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -701,6 +708,90 @@ export default function App() {
     if (correct) setRelocationTaskActive(false);
   }
 
+  function startRelocationSequence() {
+    if (!relocationTask.objectId || !relocationTask.initialLocationId || !relocationTask.currentLocationId || !relocationTask.referencePersonId) {
+      setFeedback('CONFIGURE OBJETO, LOCAIS E PESSOA');
+      return;
+    }
+    if (relocationTask.initialLocationId === relocationTask.currentLocationId) {
+      setFeedback('O LOCAL INICIAL E O ATUAL PRECISAM SER DIFERENTES');
+      return;
+    }
+    setRelocationSequence({
+      step: 'current_location',
+      completedSteps: [],
+    });
+    setSequenceWitnessAnswer([]);
+    setRelocationSequenceActive(true);
+    setFeedback(null);
+  }
+
+  function registerRelocationSequenceResult(label: string, correct: boolean) {
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label,
+      createdAt: new Date().toISOString(),
+    }]);
+  }
+
+  function answerSequenceCurrentLocation(locationId: string) {
+    if (!relocationSequenceActive || relocationSequence.step !== 'current_location') return;
+    const correct = locationId === relocationTask.currentLocationId;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — LOCAL ATUAL', correct);
+    if (correct) {
+      setRelocationSequence({
+        step: 'who_saw',
+        completedSteps: ['current_location'],
+      });
+    }
+  }
+
+  function toggleSequenceWitness(personId: string) {
+    if (!relocationSequenceActive || relocationSequence.step !== 'who_saw') return;
+    setSequenceWitnessAnswer((current) =>
+      current.includes(personId)
+        ? current.filter((id) => id !== personId)
+        : [...current, personId],
+    );
+  }
+
+  function verifySequenceWitnesses() {
+    if (!relocationSequenceActive || relocationSequence.step !== 'who_saw') return;
+    const expected = [...relocationTask.sawMovePersonIds].sort();
+    const answer = [...sequenceWitnessAnswer].sort();
+    const correct =
+      expected.length === answer.length &&
+      expected.every((id, index) => id === answer[index]);
+
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — QUEM VIU', correct);
+
+    if (correct) {
+      setRelocationSequence({
+        step: 'person_search',
+        completedSteps: ['current_location', 'who_saw'],
+      });
+    }
+  }
+
+  function answerSequenceSearchLocation(locationId: string) {
+    if (!relocationSequenceActive || relocationSequence.step !== 'person_search' || !relocationTask.referencePersonId) return;
+    const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
+    const correct = locationId === expected;
+    setFeedback(correct ? '✓ CORRETO — SEQUÊNCIA CONCLUÍDA' : '❌ ERRADO');
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — LOCAL DE PROCURA', correct);
+
+    if (correct) {
+      setRelocationSequence({
+        step: 'person_search',
+        completedSteps: ['current_location', 'who_saw', 'person_search'],
+      });
+      setRelocationSequenceActive(false);
+    }
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -978,6 +1069,9 @@ export default function App() {
     setAccessTaskActive(false);
     setHiddenInfoTaskActive(false);
     setRelocationTaskActive(false);
+    setRelocationSequenceActive(false);
+    setRelocationSequence({ step: 'current_location', completedSteps: [] });
+    setSequenceWitnessAnswer([]);
     setCompareMode('now');
   }
 
@@ -1294,9 +1388,14 @@ export default function App() {
               </div>
             </div>
 
-            <button className="relocation-start" type="button" onClick={startRelocationTask}>
-              {relocationTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
-            </button>
+            <div className="relocation-start-row">
+              <button className="relocation-start" type="button" onClick={startRelocationTask}>
+                {relocationTaskActive ? 'PERGUNTA ISOLADA ATIVA' : 'INICIAR PERGUNTA ISOLADA'}
+              </button>
+              <button className="relocation-start sequence" type="button" onClick={startRelocationSequence}>
+                {relocationSequenceActive ? 'SEQUÊNCIA ATIVA' : 'INICIAR SEQUÊNCIA 3 ETAPAS'}
+              </button>
+            </div>
 
             {relocationTaskActive && relocationTask.referencePersonId && (
               <div className="relocation-question">
@@ -1312,6 +1411,95 @@ export default function App() {
                       </button>
                     ))}
                 </div>
+              </div>
+            )}
+
+            {(relocationSequenceActive || relocationSequence.completedSteps.length > 0) && (
+              <div className="relocation-sequence">
+                <div className="sequence-progress">
+                  {[
+                    ['current_location', '1. ONDE ESTÁ AGORA?'],
+                    ['who_saw', '2. QUEM VIU?'],
+                    ['person_search', '3. ONDE VAI PROCURAR?'],
+                  ].map(([step, label]) => (
+                    <div
+                      key={step}
+                      className={[
+                        'sequence-step',
+                        relocationSequence.step === step && relocationSequenceActive ? 'active' : '',
+                        relocationSequence.completedSteps.includes(step as RelocationSequenceState['step']) ? 'done' : '',
+                      ].join(' ')}
+                    >
+                      <strong>{label}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                {relocationSequenceActive && relocationSequence.step === 'current_location' && (
+                  <div className="sequence-question">
+                    <strong>
+                      ONDE ESTÁ {findLabel(currentScene, relocationTask.objectId)} AGORA?
+                    </strong>
+                    <div className="sequence-location-options">
+                      {[relocationTask.initialLocationId, relocationTask.currentLocationId]
+                        .filter((id): id is string => Boolean(id))
+                        .map((locationId) => (
+                          <button type="button" key={locationId} onClick={() => answerSequenceCurrentLocation(locationId)}>
+                            {findLabel(currentScene, locationId)}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {relocationSequenceActive && relocationSequence.step === 'who_saw' && (
+                  <div className="sequence-question">
+                    <strong>QUEM VIU O OBJETO MUDAR DE LOCAL?</strong>
+                    <div className="sequence-witness-options">
+                      {people.map((person) => {
+                        const selected = sequenceWitnessAnswer.includes(person.instanceId);
+                        return (
+                          <button
+                            type="button"
+                            key={person.instanceId}
+                            className={selected ? 'active' : ''}
+                            onClick={() => toggleSequenceWitness(person.instanceId)}
+                          >
+                            <AssetVisual asset={person} size={42} />
+                            <span>{person.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button className="sequence-check" type="button" onClick={verifySequenceWitnesses}>
+                      CONFERIR
+                    </button>
+                  </div>
+                )}
+
+                {relocationSequenceActive && relocationSequence.step === 'person_search' && relocationTask.referencePersonId && (
+                  <div className="sequence-question">
+                    <strong>
+                      ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
+                    </strong>
+                    <div className="sequence-location-options">
+                      {[relocationTask.initialLocationId, relocationTask.currentLocationId]
+                        .filter((id): id is string => Boolean(id))
+                        .map((locationId) => (
+                          <button type="button" key={locationId} onClick={() => answerSequenceSearchLocation(locationId)}>
+                            {findLabel(currentScene, locationId)}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {!relocationSequenceActive && relocationSequence.completedSteps.includes('person_search') && (
+                  <div className="sequence-complete">
+                    <strong>SEQUÊNCIA CONCLUÍDA</strong>
+                    <span>LOCAL ATUAL → ACESSO À MUDANÇA → LOCAL DE PROCURA</span>
+                  </div>
+                )}
               </div>
             )}
 
