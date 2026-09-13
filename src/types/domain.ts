@@ -92,3 +92,11 @@ export type SpatialTask = {
   referenceId?: string;
   instruction: string;
 };
+
+
+export type TemporalEvent = {
+  id: string;
+  label: string;
+  day: TemporalDay;
+  symbol: string;
+};
