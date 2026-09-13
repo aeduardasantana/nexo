@@ -125,3 +125,11 @@ export type WeekTask = {
   referenceWeekday?: Weekday;
   eventId?: string;
 };
+
+
+export type NarrativeTaskKind = 'first' | 'next' | 'order';
+
+export type NarrativeTask = {
+  kind: NarrativeTaskKind;
+  sceneIds: string[];
+};
