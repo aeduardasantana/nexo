@@ -22,6 +22,7 @@ import type {
   TemporalEvent,
   Weekday,
   WeeklyEvent,
+  WeekTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -91,6 +92,8 @@ export default function App() {
   const [newWeeklyEventLabel, setNewWeeklyEventLabel] = useState('');
   const [newWeeklyEventDay, setNewWeeklyEventDay] = useState<Weekday>(2);
   const [newWeeklyEventRecurring, setNewWeeklyEventRecurring] = useState(true);
+  const [weekTask, setWeekTask] = useState<WeekTask>({ kind: 'today' });
+  const [weekTaskActive, setWeekTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -213,6 +216,48 @@ export default function App() {
         isToday: date.toDateString() === today.toDateString(),
       };
     });
+  }
+
+  function weekTaskQuestion() {
+    const today = new Date().getDay() as Weekday;
+    if (weekTask.kind === 'today') return 'QUE DIA É HOJE?';
+    if (weekTask.kind === 'yesterday') return 'QUAL DIA FOI ONTEM?';
+    if (weekTask.kind === 'tomorrow') return 'QUAL DIA SERÁ AMANHÃ?';
+    if (weekTask.kind === 'previous') return `QUAL DIA VEM ANTES DE ${weekdayLabel(weekTask.referenceWeekday ?? today)}?`;
+    if (weekTask.kind === 'next') return `QUAL DIA VEM DEPOIS DE ${weekdayLabel(weekTask.referenceWeekday ?? today)}?`;
+    const event = weeklyEvents.find((item) => item.id === weekTask.eventId);
+    return event ? `EM QUE DIA ACONTECE ${event.label}?` : 'ESCOLHA UM EVENTO';
+  }
+
+  function expectedWeekdayForTask(): Weekday | null {
+    const today = new Date().getDay() as Weekday;
+    if (weekTask.kind === 'today') return today;
+    if (weekTask.kind === 'yesterday') return ((today + 6) % 7) as Weekday;
+    if (weekTask.kind === 'tomorrow') return ((today + 1) % 7) as Weekday;
+    if (weekTask.kind === 'previous') return (((weekTask.referenceWeekday ?? today) + 6) % 7) as Weekday;
+    if (weekTask.kind === 'next') return (((weekTask.referenceWeekday ?? today) + 1) % 7) as Weekday;
+    if (weekTask.kind === 'event') {
+      return weeklyEvents.find((item) => item.id === weekTask.eventId)?.weekday ?? null;
+    }
+    return null;
+  }
+
+  function answerWeekTask(day: Weekday) {
+    if (!weekTaskActive) return;
+    const expected = expectedWeekdayForTask();
+    if (expected === null) {
+      setFeedback('ATIVIDADE INCOMPLETA');
+      return;
+    }
+    const correct = day === expected;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `SEMANA ${weekdayLabel(day)}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setWeekTaskActive(false);
   }
 
   function addWeeklyEvent() {
@@ -482,6 +527,7 @@ export default function App() {
     setSpatialTaskActive(false);
     setTemporalTaskActive(false);
     setTemporalEventQuestionId(null);
+    setWeekTaskActive(false);
     setCompareMode('now');
   }
 
@@ -713,7 +759,16 @@ export default function App() {
 
             <div className="week-grid">
               {getWeekDays().map(({ weekday, date, isToday }) => (
-                <section className={isToday ? 'week-day today' : 'week-day'} key={weekday}>
+                <button
+                  type="button"
+                  className={[
+                    'week-day',
+                    isToday ? 'today' : '',
+                    weekTaskActive ? 'answerable' : '',
+                  ].join(' ')}
+                  key={weekday}
+                  onClick={() => answerWeekTask(weekday)}
+                >
                   <header>
                     <strong>{weekdayLabel(weekday)}</strong>
                     <span>{String(date.getDate()).padStart(2, '0')}/{String(date.getMonth() + 1).padStart(2, '0')}</span>
@@ -732,8 +787,83 @@ export default function App() {
                       <div className="week-empty">—</div>
                     )}
                   </div>
-                </section>
+                </button>
               ))}
+            </div>
+
+            <div className="week-task-panel">
+              <div className="week-task-config">
+                <label>
+                  <span>ATIVIDADE</span>
+                  <select
+                    value={weekTask.kind}
+                    onChange={(event) => setWeekTask({ kind: event.target.value as WeekTask['kind'] })}
+                  >
+                    <option value="today">QUE DIA É HOJE?</option>
+                    <option value="yesterday">QUAL DIA FOI ONTEM?</option>
+                    <option value="tomorrow">QUAL DIA SERÁ AMANHÃ?</option>
+                    <option value="previous">QUAL DIA VEM ANTES?</option>
+                    <option value="next">QUAL DIA VEM DEPOIS?</option>
+                    <option value="event">EM QUE DIA ACONTECE O EVENTO?</option>
+                  </select>
+                </label>
+
+                {(weekTask.kind === 'previous' || weekTask.kind === 'next') && (
+                  <label>
+                    <span>DIA DE REFERÊNCIA</span>
+                    <select
+                      value={weekTask.referenceWeekday ?? 0}
+                      onChange={(event) => setWeekTask((current) => ({
+                        ...current,
+                        referenceWeekday: Number(event.target.value) as Weekday,
+                      }))}
+                    >
+                      {[0,1,2,3,4,5,6].map((day) => (
+                        <option key={day} value={day}>{weekdayLabel(day as Weekday)}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                {weekTask.kind === 'event' && (
+                  <label>
+                    <span>EVENTO</span>
+                    <select
+                      value={weekTask.eventId ?? ''}
+                      onChange={(event) => setWeekTask((current) => ({
+                        ...current,
+                        eventId: event.target.value || undefined,
+                      }))}
+                    >
+                      <option value="">?</option>
+                      {weeklyEvents.map((event) => (
+                        <option key={event.id} value={event.id}>{event.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (weekTask.kind === 'event' && !weekTask.eventId) {
+                      setFeedback('ESCOLHA UM EVENTO');
+                      return;
+                    }
+                    setWeekTaskActive(true);
+                    setFeedback(null);
+                  }}
+                >
+                  {weekTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR'}
+                </button>
+              </div>
+
+              {weekTaskActive && (
+                <div className="week-task-question">
+                  <strong>{weekTaskQuestion()}</strong>
+                  <span>TOQUE NO DIA CORRETO</span>
+                </div>
+              )}
             </div>
 
             <div className="week-create">
