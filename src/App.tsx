@@ -18,6 +18,7 @@ import type {
   MediationEvent,
   SpatialRelation,
   SpatialTask,
+  TemporalDay,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -77,6 +78,8 @@ export default function App() {
     instruction: 'COLOQUE O ELEMENTO NO LUGAR CERTO',
   });
   const [spatialTaskActive, setSpatialTaskActive] = useState(false);
+  const [temporalTaskActive, setTemporalTaskActive] = useState(false);
+  const [expectedTemporalDay, setExpectedTemporalDay] = useState<TemporalDay>('today');
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -123,6 +126,39 @@ export default function App() {
     spatialTaskSubject && spatialTaskReference
       ? evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation)
       : null;
+
+  function setSceneTemporalDay(day: TemporalDay) {
+    setHistory((current) =>
+      current.map((scene, index) =>
+        index === historyIndex ? { ...scene, temporalDay: day } : scene,
+      ),
+    );
+  }
+
+  function temporalLabel(day?: TemporalDay) {
+    if (day === 'yesterday') return 'ONTEM';
+    if (day === 'tomorrow') return 'AMANHÃ';
+    return 'HOJE';
+  }
+
+  function temporalSymbol(day?: TemporalDay) {
+    if (day === 'yesterday') return '←';
+    if (day === 'tomorrow') return '→';
+    return '●';
+  }
+
+  function validateTemporalTask(day: TemporalDay) {
+    if (!temporalTaskActive) return;
+    const correct = day === expectedTemporalDay;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `TEMPO ${temporalLabel(day)}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (correct) setTemporalTaskActive(false);
+  }
 
   function addToScene(asset: SceneAsset) {
     const entity = toEntity(asset, currentScene.entities.length);
@@ -349,6 +385,7 @@ export default function App() {
     setDraggingEntityId(null);
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
+    setTemporalTaskActive(false);
     setCompareMode('now');
   }
 
@@ -571,6 +608,73 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="temporal-builder">
+            <div className="builder-title">
+              <p className="section-kicker">TEMPO</p>
+              <strong>ONTEM • HOJE • AMANHÃ</strong>
+            </div>
+
+            <div className="temporal-strip" aria-label="Linha temporal">
+              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
+                <button
+                  type="button"
+                  key={day}
+                  className={currentScene.temporalDay === day ? 'temporal-card active' : 'temporal-card'}
+                  onClick={() => {
+                    setSceneTemporalDay(day);
+                    validateTemporalTask(day);
+                  }}
+                >
+                  <span className="temporal-symbol">{temporalSymbol(day)}</span>
+                  <strong>{temporalLabel(day)}</strong>
+                </button>
+              ))}
+            </div>
+
+            <div className="sequence-time">
+              <button type="button" onClick={() => setCompareMode('before')} className={compareMode === 'before' ? 'active' : ''}>
+                <span>←</span>
+                <strong>ANTES</strong>
+              </button>
+              <button type="button" onClick={() => setCompareMode('now')} className={compareMode === 'now' ? 'active' : ''}>
+                <span>●</span>
+                <strong>AGORA</strong>
+              </button>
+              <button type="button" onClick={() => setCompareMode('after')} className={compareMode === 'after' ? 'active' : ''}>
+                <span>→</span>
+                <strong>DEPOIS</strong>
+              </button>
+            </div>
+
+            <div className="temporal-task">
+              <label>
+                <span>ATIVIDADE DIRIGIDA</span>
+                <select
+                  value={expectedTemporalDay}
+                  onChange={(event) => setExpectedTemporalDay(event.target.value as TemporalDay)}
+                >
+                  <option value="yesterday">ONTEM</option>
+                  <option value="today">HOJE</option>
+                  <option value="tomorrow">AMANHÃ</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setTemporalTaskActive(true);
+                  setFeedback(null);
+                }}
+              >
+                {temporalTaskActive ? `ESCOLHA: ${temporalLabel(expectedTemporalDay)}` : 'INICIAR ATIVIDADE'}
+              </button>
+            </div>
+
+            <div className="temporal-current">
+              <span>CENA ATUAL</span>
+              <strong>{temporalLabel(currentScene.temporalDay)}</strong>
+            </div>
+          </section>
 
           <section className="spatial-task-builder">
             <div className="builder-title">
