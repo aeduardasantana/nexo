@@ -30,6 +30,9 @@ import type {
   MentalStateValue,
   MentalTask,
   PerspectiveTask,
+  InformationAccess,
+  AccessState,
+  AccessTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -113,6 +116,9 @@ export default function App() {
   const [mentalTargetLabel, setMentalTargetLabel] = useState('');
   const [perspectiveTask, setPerspectiveTask] = useState<PerspectiveTask>({ kind: 'same_different' });
   const [perspectiveTaskActive, setPerspectiveTaskActive] = useState(false);
+  const [informationAccess, setInformationAccess] = useState<InformationAccess[]>([]);
+  const [accessTask, setAccessTask] = useState<AccessTask>({ kind: 'who_saw' });
+  const [accessTaskActive, setAccessTaskActive] = useState(false);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -562,6 +568,56 @@ export default function App() {
     if (correct) setPerspectiveTaskActive(false);
   }
 
+  function setInformationAccessState(personId: string, sceneId: string, state: AccessState) {
+    setInformationAccess((items) => [
+      ...items.filter((item) => !(item.personId === personId && item.sceneId === sceneId)),
+      {
+        id: crypto.randomUUID(),
+        personId,
+        sceneId,
+        state,
+      },
+    ]);
+    setFeedback(state === 'saw' ? 'VIU' : 'NÃO VIU');
+  }
+
+  function getInformationAccessState(personId?: string, sceneId?: string) {
+    if (!personId || !sceneId) return undefined;
+    return informationAccess.find((item) => item.personId === personId && item.sceneId === sceneId);
+  }
+
+  function startAccessTask() {
+    if (!accessTask.sceneId) {
+      setFeedback('ESCOLHA UMA CENA');
+      return;
+    }
+    const configured = people.filter((person) => getInformationAccessState(person.instanceId, accessTask.sceneId));
+    if (configured.length === 0) {
+      setFeedback('CONFIGURE QUEM VIU OU NÃO VIU A CENA');
+      return;
+    }
+    setAccessTaskActive(true);
+    setFeedback(null);
+  }
+
+  function answerAccessTask(personId: string) {
+    if (!accessTaskActive || !accessTask.sceneId) return;
+    const access = getInformationAccessState(personId, accessTask.sceneId);
+    const correct = access?.state === 'saw';
+
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: accessTask.kind === 'who_saw'
+        ? 'ACESSO VISUAL — QUEM VIU'
+        : 'ACESSO VISUAL — QUEM TEM ACESSO À INFORMAÇÃO',
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (correct) setAccessTaskActive(false);
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -836,6 +892,7 @@ export default function App() {
     setCausalAnswer([]);
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
+    setAccessTaskActive(false);
     setCompareMode('now');
   }
 
@@ -1058,6 +1115,110 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="access-builder">
+            <div className="builder-title">
+              <p className="section-kicker">VIU / NÃO VIU</p>
+              <strong>ACESSO À INFORMAÇÃO</strong>
+            </div>
+
+            <div className="access-config">
+              <label>
+                <span>CENA</span>
+                <select
+                  value={accessTask.sceneId ?? ''}
+                  onChange={(event) => setAccessTask((current) => ({
+                    ...current,
+                    sceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>ATIVIDADE</span>
+                <select
+                  value={accessTask.kind}
+                  onChange={(event) => setAccessTask((current) => ({
+                    ...current,
+                    kind: event.target.value as AccessTask['kind'],
+                  }))}
+                >
+                  <option value="who_saw">QUEM VIU?</option>
+                  <option value="who_knows">QUEM TEM ACESSO À INFORMAÇÃO?</option>
+                </select>
+              </label>
+            </div>
+
+            {accessTask.sceneId && (
+              <div className="access-people">
+                {people.map((person) => {
+                  const access = getInformationAccessState(person.instanceId, accessTask.sceneId);
+                  return (
+                    <div className="access-person" key={person.instanceId}>
+                      <AssetVisual asset={person} size={52} />
+                      <strong>{person.label}</strong>
+                      <div>
+                        <button
+                          type="button"
+                          className={access?.state === 'saw' ? 'active' : ''}
+                          onClick={() => setInformationAccessState(person.instanceId, accessTask.sceneId!, 'saw')}
+                        >
+                          VIU
+                        </button>
+                        <button
+                          type="button"
+                          className={access?.state === 'did_not_see' ? 'active' : ''}
+                          onClick={() => setInformationAccessState(person.instanceId, accessTask.sceneId!, 'did_not_see')}
+                        >
+                          NÃO VIU
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button className="access-start" type="button" onClick={startAccessTask}>
+              {accessTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {accessTaskActive && accessTask.sceneId && (
+              <div className="access-question">
+                <strong>{accessTask.kind === 'who_saw' ? 'QUEM VIU A CENA?' : 'QUEM TEM ACESSO À INFORMAÇÃO DA CENA?'}</strong>
+                <div className="access-answer-options">
+                  {people.map((person) => (
+                    <button type="button" key={person.instanceId} onClick={() => answerAccessTask(person.instanceId)}>
+                      <AssetVisual asset={person} size={46} />
+                      <span>{person.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {accessTask.sceneId && (
+              <div className="access-summary">
+                {people.map((person) => {
+                  const access = getInformationAccessState(person.instanceId, accessTask.sceneId);
+                  return (
+                    <span key={person.instanceId}>
+                      {person.label}: {access ? (access.state === 'saw' ? 'VIU' : 'NÃO VIU') : 'SEM DADO'}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            <p className="access-note">
+              O NEXO REGISTRA ACESSO VISUAL À INFORMAÇÃO. ISSO NÃO É O MESMO QUE PROVAR CONHECIMENTO INTERNO.
+            </p>
+          </section>
 
           <section className="perspective-builder">
             <div className="builder-title">
