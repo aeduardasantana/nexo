@@ -25,6 +25,10 @@ import type {
   WeekTask,
   NarrativeTask,
   CausalTask,
+  MentalState,
+  MentalStateKind,
+  MentalStateValue,
+  MentalTask,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -102,6 +106,10 @@ export default function App() {
   const [causalTask, setCausalTask] = useState<CausalTask>({ kind: 'what_after' });
   const [causalTaskActive, setCausalTaskActive] = useState(false);
   const [causalAnswer, setCausalAnswer] = useState<string[]>([]);
+  const [mentalStates, setMentalStates] = useState<MentalState[]>([]);
+  const [mentalTask, setMentalTask] = useState<MentalTask>({ kind: 'choose_self' });
+  const [mentalTaskActive, setMentalTaskActive] = useState(false);
+  const [mentalTargetLabel, setMentalTargetLabel] = useState('');
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -404,6 +412,65 @@ export default function App() {
     }
   }
 
+  function mentalLabel(kind: MentalStateKind, value: MentalStateValue) {
+    const map: Record<MentalStateKind, Record<MentalStateValue, string>> = {
+      want: { yes: 'QUERO', no: 'NÃO QUERO' },
+      know: { yes: 'SEI', no: 'NÃO SEI' },
+      understand: { yes: 'ENTENDI', no: 'NÃO ENTENDI' },
+      like: { yes: 'GOSTO', no: 'NÃO GOSTO' },
+    };
+    return map[kind][value];
+  }
+
+  function saveMentalState(
+    personId: string,
+    kind: MentalStateKind,
+    value: MentalStateValue,
+    targetLabel?: string,
+  ) {
+    setMentalStates((states) => [
+      ...states.filter((state) => !(state.personId === personId && state.kind === kind && state.targetLabel === targetLabel)),
+      {
+        id: crypto.randomUUID(),
+        personId,
+        kind,
+        value,
+        targetLabel: targetLabel?.trim().toUpperCase() || undefined,
+      },
+    ]);
+    setFeedback(mentalLabel(kind, value));
+  }
+
+  function startMentalTask() {
+    if (!mentalTask.personId || !mentalTask.expectedKind || !mentalTask.expectedValue) {
+      setFeedback('CONFIGURE PESSOA, CONCEITO E RESPOSTA');
+      return;
+    }
+    setMentalTaskActive(true);
+    setFeedback(null);
+  }
+
+  function answerMentalTask(value: MentalStateValue) {
+    if (!mentalTaskActive || !mentalTask.personId || !mentalTask.expectedKind || !mentalTask.expectedValue) return;
+    const correct = value === mentalTask.expectedValue;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `ESTADO MENTAL ${mentalLabel(mentalTask.expectedKind!, value)}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    if (mentalTask.kind === 'choose_self') {
+      saveMentalState(
+        mentalTask.personId,
+        mentalTask.expectedKind,
+        value,
+        mentalTask.targetLabel,
+      );
+    }
+    if (correct) setMentalTaskActive(false);
+  }
+
   function addWeeklyEvent() {
     const label = newWeeklyEventLabel.trim().toUpperCase();
     if (!label) {
@@ -676,6 +743,7 @@ export default function App() {
     setNarrativeAnswer([]);
     setCausalTaskActive(false);
     setCausalAnswer([]);
+    setMentalTaskActive(false);
     setCompareMode('now');
   }
 
@@ -898,6 +966,108 @@ export default function App() {
               )}
             </div>
           )}
+
+          <section className="mental-state-builder">
+            <div className="builder-title">
+              <p className="section-kicker">EU PENSO / EU QUERO / EU GOSTO</p>
+              <strong>COMUNICAÇÃO DE ESTADOS E PREFERÊNCIAS</strong>
+            </div>
+
+            <div className="mental-config">
+              <label>
+                <span>PESSOA</span>
+                <select
+                  value={mentalTask.personId ?? ''}
+                  onChange={(event) => setMentalTask((current) => ({
+                    ...current,
+                    personId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>CONCEITO</span>
+                <select
+                  value={mentalTask.expectedKind ?? ''}
+                  onChange={(event) => setMentalTask((current) => ({
+                    ...current,
+                    expectedKind: (event.target.value || undefined) as MentalStateKind | undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  <option value="want">QUERER</option>
+                  <option value="know">SABER</option>
+                  <option value="understand">ENTENDER</option>
+                  <option value="like">GOSTAR</option>
+                </select>
+              </label>
+
+              <label>
+                <span>SOBRE</span>
+                <input
+                  value={mentalTask.targetLabel ?? mentalTargetLabel}
+                  onChange={(event) => {
+                    const value = event.target.value.toUpperCase();
+                    setMentalTargetLabel(value);
+                    setMentalTask((current) => ({ ...current, targetLabel: value }));
+                  }}
+                  placeholder="EX.: IGREJA"
+                />
+              </label>
+
+              <label>
+                <span>RESPOSTA ESPERADA</span>
+                <select
+                  value={mentalTask.expectedValue ?? ''}
+                  onChange={(event) => setMentalTask((current) => ({
+                    ...current,
+                    expectedValue: (event.target.value || undefined) as MentalStateValue | undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  <option value="yes">SIM</option>
+                  <option value="no">NÃO</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mental-actions">
+              <button type="button" onClick={startMentalTask}>
+                {mentalTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+              </button>
+            </div>
+
+            {mentalTaskActive && mentalTask.expectedKind && (
+              <div className="mental-choice">
+                <button type="button" onClick={() => answerMentalTask('yes')}>
+                  <span>✓</span>
+                  <strong>{mentalLabel(mentalTask.expectedKind, 'yes')}</strong>
+                </button>
+                <button type="button" onClick={() => answerMentalTask('no')}>
+                  <span>✕</span>
+                  <strong>{mentalLabel(mentalTask.expectedKind, 'no')}</strong>
+                </button>
+              </div>
+            )}
+
+            {mentalTask.personId && (
+              <div className="mental-summary">
+                {mentalStates
+                  .filter((state) => state.personId === mentalTask.personId)
+                  .map((state) => (
+                    <span key={state.id}>
+                      {mentalLabel(state.kind, state.value)}
+                      {state.targetLabel ? ` — ${state.targetLabel}` : ''}
+                    </span>
+                  ))}
+              </div>
+            )}
+          </section>
 
           <section className="causal-task-builder">
             <div className="builder-title">
