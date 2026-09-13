@@ -698,3 +698,175 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     font-size: 1.8rem;
   }
 }
+
+
+.asset-svg {
+  display: block;
+  color: currentColor;
+}
+
+.scene-item .asset-svg {
+  transition: transform .35s ease, opacity .35s ease;
+}
+
+.verb-visual {
+  display: grid;
+  place-items: center;
+  color: currentColor;
+}
+
+.verb-visual svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.verb-head {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+}
+
+.verb-body,
+.verb-arrow,
+.verb-seat,
+.verb-cup {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.verb-object {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+}
+
+.verb-seat,
+.verb-cup,
+.verb-object,
+.verb-arrow {
+  opacity: 0;
+}
+
+.verb-take .verb-object,
+.verb-take .verb-arrow,
+.verb-give .verb-object,
+.verb-give .verb-arrow,
+.verb-go .verb-arrow,
+.verb-sit .verb-seat,
+.verb-eat .verb-object,
+.verb-drink .verb-cup {
+  opacity: 1;
+}
+
+.verb-sleep .verb-body {
+  transform-origin: 32px 60px;
+  transform: rotate(65deg) translate(8px, -8px);
+}
+
+.verb-walk.is-animated .verb-body,
+.verb-go.is-animated .verb-body {
+  animation: verbWalk 1s ease-in-out infinite alternate;
+}
+
+.verb-take.is-animated .verb-object {
+  animation: verbTake 1.2s ease-in-out infinite;
+}
+
+.verb-give.is-animated .verb-object {
+  animation: verbGive 1.4s ease-in-out infinite;
+}
+
+.verb-go.is-animated .verb-arrow {
+  animation: verbArrow 1s ease-in-out infinite;
+}
+
+.verb-sit.is-animated .verb-body {
+  animation: verbSit 1.3s ease-in-out infinite;
+  transform-origin: 32px 60px;
+}
+
+.verb-eat.is-animated .verb-object,
+.verb-drink.is-animated .verb-cup {
+  animation: verbConsume 1.2s ease-in-out infinite;
+}
+
+.activity-taking {
+  animation: actorReach .55s ease both;
+}
+
+.activity-giving {
+  animation: actorReach .65s ease both;
+}
+
+.activity-going,
+.activity-walking {
+  animation: actorMove .8s ease both;
+}
+
+.activity-eating,
+.activity-drinking {
+  animation: actorConsume .7s ease both;
+}
+
+.activity-sleeping {
+  transform: rotate(72deg);
+  transform-origin: center bottom;
+}
+
+@keyframes verbWalk {
+  from { transform: translateX(-5px) rotate(-2deg); }
+  to { transform: translateX(6px) rotate(2deg); }
+}
+
+@keyframes verbTake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-24px) translateY(-5px); }
+}
+
+@keyframes verbGive {
+  0% { transform: translateX(-22px); }
+  70%, 100% { transform: translateX(4px); }
+}
+
+@keyframes verbArrow {
+  0%, 100% { transform: translateX(-4px); opacity: .35; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+
+@keyframes verbSit {
+  0%, 35% { transform: translateY(0) rotate(0); }
+  70%, 100% { transform: translateY(10px) rotate(12deg); }
+}
+
+@keyframes verbConsume {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-26px, -28px) scale(.75); }
+}
+
+@keyframes actorReach {
+  from { transform: translateX(0); }
+  to { transform: translateX(12px); }
+}
+
+@keyframes actorMove {
+  from { transform: translateX(-10px); }
+  to { transform: translateX(14px); }
+}
+
+@keyframes actorConsume {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verb-visual *,
+  .scene-item .asset-svg {
+    animation: none !important;
+    transition: none !important;
+  }
+}
