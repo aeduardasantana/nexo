@@ -110,3 +110,18 @@ export type WeeklyEvent = {
   weekday: Weekday;
   recurring: boolean;
 };
+
+
+export type WeekTaskKind =
+  | 'today'
+  | 'yesterday'
+  | 'tomorrow'
+  | 'previous'
+  | 'next'
+  | 'event';
+
+export type WeekTask = {
+  kind: WeekTaskKind;
+  referenceWeekday?: Weekday;
+  eventId?: string;
+};
