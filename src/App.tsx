@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
+import { AssetVisual, VerbVisual } from './components/Visuals';
 import { assets } from './data/assets';
 import { verbRules } from './data/verbs';
 import { executeAction } from './features/actionEngine';
@@ -220,7 +221,7 @@ export default function App() {
         ].join(' ')}
         key={entity.instanceId}
       >
-        <span>{entity.symbol}</span>
+        <AssetVisual asset={entity} size={92} className={entity.activity ? `activity-${entity.activity}` : ''} />
         <small>{entity.label}</small>
         {entity.posture && entity.posture !== 'standing' && (
           <em>{entity.posture === 'sitting' ? 'SENTADO' : 'DORMINDO'}</em>
@@ -321,7 +322,7 @@ export default function App() {
                   className={draft.verbId === verb.id ? 'verb-button active' : 'verb-button'}
                   onClick={() => selectVerb(verb)}
                 >
-                  <span aria-hidden="true">{verb.symbol}</span>
+                  <VerbVisual verb={verb} size={52} animated={draft.verbId === verb.id} />
                   <small>{verb.label}</small>
                 </button>
               ))}
@@ -402,7 +403,7 @@ export default function App() {
                   </div>
                   <div className="sentence-arrow">→</div>
                   <div className="sentence-slot action-slot">
-                    <span aria-hidden="true">{selectedRule.symbol}</span>
+                    <VerbVisual verb={selectedRule} size={54} animated />
                     <strong>{selectedRule.label}</strong>
                   </div>
                   {selectedRule.requires.includes('object') && (
@@ -454,7 +455,7 @@ export default function App() {
                           className={draft.actorId === person.instanceId ? 'visual-option active' : 'visual-option'}
                           onClick={() => updateDraft('actorId', person.instanceId)}
                         >
-                          <span>{person.symbol}</span>
+                          <AssetVisual asset={person} size={54} />
                           <small>{person.label}</small>
                         </button>
                       ))}
@@ -472,7 +473,7 @@ export default function App() {
                             className={draft.objectId === object.instanceId ? 'visual-option active' : 'visual-option'}
                             onClick={() => updateDraft('objectId', object.instanceId)}
                           >
-                            <span>{object.symbol}</span>
+                            <AssetVisual asset={object} size={54} />
                             <small>{object.label}</small>
                           </button>
                         ))}
@@ -491,7 +492,7 @@ export default function App() {
                             className={draft.targetPersonId === person.instanceId ? 'visual-option active' : 'visual-option'}
                             onClick={() => updateDraft('targetPersonId', person.instanceId)}
                           >
-                            <span>{person.symbol}</span>
+                            <AssetVisual asset={person} size={54} />
                             <small>{person.label}</small>
                           </button>
                         ))}
@@ -510,7 +511,7 @@ export default function App() {
                             className={draft.destinationId === item.instanceId ? 'visual-option active' : 'visual-option'}
                             onClick={() => updateDraft('destinationId', item.instanceId)}
                           >
-                            <span>{item.symbol}</span>
+                            <AssetVisual asset={item} size={54} />
                             <small>{item.label}</small>
                           </button>
                         ))}
@@ -529,7 +530,7 @@ export default function App() {
                             className={draft.seatId === item.instanceId ? 'visual-option active' : 'visual-option'}
                             onClick={() => updateDraft('seatId', item.instanceId)}
                           >
-                            <span>{item.symbol}</span>
+                            <AssetVisual asset={item} size={54} />
                             <small>{item.label}</small>
                           </button>
                         ))}
