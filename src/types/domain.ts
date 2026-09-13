@@ -214,3 +214,11 @@ export type RelocationPerspectiveTask = {
   sawMovePersonIds: string[];
   referencePersonId?: string;
 };
+
+
+export type RelocationSequenceStep = 'current_location' | 'who_saw' | 'person_search';
+
+export type RelocationSequenceState = {
+  step: RelocationSequenceStep;
+  completedSteps: RelocationSequenceStep[];
+};
