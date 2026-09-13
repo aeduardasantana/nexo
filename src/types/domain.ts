@@ -69,6 +69,9 @@ export type MediationEvent = {
   type: MediationEventType;
   label: string;
   createdAt: string;
+  difficulty?: DifficultyLevel;
+  optionCount?: 2 | 3 | 4;
+  useDistractors?: boolean;
 };
 
 
@@ -221,4 +224,24 @@ export type RelocationSequenceStep = 'current_location' | 'who_saw' | 'person_se
 export type RelocationSequenceState = {
   step: RelocationSequenceStep;
   completedSteps: RelocationSequenceStep[];
+};
+
+
+export type DifficultyLevel = 1 | 2 | 3;
+export type MediationLevel = 0 | 1 | 2 | 3;
+
+export type ActivitySupportConfig = {
+  difficulty: DifficultyLevel;
+  optionCount: 2 | 3 | 4;
+  useDistractors: boolean;
+};
+
+export type MediationAssessment = {
+  id: string;
+  sourceEventId?: string;
+  level: MediationLevel;
+  difficulty: DifficultyLevel;
+  optionCount: 2 | 3 | 4;
+  useDistractors: boolean;
+  createdAt: string;
 };
