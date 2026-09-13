@@ -1457,3 +1457,160 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.week-builder {
+  border: 1px solid #dedbd3;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f5f2eb;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(100px, 1fr));
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.week-day {
+  border: 1px solid #cec8be;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.week-day.today {
+  outline: 2px solid #161616;
+  outline-offset: 2px;
+}
+
+.week-day header {
+  padding: 9px 7px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  background: #faf9f6;
+  border-bottom: 1px solid #dedbd3;
+}
+
+.week-day header strong {
+  font-size: .62rem;
+}
+
+.week-day header span {
+  font-size: .7rem;
+  font-weight: 850;
+}
+
+.week-day header small {
+  font-size: .56rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+}
+
+.week-events {
+  min-height: 78px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 7px;
+}
+
+.week-event {
+  border: 1px solid #d5d0c7;
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px;
+  display: grid;
+  gap: 3px;
+}
+
+.week-event strong {
+  font-size: .62rem;
+}
+
+.week-event small {
+  font-size: .52rem;
+  font-weight: 800;
+  color: #6f6b63;
+}
+
+.week-empty {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  color: #aaa49a;
+}
+
+.week-create {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(130px, 1fr) minmax(150px, 1fr) minmax(130px, auto);
+  gap: 10px;
+  align-items: end;
+}
+
+.week-create label {
+  display: grid;
+  gap: 5px;
+}
+
+.week-create label > span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.week-create input,
+.week-create select,
+.week-create button {
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.week-create button {
+  background: #161616;
+  color: #fff;
+  cursor: pointer;
+}
+
+.week-check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px !important;
+  min-height: 44px;
+  border: 1px solid #c9c5bc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.week-check input {
+  min-height: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .week-create {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .week-create {
+    grid-template-columns: 1fr;
+  }
+
+  .week-grid {
+    grid-template-columns: repeat(7, 110px);
+  }
+}
