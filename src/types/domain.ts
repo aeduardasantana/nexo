@@ -112,6 +112,7 @@ export type WeeklyEvent = {
   label: string;
   weekday: Weekday;
   recurring: boolean;
+  date?: string;
 };
 
 
@@ -261,6 +262,8 @@ export type SessionReport = {
   mediationAssessments: MediationAssessment[];
   mentalStates: MentalState[];
   informationAccess: InformationAccess[];
+  temporalEvents?: TemporalEvent[];
+  weeklyEvents?: WeeklyEvent[];
   supportConfig: ActivitySupportConfig;
   generatedAt: string;
 };
