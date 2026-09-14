@@ -26,7 +26,7 @@ npm run dev
 
 ## Estrutura
 
-- `src/components` — componentes visuais
-- `src/data` — vocabulário e regras declarativas
-- `src/types` — tipos do domínio
-- `docs` — documentação pedagógica e técnica
+- `src/components` - componentes visuais
+- `src/data` - vocabulário e regras declarativas
+- `src/types` - tipos do domínio
+- `docs` - documentação pedagógica e técnica
