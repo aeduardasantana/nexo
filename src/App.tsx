@@ -1466,10 +1466,11 @@ export default function App() {
       activityMode === 'directed' &&
       directedActivity.expectedUnknown
     ) {
-      setFeedback('❌ ERRADO - A RESPOSTA ESPERADA É NÃO SEI');
+      setFeedback('❌ RESPOSTA DIFERENTE DO ESPERADO - A RESPOSTA É NÃO SEI');
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: 'error',
+        errorKind: 'unexpected',
         label: selectedRule.label,
         createdAt: new Date().toISOString(),
       }]);
@@ -1481,10 +1482,11 @@ export default function App() {
       directedActivity.expectedVerbId &&
       selectedRule.id !== directedActivity.expectedVerbId
     ) {
-      setFeedback('❌ ERRADO');
+      setFeedback('❌ RESPOSTA DIFERENTE DO ESPERADO');
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: 'error',
+        errorKind: 'unexpected',
         label: selectedRule.label,
         createdAt: new Date().toISOString(),
       }]);
@@ -1493,10 +1495,18 @@ export default function App() {
 
     const result = executeAction(currentScene, draft, selectedRule);
     if (!result.ok) {
-      setFeedback(`❌ ERRADO - ${result.error}`);
+      const prefix =
+        result.errorKind === 'incomplete'
+          ? '⚠ ESTRUTURA INCOMPLETA'
+          : result.errorKind === 'impossible'
+            ? '❌ COMBINAÇÃO IMPOSSÍVEL'
+            : '❌ ERRADO';
+
+      setFeedback(`${prefix} - ${result.error}`);
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: 'error',
+        errorKind: result.errorKind,
         label: result.error,
         createdAt: new Date().toISOString(),
       }]);
@@ -2070,6 +2080,7 @@ export default function App() {
                         <strong>{event.label}</strong>
                         <small>
                           {event.type.toUpperCase()}
+                          {event.errorKind ? ` - ${event.errorKind === 'incomplete' ? 'ESTRUTURA INCOMPLETA' : event.errorKind === 'impossible' ? 'COMBINAÇÃO IMPOSSÍVEL' : event.errorKind === 'unexpected' ? 'DIFERENTE DO ESPERADO' : 'RESPOSTA INCORRETA'}` : ''}
                           {assessment ? ` - MEDIAÇÃO ${assessment.level} - DIFICULDADE ${assessment.difficulty} - ${assessment.optionCount} OPÇÕES` : ''}
                         </small>
                       </div>
@@ -3831,11 +3842,12 @@ export default function App() {
             <button type="button" className={compareMode === 'after' ? 'active' : ''} onClick={() => setCompareMode('after')}>DEPOIS</button>
             <button type="button" className={compareMode === 'compare' ? 'active' : ''} onClick={() => setCompareMode('compare')}>ANTES × DEPOIS</button>
             <button type="button" onClick={() => {
-              setFeedback('❌ ERRADO');
+              setFeedback('❌ RESPOSTA INCORRETA');
               setMediationEvents((events) => [...events, {
                 id: crypto.randomUUID(),
                 type: 'error',
-                label: 'ERRADO',
+                errorKind: 'incorrect',
+                label: 'RESPOSTA INCORRETA',
                 createdAt: new Date().toISOString(),
               }]);
             }}>❌ ERRADO</button>
