@@ -245,3 +245,22 @@ export type MediationAssessment = {
   useDistractors: boolean;
   createdAt: string;
 };
+
+
+export type SessionMetadata = {
+  participant: string;
+  date: string;
+  objective: string;
+  notes: string;
+};
+
+export type SessionReport = {
+  metadata: SessionMetadata;
+  scenes: SceneState[];
+  mediationEvents: MediationEvent[];
+  mediationAssessments: MediationAssessment[];
+  mentalStates: MentalState[];
+  informationAccess: InformationAccess[];
+  supportConfig: ActivitySupportConfig;
+  generatedAt: string;
+};
