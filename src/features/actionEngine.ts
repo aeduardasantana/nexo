@@ -161,6 +161,7 @@ export function executeAction(
       id: crypto.randomUUID(),
       entities,
       actionLabel: rule.label,
+      temporalDay: scene.temporalDay,
     },
   };
 }
