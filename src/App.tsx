@@ -98,6 +98,7 @@ export default function App() {
   const [storyArchive, setStoryArchive] = useState<SceneState[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [draft, setDraft] = useState<ActionDraft>({ verbId: '' });
+  const [actionIssueRole, setActionIssueRole] = useState<'actor' | 'object' | 'targetPerson' | 'destination' | 'seat' | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after' | 'compare'>('now');
   const [isReplaying, setIsReplaying] = useState(false);
@@ -1408,11 +1409,13 @@ export default function App() {
 
   function selectVerb(rule: VerbRule) {
     setDraft({ verbId: rule.id });
+    setActionIssueRole(null);
     setFeedback(null);
   }
 
   function updateDraft<K extends keyof ActionDraft>(key: K, value: ActionDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+    if (key === actionIssueRole || key === 'verbId') setActionIssueRole(null);
     setFeedback(null);
   }
 
@@ -1502,6 +1505,7 @@ export default function App() {
             ? '❌ COMBINAÇÃO IMPOSSÍVEL'
             : '❌ ERRADO';
 
+      setActionIssueRole(result.role ?? null);
       setFeedback(`${prefix} - ${result.error}`);
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
@@ -1517,6 +1521,7 @@ export default function App() {
     setHistory(nextHistory);
     setHistoryIndex(nextHistory.length - 1);
     setCompareMode('now');
+    setActionIssueRole(null);
     setFeedback(`✓ ${selectedRule.label}`);
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
@@ -1579,6 +1584,7 @@ export default function App() {
     setStoryArchive([]);
     setHistoryIndex(0);
     setDraft({ verbId: '' });
+    setActionIssueRole(null);
     setFeedback(null);
     setSelectedEntityId(null);
     setDraggingEntityId(null);
@@ -1656,6 +1662,7 @@ export default function App() {
     setHistory([initialScene]);
     setHistoryIndex(0);
     setDraft({ verbId: '' });
+    setActionIssueRole(null);
     setFeedback(null);
     setSelectedEntityId(null);
     setDraggingEntityId(null);
@@ -3687,7 +3694,7 @@ export default function App() {
             {selectedRule && (
               <>
                 <div className="visual-sentence" aria-label="Prévia visual da ação">
-                  <div className="sentence-slot">
+                  <div className={actionIssueRole === 'actor' ? 'sentence-slot issue' : 'sentence-slot'}>
                     <span className="slot-label">QUEM</span>
                     <strong>{findLabel(currentScene, draft.actorId)}</strong>
                   </div>
@@ -3699,7 +3706,7 @@ export default function App() {
                   {selectedRule.requires.includes('object') && (
                     <>
                       <div className="sentence-arrow">→</div>
-                      <div className="sentence-slot">
+                      <div className={actionIssueRole === 'object' ? 'sentence-slot issue' : 'sentence-slot'}>
                         <span className="slot-label">OBJETO</span>
                         <strong>{findLabel(currentScene, draft.objectId)}</strong>
                       </div>
@@ -3708,7 +3715,7 @@ export default function App() {
                   {selectedRule.requires.includes('targetPerson') && (
                     <>
                       <div className="sentence-arrow">→</div>
-                      <div className="sentence-slot">
+                      <div className={actionIssueRole === 'targetPerson' ? 'sentence-slot issue' : 'sentence-slot'}>
                         <span className="slot-label">PARA QUEM</span>
                         <strong>{findLabel(currentScene, draft.targetPersonId)}</strong>
                       </div>
@@ -3717,7 +3724,7 @@ export default function App() {
                   {selectedRule.requires.includes('destination') && (
                     <>
                       <div className="sentence-arrow">→</div>
-                      <div className="sentence-slot">
+                      <div className={actionIssueRole === 'destination' ? 'sentence-slot issue' : 'sentence-slot'}>
                         <span className="slot-label">PARA ONDE</span>
                         <strong>{findLabel(currentScene, draft.destinationId)}</strong>
                       </div>
@@ -3726,7 +3733,7 @@ export default function App() {
                   {selectedRule.requires.includes('seat') && (
                     <>
                       <div className="sentence-arrow">→</div>
-                      <div className="sentence-slot">
+                      <div className={actionIssueRole === 'seat' ? 'sentence-slot issue' : 'sentence-slot'}>
                         <span className="slot-label">ONDE</span>
                         <strong>{findLabel(currentScene, draft.seatId)}</strong>
                       </div>
@@ -3735,7 +3742,7 @@ export default function App() {
                 </div>
 
                 <div className="visual-picker">
-                  <section>
+                  <section className={actionIssueRole === 'actor' ? 'picker-section issue' : 'picker-section'}>
                     <span className="picker-title">QUEM</span>
                     <div className="picker-options">
                       {people.map((person) => (
@@ -3753,7 +3760,7 @@ export default function App() {
                   </section>
 
                   {selectedRule.requires.includes('object') && (
-                    <section>
+                    <section className={actionIssueRole === 'object' ? 'picker-section issue' : 'picker-section'}>
                       <span className="picker-title">OBJETO</span>
                       <div className="picker-options">
                         {objects.filter((object) => !object.consumed).map((object) => (
@@ -3772,7 +3779,7 @@ export default function App() {
                   )}
 
                   {selectedRule.requires.includes('targetPerson') && (
-                    <section>
+                    <section className={actionIssueRole === 'targetPerson' ? 'picker-section issue' : 'picker-section'}>
                       <span className="picker-title">PARA QUEM</span>
                       <div className="picker-options">
                         {people.map((person) => (
@@ -3791,7 +3798,7 @@ export default function App() {
                   )}
 
                   {selectedRule.requires.includes('destination') && (
-                    <section>
+                    <section className={actionIssueRole === 'destination' ? 'picker-section issue' : 'picker-section'}>
                       <span className="picker-title">PARA ONDE</span>
                       <div className="picker-options">
                         {placesAndSeats.map((item) => (
@@ -3810,7 +3817,7 @@ export default function App() {
                   )}
 
                   {selectedRule.requires.includes('seat') && (
-                    <section>
+                    <section className={actionIssueRole === 'seat' ? 'picker-section issue' : 'picker-section'}>
                       <span className="picker-title">ONDE</span>
                       <div className="picker-options">
                         {placesAndSeats.filter((item) => ['CADEIRA', 'SOFÁ', 'CAMA'].includes(item.label)).map((item) => (
