@@ -70,8 +70,8 @@ function toEntity(asset: SceneAsset, index: number): EntityState {
 }
 
 function findLabel(scene: SceneState, instanceId?: string) {
-  if (!instanceId) return '—';
-  return scene.entities.find((entity) => entity.instanceId === instanceId)?.label ?? '—';
+  if (!instanceId) return ' - ';
+  return scene.entities.find((entity) => entity.instanceId === instanceId)?.label ?? ' - ';
 }
 
 export default function App() {
@@ -217,7 +217,7 @@ export default function App() {
       useDistractors: supportConfig.useDistractors,
       createdAt: new Date().toISOString(),
     }]);
-    setFeedback(`MEDIAÇÃO ${level} — ${mediationLevelLabel(level)}`);
+    setFeedback(`MEDIAÇÃO ${level} - ${mediationLevelLabel(level)}`);
   }
 
   function buildSessionReport(): SessionReport {
@@ -301,7 +301,7 @@ export default function App() {
       const text = await file.text();
       const parsed: unknown = JSON.parse(text);
       if (!isSessionReport(parsed)) {
-        setFeedback('ARQUIVO INVÁLIDO — NÃO É UMA SESSÃO NEXO COMPATÍVEL');
+        setFeedback('ARQUIVO INVÁLIDO - NÃO É UMA SESSÃO NEXO COMPATÍVEL');
         return;
       }
       restoreSessionReport(parsed);
@@ -426,7 +426,7 @@ export default function App() {
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
-      label: `EVENTO ${event.label} — ${temporalLabel(day)}`,
+      label: `EVENTO ${event.label} - ${temporalLabel(day)}`,
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setTemporalEventQuestionId(null);
@@ -585,7 +585,7 @@ export default function App() {
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: correct ? 'correct' : 'error',
-        label: 'CAUSA E CONSEQUÊNCIA — DEPOIS',
+        label: 'CAUSA E CONSEQUÊNCIA - DEPOIS',
         createdAt: new Date().toISOString(),
       }]);
       if (correct) setCausalTaskActive(false);
@@ -598,7 +598,7 @@ export default function App() {
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: correct ? 'correct' : 'error',
-        label: 'CAUSA E CONSEQUÊNCIA — RESULTADO',
+        label: 'CAUSA E CONSEQUÊNCIA - RESULTADO',
         createdAt: new Date().toISOString(),
       }]);
       if (correct) setCausalTaskActive(false);
@@ -620,7 +620,7 @@ export default function App() {
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: correct ? 'correct' : 'error',
-        label: 'CAUSA E CONSEQUÊNCIA — CADEIA',
+        label: 'CAUSA E CONSEQUÊNCIA - CADEIA',
         createdAt: new Date().toISOString(),
       }]);
       if (correct) {
@@ -772,7 +772,7 @@ export default function App() {
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
-      label: `PERSPECTIVA OUTRO — ${mentalLabel(perspectiveTask.stateKind!, value)}`,
+      label: `PERSPECTIVA OUTRO - ${mentalLabel(perspectiveTask.stateKind!, value)}`,
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setPerspectiveTaskActive(false);
@@ -820,8 +820,8 @@ export default function App() {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
       label: accessTask.kind === 'who_saw'
-        ? 'ACESSO VISUAL — QUEM VIU'
-        : 'ACESSO VISUAL — QUEM TEM ACESSO À INFORMAÇÃO',
+        ? 'ACESSO VISUAL - QUEM VIU'
+        : 'ACESSO VISUAL - QUEM TEM ACESSO À INFORMAÇÃO',
       createdAt: new Date().toISOString(),
     }]);
 
@@ -857,7 +857,7 @@ export default function App() {
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
-      label: 'INFORMAÇÃO OCULTA — BASE PARA SABER',
+      label: 'INFORMAÇÃO OCULTA - BASE PARA SABER',
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setHiddenInfoTaskActive(false);
@@ -899,7 +899,7 @@ export default function App() {
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
-      label: 'MUDANÇA DE LOCAL — ONDE TEM BASE PARA PROCURAR',
+      label: 'MUDANÇA DE LOCAL - ONDE TEM BASE PARA PROCURAR',
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setRelocationTaskActive(false);
@@ -936,7 +936,7 @@ export default function App() {
     if (!relocationSequenceActive || relocationSequence.step !== 'current_location') return;
     const correct = locationId === relocationTask.currentLocationId;
     setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
-    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — LOCAL ATUAL', correct);
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA - LOCAL ATUAL', correct);
     if (correct) {
       setRelocationSequence({
         step: 'who_saw',
@@ -963,7 +963,7 @@ export default function App() {
       expected.every((id, index) => id === answer[index]);
 
     setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
-    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — QUEM VIU', correct);
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA - QUEM VIU', correct);
 
     if (correct) {
       setRelocationSequence({
@@ -977,8 +977,8 @@ export default function App() {
     if (!relocationSequenceActive || relocationSequence.step !== 'person_search' || !relocationTask.referencePersonId) return;
     const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
     const correct = locationId === expected;
-    setFeedback(correct ? '✓ CORRETO — SEQUÊNCIA CONCLUÍDA' : '❌ ERRADO');
-    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA — LOCAL DE PROCURA', correct);
+    setFeedback(correct ? '✓ CORRETO - SEQUÊNCIA CONCLUÍDA' : '❌ ERRADO');
+    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA - LOCAL DE PROCURA', correct);
 
     if (correct) {
       setRelocationSequence({
@@ -1191,7 +1191,7 @@ export default function App() {
 
     const result = executeAction(currentScene, draft, selectedRule);
     if (!result.ok) {
-      setFeedback(`❌ ERRADO — ${result.error}`);
+      setFeedback(`❌ ERRADO - ${result.error}`);
       setMediationEvents((events) => [...events, {
         id: crypto.randomUUID(),
         type: 'error',
@@ -1540,7 +1540,7 @@ export default function App() {
           </div>
 
           <div className="mediation-scale">
-            <span>REGISTRAR MEDIAÇÃO 0–3</span>
+            <span>REGISTRAR MEDIAÇÃO 0 - 3</span>
             <div>
               {([0, 1, 2, 3] as MediationLevel[]).map((level) => (
                 <button type="button" key={level} onClick={() => registerMediationAssessment(level)}>
@@ -1558,7 +1558,7 @@ export default function App() {
           <header className="report-header">
             <div>
               <p>PROJETO EU, NÓS E O OUTRO</p>
-              <h2>RELATÓRIO DE SESSÃO — NEXO</h2>
+              <h2>RELATÓRIO DE SESSÃO - NEXO</h2>
             </div>
             <div className="report-actions no-print">
               <button type="button" onClick={() => {
@@ -1578,7 +1578,7 @@ export default function App() {
           <section className="report-kpis">
             <div><strong>{Math.max(0, history.length - 1)}</strong><span>CENAS</span></div>
             <div><strong>{mediationEvents.length}</strong><span>EVENTOS</span></div>
-            <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0–3</span></div>
+            <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0 - 3</span></div>
             <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
           </section>
 
@@ -1593,7 +1593,7 @@ export default function App() {
           </section>
 
           <section className="report-section">
-            <h3>ESCALA DE MEDIAÇÃO 0–3</h3>
+            <h3>ESCALA DE MEDIAÇÃO 0 - 3</h3>
             <div className="report-mediation-grid">
               {assessmentCounts().map(({ level, count }) => (
                 <div key={level}>
@@ -1664,8 +1664,8 @@ export default function App() {
               ) : (
                 mentalStates.map((state) => (
                   <span key={state.id}>
-                    {findLabel(currentScene, state.personId)} — {mentalLabel(state.kind, state.value)}
-                    {state.targetLabel ? ` — ${state.targetLabel}` : ''}
+                    {findLabel(currentScene, state.personId)} - {mentalLabel(state.kind, state.value)}
+                    {state.targetLabel ? ` - ${state.targetLabel}` : ''}
                   </span>
                 ))
               )}
@@ -2042,7 +2042,7 @@ export default function App() {
                 >
                   <option value="">?</option>
                   {history.slice(1).map((scene, index) => (
-                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
                   ))}
                 </select>
               </label>
@@ -2154,7 +2154,7 @@ export default function App() {
                 >
                   <option value="">?</option>
                   {history.slice(1).map((scene, index) => (
-                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
                   ))}
                 </select>
               </label>
@@ -2363,7 +2363,7 @@ export default function App() {
                       <strong>{findLabel(currentScene, personId)}</strong>
                       <span>
                         {state
-                          ? `${mentalLabel(state.kind, state.value)}${state.targetLabel ? ` — ${state.targetLabel}` : ''}`
+                          ? `${mentalLabel(state.kind, state.value)}${state.targetLabel ? ` - ${state.targetLabel}` : ''}`
                           : 'SEM DECLARAÇÃO'}
                       </span>
                     </div>
@@ -2468,7 +2468,7 @@ export default function App() {
                   .map((state) => (
                     <span key={state.id}>
                       {mentalLabel(state.kind, state.value)}
-                      {state.targetLabel ? ` — ${state.targetLabel}` : ''}
+                      {state.targetLabel ? ` - ${state.targetLabel}` : ''}
                     </span>
                   ))}
               </div>
@@ -2493,7 +2493,7 @@ export default function App() {
                 >
                   <option value="">?</option>
                   {history.slice(1).map((scene, index) => (
-                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
                   ))}
                 </select>
               </label>
@@ -2509,7 +2509,7 @@ export default function App() {
                 >
                   <option value="">?</option>
                   {history.slice(1).map((scene, index) => (
-                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
                   ))}
                 </select>
               </label>
@@ -2525,7 +2525,7 @@ export default function App() {
                 >
                   <option value="">?</option>
                   {history.slice(1).map((scene, index) => (
-                    <option key={scene.id} value={scene.id}>CENA {index + 1} — {scene.actionLabel ?? 'AÇÃO'}</option>
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
                   ))}
                 </select>
               </label>
@@ -2609,7 +2609,7 @@ export default function App() {
                 >
                   <option value="first">O QUE ACONTECEU PRIMEIRO?</option>
                   <option value="next">O QUE ACONTECEU DEPOIS?</option>
-                  <option value="order">ORDENAR 2–3 CENAS</option>
+                  <option value="order">ORDENAR 2 - 3 CENAS</option>
                 </select>
               </label>
               <button type="button" onClick={startNarrativeTask}>
@@ -2706,7 +2706,7 @@ export default function App() {
                       event.weekday !== weekday ||
                       (!event.recurring && event.date !== date.toISOString().slice(0, 10))
                     ) && (
-                      <div className="week-empty">—</div>
+                      <div className="week-empty"> - </div>
                     )}
                   </div>
                 </button>
@@ -3315,7 +3315,7 @@ export default function App() {
               }]);
             }}>NÃO SEI</button>
             <button type="button" onClick={() => {
-              setFeedback('NÃO ENTENDI — MOSTRE NOVAMENTE');
+              setFeedback('NÃO ENTENDI - MOSTRE NOVAMENTE');
               setCompareMode('before');
               setMediationEvents((events) => [...events, {
                 id: crypto.randomUUID(),
