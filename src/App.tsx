@@ -204,7 +204,7 @@ export default function App() {
   }
 
   function registerMediationAssessment(level: MediationLevel) {
-    const latestEvent = mediationEvents.at(-1);
+    const latestEvent = mediationEvents.length > 0 ? mediationEvents[mediationEvents.length - 1] : undefined;
     setMediationAssessments((items) => [...items, {
       id: crypto.randomUUID(),
       sourceEventId: latestEvent?.id,
