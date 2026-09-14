@@ -1,4 +1,4 @@
-# MVP — NEXO
+# MVP - NEXO
 
 ## Objetivo
 
