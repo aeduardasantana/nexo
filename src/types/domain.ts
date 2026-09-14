@@ -58,6 +58,7 @@ export type ActivityMode = 'free' | 'directed';
 export type DirectedActivity = {
   instruction: string;
   expectedVerbId?: string;
+  expectedUnknown?: boolean;
   allowUnknown: boolean;
   allowNotUnderstood: boolean;
 };
