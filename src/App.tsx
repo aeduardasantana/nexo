@@ -1319,8 +1319,11 @@ export default function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow">PROJETO EU, NÓS E O OUTRO</p>
-          <h1>NEXO</h1>
-          <p className="subtitle">Sistema Visual de Ação e Narrativa</p>
+          <div className="brand-lockup">
+            <h1>NEXO</h1>
+            <span className="brand-mark" aria-hidden="true">↔</span>
+          </div>
+          <p className="subtitle">Ação, tempo, relações e narrativa visual</p>
         </div>
         <button className="teacher-button" type="button" onClick={() => setTeacherOpen((open) => !open)}>
           {teacherOpen ? 'FECHAR PROFESSORA' : 'MODO PROFESSORA'}
@@ -1741,8 +1744,9 @@ export default function App() {
             <div className={isReplaying ? 'stage is-replaying' : 'stage'} aria-live="polite">
               {displayedScene.entities.filter((entity) => !entity.consumed).length === 0 ? (
                 <div className="empty-state">
-                  <span>＋</span>
-                  <p>ESCOLHA UMA ILUSTRAÇÃO</p>
+                  <span aria-hidden="true">＋</span>
+                  <strong>COMECE A CENA</strong>
+                  <p>ESCOLHA UMA PESSOA, UM OBJETO OU UM LUGAR</p>
                 </div>
               ) : (
                 <div
