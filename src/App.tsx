@@ -529,7 +529,10 @@ export default function App() {
 
   function narrativeQuestion() {
     if (narrativeTask.kind === 'first') return 'O QUE ACONTECEU PRIMEIRO?';
-    if (narrativeTask.kind === 'next') return 'O QUE ACONTECEU DEPOIS?';
+    if (narrativeTask.kind === 'next') {
+      const reference = history.find((scene) => scene.id === narrativeTask.sceneIds[0]);
+      return `O QUE ACONTECEU DEPOIS DE ${reference?.actionLabel ?? 'ESTA CENA'}?`;
+    }
     return 'COLOQUE AS CENAS NA ORDEM';
   }
 
@@ -578,6 +581,15 @@ export default function App() {
       setFeedback('DEFINA PROBLEMA, AÇÃO E RESULTADO');
       return;
     }
+    const distinctScenes = new Set([
+      causalTask.problemSceneId,
+      causalTask.actionSceneId,
+      causalTask.resultSceneId,
+    ]);
+    if (distinctScenes.size !== 3) {
+      setFeedback('USE TRÊS CENAS DIFERENTES');
+      return;
+    }
     setCausalAnswer([]);
     setCausalOptionIds(shuffledCopy([
       causalTask.problemSceneId,
@@ -589,9 +601,15 @@ export default function App() {
   }
 
   function causalQuestion() {
-    if (causalTask.kind === 'what_after') return 'O QUE ACONTECEU DEPOIS DISSO?';
-    if (causalTask.kind === 'what_result') return 'QUAL FOI O RESULTADO?';
-    return 'MONTE: PROBLEMA → AÇÃO → RESULTADO';
+    const problem = history.find((scene) => scene.id === causalTask.problemSceneId);
+    const action = history.find((scene) => scene.id === causalTask.actionSceneId);
+    if (causalTask.kind === 'what_after') {
+      return `O QUE ACONTECEU DEPOIS DE ${problem?.actionLabel ?? 'ESTA SITUAÇÃO'}?`;
+    }
+    if (causalTask.kind === 'what_result') {
+      return `QUAL FOI O RESULTADO DE ${action?.actionLabel ?? 'ESTA AÇÃO'}?`;
+    }
+    return 'MONTE: PROBLEMA - AÇÃO - RESULTADO';
   }
 
   function answerCausalScene(sceneId: string) {
