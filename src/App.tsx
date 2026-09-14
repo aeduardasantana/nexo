@@ -144,6 +144,7 @@ export default function App() {
   });
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
     participant: '',
     date: new Date().toISOString().slice(0, 10),
@@ -241,6 +242,68 @@ export default function App() {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+  }
+
+  function isSessionReport(value: unknown): value is SessionReport {
+    if (!value || typeof value !== 'object') return false;
+    const report = value as Partial<SessionReport>;
+    return Boolean(
+      report.metadata &&
+      typeof report.metadata === 'object' &&
+      Array.isArray(report.scenes) &&
+      Array.isArray(report.mediationEvents) &&
+      Array.isArray(report.mediationAssessments) &&
+      Array.isArray(report.mentalStates) &&
+      Array.isArray(report.informationAccess) &&
+      report.supportConfig &&
+      typeof report.supportConfig === 'object'
+    );
+  }
+
+  function restoreSessionReport(report: SessionReport) {
+    const scenes = report.scenes.length > 0 ? report.scenes : [initialScene];
+    setSessionMetadata(report.metadata);
+    setHistory(scenes);
+    setHistoryIndex(Math.max(0, scenes.length - 1));
+    setMediationEvents(report.mediationEvents);
+    setMediationAssessments(report.mediationAssessments);
+    setMentalStates(report.mentalStates);
+    setInformationAccess(report.informationAccess);
+    setSupportConfig(report.supportConfig);
+    setDraft({ verbId: '' });
+    setFeedback('SESSÃO RESTAURADA');
+    setCompareMode('now');
+    setReportOpen(false);
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setRelationReferenceId(null);
+    setSpatialTaskActive(false);
+    setTemporalTaskActive(false);
+    setWeekTaskActive(false);
+    setNarrativeTaskActive(false);
+    setCausalTaskActive(false);
+    setMentalTaskActive(false);
+    setPerspectiveTaskActive(false);
+    setAccessTaskActive(false);
+    setHiddenInfoTaskActive(false);
+    setRelocationTaskActive(false);
+    setRelocationSequenceActive(false);
+  }
+
+  async function importSessionJson(file: File) {
+    try {
+      const text = await file.text();
+      const parsed: unknown = JSON.parse(text);
+      if (!isSessionReport(parsed)) {
+        setFeedback('ARQUIVO INVÁLIDO — NÃO É UMA SESSÃO NEXO COMPATÍVEL');
+        return;
+      }
+      restoreSessionReport(parsed);
+    } catch {
+      setFeedback('ERRO AO LER O ARQUIVO JSON');
+    } finally {
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
   }
 
   function exportSessionJson() {
@@ -1358,8 +1421,19 @@ export default function App() {
             <div className="session-export">
               <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
               <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
+              <button type="button" onClick={() => importInputRef.current?.click()}>IMPORTAR JSON</button>
               <button type="button" onClick={() => setReportOpen(true)}>VER RELATÓRIO</button>
               <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
+              <input
+                ref={importInputRef}
+                className="session-import-input"
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void importSessionJson(file);
+                }}
+              />
             </div>
           </div>
 
