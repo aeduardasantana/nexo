@@ -96,6 +96,7 @@ export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
   const [history, setHistory] = useState<SceneState[]>([initialScene]);
   const [storyArchive, setStoryArchive] = useState<SceneState[][]>([]);
+  const [personNames, setPersonNames] = useState<Record<string, string>>({});
   const [historyIndex, setHistoryIndex] = useState(0);
   const [draft, setDraft] = useState<ActionDraft>({ verbId: '' });
   const [actionIssueRole, setActionIssueRole] = useState<'actor' | 'object' | 'targetPerson' | 'destination' | 'seat' | null>(null);
@@ -209,8 +210,14 @@ export default function App() {
   }, []);
 
   const visibleAssets = useMemo(
-    () => assets.filter((item) => item.category === category),
-    [category],
+    () => assets
+      .filter((item) => item.category === category)
+      .map((item) =>
+        item.category === 'person' && personNames[item.id]
+          ? { ...item, label: personNames[item.id] }
+          : item,
+      ),
+    [category, personNames],
   );
 
   const people = currentScene.entities.filter((entity) => entity.category === 'person');
@@ -271,11 +278,57 @@ export default function App() {
     setFeedback(`MEDIAÇÃO ${level} - ${mediationLevelLabel(level)}`);
   }
 
+  function renamePersonAsset(assetId: string, rawName: string) {
+    const fallback = assets.find((asset) => asset.id === assetId)?.label ?? 'PESSOA';
+    const nextName = rawName.trim().toUpperCase() || fallback;
+
+    setPersonNames((current) => ({
+      ...current,
+      [assetId]: nextName,
+    }));
+
+    const renameScene = (scene: SceneState): SceneState => ({
+      ...scene,
+      entities: scene.entities.map((entity) =>
+        entity.category === 'person' && entity.id === assetId
+          ? { ...entity, label: nextName }
+          : entity,
+      ),
+    });
+
+    setHistory((current) => current.map(renameScene));
+    setStoryArchive((stories) =>
+      stories.map((story) => story.map(renameScene)),
+    );
+    setFeedback(`NOME ATUALIZADO - ${nextName}`);
+  }
+
+  function resetPersonNames() {
+    const defaults = Object.fromEntries(
+      assets
+        .filter((asset) => asset.category === 'person')
+        .map((asset) => [asset.id, asset.label]),
+    );
+    setPersonNames({});
+    const renameScene = (scene: SceneState): SceneState => ({
+      ...scene,
+      entities: scene.entities.map((entity) =>
+        entity.category === 'person'
+          ? { ...entity, label: defaults[entity.id] ?? entity.label }
+          : entity,
+      ),
+    });
+    setHistory((current) => current.map(renameScene));
+    setStoryArchive((stories) => stories.map((story) => story.map(renameScene)));
+    setFeedback('NOMES DAS PESSOAS RESTAURADOS');
+  }
+
   function buildSessionReport(): SessionReport {
     return {
       metadata: sessionMetadata,
       scenes: history,
       storyArchive,
+      personNames,
       mediationEvents,
       mediationAssessments,
       mentalStates,
@@ -322,6 +375,7 @@ export default function App() {
     setSessionMetadata(report.metadata);
     setHistory(scenes);
     setStoryArchive(report.storyArchive ?? []);
+    setPersonNames(report.personNames ?? {});
     setHistoryIndex(Math.max(0, scenes.length - 1));
     setMediationEvents(report.mediationEvents);
     setMediationAssessments(report.mediationAssessments);
@@ -1610,6 +1664,7 @@ export default function App() {
     stopReplay();
     setHistory([initialScene]);
     setStoryArchive([]);
+    setPersonNames({});
     setHistoryIndex(0);
     setDraft({ verbId: '' });
     setActionIssueRole(null);
@@ -1996,6 +2051,31 @@ export default function App() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="person-customization">
+            <div className="person-customization-heading">
+              <div>
+                <span>PESSOAS</span>
+                <strong>PERSONALIZAR NOMES</strong>
+              </div>
+              <button type="button" onClick={resetPersonNames}>RESTAURAR</button>
+            </div>
+            <div className="person-name-grid">
+              {assets
+                .filter((asset) => asset.category === 'person')
+                .map((person) => (
+                  <label key={person.id}>
+                    <span>{person.label}</span>
+                    <input
+                      value={personNames[person.id] ?? person.label}
+                      onChange={(event) => renamePersonAsset(person.id, event.target.value)}
+                      aria-label={`Nome para ${person.label}`}
+                    />
+                  </label>
+                ))}
+            </div>
+            <small>O NOME MUDA NA TELA, NAS HISTÓRIAS E NO RELATÓRIO. O ID INTERNO NÃO MUDA.</small>
           </div>
 
           <div className="teacher-support">
