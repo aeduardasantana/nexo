@@ -697,8 +697,12 @@ export default function App() {
   }
 
   function startMentalTask() {
-    if (!mentalTask.personId || !mentalTask.expectedKind || !mentalTask.expectedValue) {
-      setFeedback('CONFIGURE PESSOA, CONCEITO E RESPOSTA');
+    if (!mentalTask.personId || !mentalTask.expectedKind) {
+      setFeedback('CONFIGURE PESSOA E CONCEITO');
+      return;
+    }
+    if (mentalTask.kind === 'identify' && !mentalTask.expectedValue) {
+      setFeedback('CONFIGURE A RESPOSTA ESPERADA');
       return;
     }
     setMentalTaskActive(true);
@@ -706,15 +710,8 @@ export default function App() {
   }
 
   function answerMentalTask(value: MentalStateValue) {
-    if (!mentalTaskActive || !mentalTask.personId || !mentalTask.expectedKind || !mentalTask.expectedValue) return;
-    const correct = value === mentalTask.expectedValue;
-    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
-    setMediationEvents((events) => [...events, {
-      id: crypto.randomUUID(),
-      type: correct ? 'correct' : 'error',
-      label: `ESTADO MENTAL ${mentalLabel(mentalTask.expectedKind!, value)}`,
-      createdAt: new Date().toISOString(),
-    }]);
+    if (!mentalTaskActive || !mentalTask.personId || !mentalTask.expectedKind) return;
+
     if (mentalTask.kind === 'choose_self') {
       saveMentalState(
         mentalTask.personId,
@@ -722,7 +719,19 @@ export default function App() {
         value,
         mentalTask.targetLabel,
       );
+      setMentalTaskActive(false);
+      return;
     }
+
+    if (!mentalTask.expectedValue) return;
+    const correct = value === mentalTask.expectedValue;
+    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      label: `ESTADO DECLARADO - ${mentalLabel(mentalTask.expectedKind!, value)}`,
+      createdAt: new Date().toISOString(),
+    }]);
     if (correct) setMentalTaskActive(false);
   }
 
@@ -2419,6 +2428,21 @@ export default function App() {
 
             <div className="mental-config">
               <label>
+                <span>TIPO</span>
+                <select
+                  value={mentalTask.kind}
+                  onChange={(event) => setMentalTask((current) => ({
+                    ...current,
+                    kind: event.target.value as MentalTask['kind'],
+                    expectedValue: event.target.value === 'choose_self' ? undefined : current.expectedValue,
+                  }))}
+                >
+                  <option value="choose_self">DECLARAR</option>
+                  <option value="identify">IDENTIFICAR</option>
+                </select>
+              </label>
+
+              <label>
                 <span>PESSOA</span>
                 <select
                   value={mentalTask.personId ?? ''}
@@ -2464,20 +2488,22 @@ export default function App() {
                 />
               </label>
 
-              <label>
-                <span>RESPOSTA ESPERADA</span>
-                <select
-                  value={mentalTask.expectedValue ?? ''}
-                  onChange={(event) => setMentalTask((current) => ({
-                    ...current,
-                    expectedValue: (event.target.value || undefined) as MentalStateValue | undefined,
-                  }))}
-                >
-                  <option value="">?</option>
-                  <option value="yes">SIM</option>
-                  <option value="no">NÃO</option>
-                </select>
-              </label>
+              {mentalTask.kind === 'identify' && (
+                <label>
+                  <span>RESPOSTA ESPERADA</span>
+                  <select
+                    value={mentalTask.expectedValue ?? ''}
+                    onChange={(event) => setMentalTask((current) => ({
+                      ...current,
+                      expectedValue: (event.target.value || undefined) as MentalStateValue | undefined,
+                    }))}
+                  >
+                    <option value="">?</option>
+                    <option value="yes">SIM</option>
+                    <option value="no">NÃO</option>
+                  </select>
+                </label>
+              )}
             </div>
 
             <div className="mental-actions">
