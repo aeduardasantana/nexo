@@ -266,5 +266,7 @@ export type SessionReport = {
   temporalEvents?: TemporalEvent[];
   weeklyEvents?: WeeklyEvent[];
   supportConfig: ActivitySupportConfig;
+  activityMode?: ActivityMode;
+  directedActivity?: DirectedActivity;
   generatedAt: string;
 };
