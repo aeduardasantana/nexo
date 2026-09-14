@@ -330,6 +330,7 @@ export default function App() {
     setActivityMode(report.activityMode ?? 'free');
     setDirectedActivity(report.directedActivity ?? {
       instruction: 'ESCOLHA A AÇÃO',
+      expectedUnknown: false,
       allowUnknown: true,
       allowNotUnderstood: true,
     });
@@ -1396,6 +1397,41 @@ export default function App() {
     setFeedback(null);
   }
 
+  function answerUnknown() {
+    const isExpected =
+      activityMode === 'directed' &&
+      directedActivity.allowUnknown &&
+      directedActivity.expectedUnknown === true;
+
+    setFeedback(isExpected ? '✓ NÃO SEI - RESPOSTA VÁLIDA' : 'NÃO SEI');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'unknown',
+      label: isExpected ? 'NÃO SEI - RESPOSTA ESPERADA' : 'NÃO SEI',
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (isExpected) {
+      setDraft({ verbId: '' });
+    }
+  }
+
+  function answerNotUnderstood() {
+    if (activityMode === 'directed' && !directedActivity.allowNotUnderstood) {
+      setFeedback('NÃO ENTENDI NÃO ESTÁ DISPONÍVEL NESTA ATIVIDADE');
+      return;
+    }
+
+    setFeedback('NÃO ENTENDI - MOSTRE NOVAMENTE');
+    setCompareMode('before');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'not_understood',
+      label: 'NÃO ENTENDI - REAPRESENTAR',
+      createdAt: new Date().toISOString(),
+    }]);
+  }
+
   function runAction() {
     if (historyIndex !== history.length - 1) {
       setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA CRIAR UMA NOVA AÇÃO');
@@ -1404,6 +1440,20 @@ export default function App() {
 
     if (!selectedRule) {
       setFeedback('❌ ESCOLHA UMA AÇÃO');
+      return;
+    }
+
+    if (
+      activityMode === 'directed' &&
+      directedActivity.expectedUnknown
+    ) {
+      setFeedback('❌ ERRADO - A RESPOSTA ESPERADA É NÃO SEI');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        label: selectedRule.label,
+        createdAt: new Date().toISOString(),
+      }]);
       return;
     }
 
@@ -1553,6 +1603,7 @@ export default function App() {
     setActivityMode('free');
     setDirectedActivity({
       instruction: 'ESCOLHA A AÇÃO',
+      expectedUnknown: false,
       allowUnknown: true,
       allowNotUnderstood: true,
     });
@@ -1722,12 +1773,45 @@ export default function App() {
               <label>
                 <span>RESPOSTA ESPERADA</span>
                 <select
-                  value={directedActivity.expectedVerbId ?? ''}
-                  onChange={(event) => setDirectedActivity((current) => ({ ...current, expectedVerbId: event.target.value || undefined }))}
+                  value={directedActivity.expectedUnknown ? '__unknown__' : (directedActivity.expectedVerbId ?? '')}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setDirectedActivity((current) => ({
+                      ...current,
+                      expectedVerbId: value && value !== '__unknown__' ? value : undefined,
+                      expectedUnknown: value === '__unknown__',
+                    }));
+                  }}
                 >
                   <option value="">SEM RESPOSTA ÚNICA</option>
+                  <option value="__unknown__">NÃO SEI</option>
                   {verbRules.map((verb) => <option key={verb.id} value={verb.id}>{verb.label}</option>)}
                 </select>
+              </label>
+
+              <label className="teacher-check">
+                <input
+                  type="checkbox"
+                  checked={directedActivity.allowUnknown}
+                  onChange={(event) => setDirectedActivity((current) => ({
+                    ...current,
+                    allowUnknown: event.target.checked,
+                    expectedUnknown: event.target.checked ? current.expectedUnknown : false,
+                  }))}
+                />
+                <span>PERMITIR NÃO SEI</span>
+              </label>
+
+              <label className="teacher-check">
+                <input
+                  type="checkbox"
+                  checked={directedActivity.allowNotUnderstood}
+                  onChange={(event) => setDirectedActivity((current) => ({
+                    ...current,
+                    allowNotUnderstood: event.target.checked,
+                  }))}
+                />
+                <span>PERMITIR NÃO ENTENDI</span>
               </label>
             </>
           )}
@@ -3736,25 +3820,12 @@ export default function App() {
                 createdAt: new Date().toISOString(),
               }]);
             }}>❌ ERRADO</button>
-            <button type="button" onClick={() => {
-              setFeedback('NÃO SEI');
-              setMediationEvents((events) => [...events, {
-                id: crypto.randomUUID(),
-                type: 'unknown',
-                label: 'NÃO SEI',
-                createdAt: new Date().toISOString(),
-              }]);
-            }}>NÃO SEI</button>
-            <button type="button" onClick={() => {
-              setFeedback('NÃO ENTENDI - MOSTRE NOVAMENTE');
-              setCompareMode('before');
-              setMediationEvents((events) => [...events, {
-                id: crypto.randomUUID(),
-                type: 'not_understood',
-                label: 'NÃO ENTENDI',
-                createdAt: new Date().toISOString(),
-              }]);
-            }}>NÃO ENTENDI</button>
+            {(activityMode !== 'directed' || directedActivity.allowUnknown) && (
+              <button type="button" onClick={answerUnknown}>NÃO SEI</button>
+            )}
+            {(activityMode !== 'directed' || directedActivity.allowNotUnderstood) && (
+              <button type="button" onClick={answerNotUnderstood}>NÃO ENTENDI</button>
+            )}
           </footer>
         </section>
 
