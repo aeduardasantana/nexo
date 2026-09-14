@@ -900,6 +900,16 @@ export default function App() {
     if (correct) setPerspectiveTaskActive(false);
   }
 
+  function getLimitedPeopleOptions(requiredPersonIds: string[] = []) {
+    const required = people.filter((person) => requiredPersonIds.includes(person.instanceId));
+    const others = people.filter((person) => !requiredPersonIds.includes(person.instanceId));
+    const limit = Math.max(required.length, Math.min(supportConfig.optionCount, people.length));
+    return shuffledCopy([
+      ...required,
+      ...shuffledCopy(others).slice(0, Math.max(0, limit - required.length)),
+    ]);
+  }
+
   function setInformationAccessState(personId: string, sceneId: string, state: AccessState) {
     setInformationAccess((items) => [
       ...items.filter((item) => !(item.personId === personId && item.sceneId === sceneId)),
@@ -2143,7 +2153,11 @@ export default function App() {
                   }))}
                 >
                   <option value="">?</option>
-                  {people.map((person) => (
+                  {getLimitedPeopleOptions(
+                    people
+                      .filter((person) => getInformationAccessState(person.instanceId, accessTask.sceneId)?.state === 'saw')
+                      .map((person) => person.instanceId),
+                  ).map((person) => (
                     <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
                   ))}
                 </select>
@@ -2263,7 +2277,7 @@ export default function App() {
                   <div className="sequence-question">
                     <strong>QUEM VIU O OBJETO MUDAR DE LOCAL?</strong>
                     <div className="sequence-witness-options">
-                      {people.map((person) => {
+                      {getLimitedPeopleOptions(relocationTask.sawMovePersonIds).map((person) => {
                         const selected = sequenceWitnessAnswer.includes(person.instanceId);
                         return (
                           <button
@@ -2420,7 +2434,7 @@ export default function App() {
                   QUEM TEM BASE PARA SABER ONDE ESTÁ {findLabel(currentScene, hiddenInfoTask.objectId)}?
                 </strong>
                 <div>
-                  {people.map((person) => (
+                  {getLimitedPeopleOptions(hiddenInfoTask.witnessPersonIds).map((person) => (
                     <button
                       type="button"
                       key={person.instanceId}
