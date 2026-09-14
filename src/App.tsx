@@ -1117,11 +1117,18 @@ export default function App() {
     if (!relocationTaskActive || !relocationTask.referencePersonId) return;
     const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
     const correct = locationId === expected;
-    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    const isValidUnknown = correct && expected === null && locationId === null;
+    setFeedback(
+      correct
+        ? (isValidUnknown ? '✓ NÃO SEI - INFORMAÇÃO INSUFICIENTE' : '✓ CORRETO')
+        : '❌ ERRADO',
+    );
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
-      type: correct ? 'correct' : 'error',
-      label: 'MUDANÇA DE LOCAL - ONDE TEM BASE PARA PROCURAR',
+      type: isValidUnknown ? 'unknown' : (correct ? 'correct' : 'error'),
+      label: isValidUnknown
+        ? 'MUDANÇA DE LOCAL - NÃO SEI - INFORMAÇÃO INSUFICIENTE'
+        : 'MUDANÇA DE LOCAL - ONDE TEM BASE PARA PROCURAR',
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setRelocationTaskActive(false);
@@ -1211,8 +1218,20 @@ export default function App() {
     if (!relocationSequenceActive || relocationSequence.step !== 'person_search' || !relocationTask.referencePersonId) return;
     const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
     const correct = locationId === expected;
-    setFeedback(correct ? '✓ CORRETO - SEQUÊNCIA CONCLUÍDA' : '❌ ERRADO');
-    registerRelocationSequenceResult('SEQUÊNCIA PERSPECTIVA - LOCAL DE PROCURA', correct);
+    const isValidUnknown = correct && expected === null && locationId === null;
+    setFeedback(
+      correct
+        ? (isValidUnknown ? '✓ NÃO SEI - SEQUÊNCIA CONCLUÍDA' : '✓ CORRETO - SEQUÊNCIA CONCLUÍDA')
+        : '❌ ERRADO',
+    );
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: isValidUnknown ? 'unknown' : (correct ? 'correct' : 'error'),
+      label: isValidUnknown
+        ? 'SEQUÊNCIA PERSPECTIVA - NÃO SEI - INFORMAÇÃO INSUFICIENTE'
+        : 'SEQUÊNCIA PERSPECTIVA - LOCAL DE PROCURA',
+      createdAt: new Date().toISOString(),
+    }]);
 
     if (correct) {
       setRelocationSequence({
@@ -2367,7 +2386,7 @@ export default function App() {
                       key={optionId}
                       onClick={() => answerRelocationTask(optionId === '__unknown__' ? null : optionId)}
                     >
-                      <span>{optionId === '__unknown__' ? 'SEM INFORMAÇÃO' : findLabel(currentScene, optionId)}</span>
+                      <span>{optionId === '__unknown__' ? 'NÃO SEI' : findLabel(currentScene, optionId)}</span>
                     </button>
                   ))}
                 </div>
@@ -2447,7 +2466,7 @@ export default function App() {
                           key={optionId}
                           onClick={() => answerSequenceSearchLocation(optionId === '__unknown__' ? null : optionId)}
                         >
-                          {optionId === '__unknown__' ? 'SEM INFORMAÇÃO' : findLabel(currentScene, optionId)}
+                          {optionId === '__unknown__' ? 'NÃO SEI' : findLabel(currentScene, optionId)}
                         </button>
                       ))}
                     </div>
@@ -2479,7 +2498,7 @@ export default function App() {
             </div>
 
             <p className="access-note">
-              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA TEM O LOCAL ATUAL; QUEM VIU APENAS O INÍCIO TEM O LOCAL INICIAL; QUEM NÃO VIU NENHUM DOS DOIS FICA SEM INFORMAÇÃO.
+              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA TEM O LOCAL ATUAL; QUEM VIU APENAS O INÍCIO TEM O LOCAL INICIAL; QUEM NÃO VIU NENHUM DOS DOIS NÃO TEM INFORMAÇÃO SUFICIENTE E PODE RESPONDER NÃO SEI.
             </p>
           </section>
 
