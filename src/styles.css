@@ -3327,3 +3327,172 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.module-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 6px;
+  padding: 8px 24px;
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid #dedbd3;
+}
+
+.module-nav button {
+  min-height: 42px;
+  border: 1px solid #cfc9bf;
+  border-radius: 10px;
+  background: #fff;
+  font-size: .66rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  cursor: pointer;
+}
+
+.module-nav button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+/* Default: hide pedagogical modules until their navigation section is active. */
+.temporal-builder,
+.calendar-builder,
+.week-builder,
+.narrative-task-builder,
+.causal-task-builder,
+.mental-state-builder,
+.perspective-builder,
+.access-builder,
+.hidden-info-builder,
+.relocation-builder,
+.spatial-task-builder,
+.relation-builder,
+.session-report-view {
+  display: none;
+}
+
+/* CENÁRIO */
+.module-scenario .spatial-task-builder,
+.module-scenario .relation-builder,
+.module-scenario .action-builder {
+  display: block;
+}
+
+.module-scenario .relocation-builder {
+  display: none;
+}
+
+/* TEMPO */
+.module-time .temporal-builder,
+.module-time .calendar-builder,
+.module-time .week-builder {
+  display: block;
+}
+
+.module-time .action-builder,
+.module-time .spatial-task-builder,
+.module-time .relation-builder,
+.module-time .narrative-task-builder,
+.module-time .causal-task-builder,
+.module-time .mental-state-builder,
+.module-time .perspective-builder,
+.module-time .access-builder,
+.module-time .hidden-info-builder,
+.module-time .relocation-builder {
+  display: none;
+}
+
+/* NARRATIVA */
+.module-narrative .narrative-task-builder,
+.module-narrative .causal-task-builder,
+.module-narrative .action-builder {
+  display: block;
+}
+
+.module-narrative .spatial-task-builder,
+.module-narrative .relation-builder,
+.module-narrative .temporal-builder,
+.module-narrative .calendar-builder,
+.module-narrative .week-builder,
+.module-narrative .mental-state-builder,
+.module-narrative .perspective-builder,
+.module-narrative .access-builder,
+.module-narrative .hidden-info-builder,
+.module-narrative .relocation-builder {
+  display: none;
+}
+
+/* PERSPECTIVA */
+.module-perspective .mental-state-builder,
+.module-perspective .perspective-builder,
+.module-perspective .access-builder,
+.module-perspective .hidden-info-builder,
+.module-perspective .relocation-builder {
+  display: block;
+}
+
+.module-perspective .action-builder,
+.module-perspective .spatial-task-builder,
+.module-perspective .relation-builder,
+.module-perspective .temporal-builder,
+.module-perspective .calendar-builder,
+.module-perspective .week-builder,
+.module-perspective .narrative-task-builder,
+.module-perspective .causal-task-builder {
+  display: none;
+}
+
+/* RELATÓRIO */
+.module-report .workspace {
+  display: none;
+}
+
+.module-report .session-report-view {
+  display: grid;
+}
+
+.module-report .teacher-panel {
+  display: grid;
+}
+
+/* Keep the main scene visible in every learning module except report. */
+.module-time .library,
+.module-time .story-panel,
+.module-narrative .library,
+.module-perspective .library {
+  display: none;
+}
+
+.module-time .workspace,
+.module-narrative .workspace,
+.module-perspective .workspace {
+  grid-template-columns: 1fr;
+}
+
+.module-time .stage-panel,
+.module-narrative .stage-panel,
+.module-perspective .stage-panel {
+  border-left: 0;
+}
+
+@media (max-width: 760px) {
+  .module-nav {
+    grid-template-columns: repeat(5, minmax(105px, 1fr));
+    overflow-x: auto;
+    padding: 8px 12px;
+  }
+
+  .module-nav button {
+    min-width: 105px;
+  }
+}
+
+@media print {
+  .module-nav {
+    display: none !important;
+  }
+}
