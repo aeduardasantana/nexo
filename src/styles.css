@@ -4027,3 +4027,69 @@ body {
   letter-spacing: .06em;
   color: #7c3f36;
 }
+
+
+.person-customization {
+  grid-column: 1 / -1;
+  border: 1px solid #cfc9bd;
+  border-radius: 12px;
+  background: #f8f6f1;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.person-customization-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.person-customization-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.person-customization-heading span,
+.person-customization > small {
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: #6f6a61;
+}
+
+.person-customization-heading strong {
+  font-size: .74rem;
+}
+
+.person-customization-heading button {
+  min-height: 36px;
+  border: 1px solid #c7c1b5;
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.person-name-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.person-name-grid label {
+  display: grid;
+  gap: 4px;
+}
+
+.person-name-grid input {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .person-name-grid {
+    grid-template-columns: 1fr;
+  }
+}
