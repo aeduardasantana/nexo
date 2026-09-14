@@ -159,6 +159,9 @@ export default function App() {
     sawMovePersonIds: [],
   });
   const [relocationTaskActive, setRelocationTaskActive] = useState(false);
+  const [relocationLocationOptions, setRelocationLocationOptions] = useState<string[]>([]);
+  const [sequenceCurrentLocationOptions, setSequenceCurrentLocationOptions] = useState<string[]>([]);
+  const [sequenceSearchLocationOptions, setSequenceSearchLocationOptions] = useState<string[]>([]);
   const [relocationSequence, setRelocationSequence] = useState<RelocationSequenceState>({
     step: 'current_location',
     completedSteps: [],
@@ -351,6 +354,9 @@ export default function App() {
     setHiddenInfoTaskActive(false);
     setHiddenInfoAnswerPersonIds([]);
     setRelocationTaskActive(false);
+    setRelocationLocationOptions([]);
+    setSequenceCurrentLocationOptions([]);
+    setSequenceSearchLocationOptions([]);
     setRelocationSequenceActive(false);
   }
 
@@ -1044,6 +1050,43 @@ export default function App() {
     }));
   }
 
+  function buildLocationOptions(
+    expectedLocationId: string | null,
+    includeUnknown: boolean,
+  ) {
+    const UNKNOWN = '__unknown__';
+    const basePool = [
+      relocationTask.initialLocationId,
+      relocationTask.currentLocationId,
+    ].filter((id): id is string => Boolean(id));
+
+    const extraPlaces =
+      supportConfig.useDistractors && supportConfig.difficulty >= 2
+        ? placesAndSeats
+            .map((place) => place.instanceId)
+            .filter((id) => !basePool.includes(id))
+        : [];
+
+    const unknownOption = includeUnknown ? [UNKNOWN] : [];
+    const pool = [...new Set([...basePool, ...unknownOption, ...extraPlaces])];
+    const expectedKey = expectedLocationId ?? UNKNOWN;
+
+    const minimumCount =
+      supportConfig.difficulty === 1 ? 2 :
+      supportConfig.difficulty === 2 ? Math.min(3, supportConfig.optionCount) :
+      supportConfig.optionCount;
+
+    const count = Math.max(
+      2,
+      Math.min(
+        pool.length,
+        Math.max(minimumCount, Math.min(supportConfig.optionCount, pool.length)),
+      ),
+    );
+
+    return takeOptionsWithExpected(expectedKey, pool, count);
+  }
+
   function startRelocationTask() {
     if (!relocationTask.objectId || !relocationTask.initialLocationId || !relocationTask.currentLocationId || !relocationTask.referencePersonId) {
       setFeedback('CONFIGURE OBJETO, LOCAIS E PESSOA');
@@ -1053,6 +1096,8 @@ export default function App() {
       setFeedback('O LOCAL INICIAL E O ATUAL PRECISAM SER DIFERENTES');
       return;
     }
+    const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
+    setRelocationLocationOptions(buildLocationOptions(expected, true));
     setRelocationTaskActive(true);
     setFeedback(null);
   }
@@ -1095,6 +1140,10 @@ export default function App() {
       completedSteps: [],
     });
     setSequenceWitnessAnswer([]);
+    setSequenceCurrentLocationOptions(
+      buildLocationOptions(relocationTask.currentLocationId ?? null, false),
+    );
+    setSequenceSearchLocationOptions([]);
     setRelocationSequenceActive(true);
     setFeedback(null);
   }
@@ -1146,6 +1195,14 @@ export default function App() {
         step: 'person_search',
         completedSteps: ['current_location', 'who_saw'],
       });
+      if (relocationTask.referencePersonId) {
+        setSequenceSearchLocationOptions(
+          buildLocationOptions(
+            expectedSearchLocationForPerson(relocationTask.referencePersonId),
+            true,
+          ),
+        );
+      }
     }
   }
 
@@ -1540,6 +1597,9 @@ export default function App() {
     setAccessTaskActive(false);
     setHiddenInfoTaskActive(false);
     setRelocationTaskActive(false);
+    setRelocationLocationOptions([]);
+    setSequenceCurrentLocationOptions([]);
+    setSequenceSearchLocationOptions([]);
     setRelocationSequenceActive(false);
     setRelocationSequence({ step: 'current_location', completedSteps: [] });
     setRelocationTask((current) => ({
@@ -2153,11 +2213,7 @@ export default function App() {
                   }))}
                 >
                   <option value="">?</option>
-                  {getLimitedPeopleOptions(
-                    people
-                      .filter((person) => getInformationAccessState(person.instanceId, accessTask.sceneId)?.state === 'saw')
-                      .map((person) => person.instanceId),
-                  ).map((person) => (
+                  {people.map((person) => (
                     <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
                   ))}
                 </select>
@@ -2221,16 +2277,15 @@ export default function App() {
                   ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
                 </strong>
                 <div>
-                  {[relocationTask.initialLocationId, relocationTask.currentLocationId]
-                    .filter((id): id is string => Boolean(id))
-                    .map((locationId) => (
-                      <button type="button" key={locationId} onClick={() => answerRelocationTask(locationId)}>
-                        <span>{findLabel(currentScene, locationId)}</span>
-                      </button>
-                    ))}
-                  <button type="button" onClick={() => answerRelocationTask(null)}>
-                    <span>SEM INFORMAÇÃO</span>
-                  </button>
+                  {relocationLocationOptions.map((optionId) => (
+                    <button
+                      type="button"
+                      key={optionId}
+                      onClick={() => answerRelocationTask(optionId === '__unknown__' ? null : optionId)}
+                    >
+                      <span>{optionId === '__unknown__' ? 'SEM INFORMAÇÃO' : findLabel(currentScene, optionId)}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -2262,13 +2317,11 @@ export default function App() {
                       ONDE ESTÁ {findLabel(currentScene, relocationTask.objectId)} AGORA?
                     </strong>
                     <div className="sequence-location-options">
-                      {[relocationTask.initialLocationId, relocationTask.currentLocationId]
-                        .filter((id): id is string => Boolean(id))
-                        .map((locationId) => (
-                          <button type="button" key={locationId} onClick={() => answerSequenceCurrentLocation(locationId)}>
-                            {findLabel(currentScene, locationId)}
-                          </button>
-                        ))}
+                      {sequenceCurrentLocationOptions.map((locationId) => (
+                        <button type="button" key={locationId} onClick={() => answerSequenceCurrentLocation(locationId)}>
+                          {findLabel(currentScene, locationId)}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -2304,16 +2357,15 @@ export default function App() {
                       ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
                     </strong>
                     <div className="sequence-location-options">
-                      {[relocationTask.initialLocationId, relocationTask.currentLocationId]
-                        .filter((id): id is string => Boolean(id))
-                        .map((locationId) => (
-                          <button type="button" key={locationId} onClick={() => answerSequenceSearchLocation(locationId)}>
-                            {findLabel(currentScene, locationId)}
-                          </button>
-                        ))}
-                      <button type="button" onClick={() => answerSequenceSearchLocation(null)}>
-                        SEM INFORMAÇÃO
-                      </button>
+                      {sequenceSearchLocationOptions.map((optionId) => (
+                        <button
+                          type="button"
+                          key={optionId}
+                          onClick={() => answerSequenceSearchLocation(optionId === '__unknown__' ? null : optionId)}
+                        >
+                          {optionId === '__unknown__' ? 'SEM INFORMAÇÃO' : findLabel(currentScene, optionId)}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
