@@ -224,15 +224,27 @@ export default function App() {
 
   function registerMediationAssessment(level: MediationLevel) {
     const latestEvent = mediationEvents.length > 0 ? mediationEvents[mediationEvents.length - 1] : undefined;
-    setMediationAssessments((items) => [...items, {
-      id: crypto.randomUUID(),
-      sourceEventId: latestEvent?.id,
-      level,
-      difficulty: supportConfig.difficulty,
-      optionCount: supportConfig.optionCount,
-      useDistractors: supportConfig.useDistractors,
-      createdAt: new Date().toISOString(),
-    }]);
+    if (!latestEvent) {
+      setFeedback('REGISTRE PRIMEIRO UMA RESPOSTA OU ATIVIDADE');
+      return;
+    }
+
+    setMediationAssessments((items) => {
+      const nextAssessment: MediationAssessment = {
+        id: crypto.randomUUID(),
+        sourceEventId: latestEvent.id,
+        level,
+        difficulty: supportConfig.difficulty,
+        optionCount: supportConfig.optionCount,
+        useDistractors: supportConfig.useDistractors,
+        createdAt: new Date().toISOString(),
+      };
+      return [
+        ...items.filter((item) => item.sourceEventId !== latestEvent.id),
+        nextAssessment,
+      ];
+    });
+
     setFeedback(`MEDIAÇÃO ${level} - ${mediationLevelLabel(level)}`);
   }
 
@@ -1715,7 +1727,7 @@ export default function App() {
                 <p>SEM EVENTOS REGISTRADOS.</p>
               ) : (
                 mediationEvents.map((event, index) => {
-                  const assessment = mediationAssessments.find((item) => item.sourceEventId === event.id);
+                  const assessment = [...mediationAssessments].reverse().find((item) => item.sourceEventId === event.id);
                   return (
                     <article key={event.id}>
                       <span>{index + 1}</span>
