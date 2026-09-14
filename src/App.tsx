@@ -144,6 +144,7 @@ export default function App() {
   });
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState<'scenario' | 'time' | 'narrative' | 'perspective' | 'report'>('scenario');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
     participant: '',
@@ -274,6 +275,7 @@ export default function App() {
     setFeedback('SESSÃO RESTAURADA');
     setCompareMode('now');
     setReportOpen(false);
+    setActiveModule('scenario');
     setSelectedEntityId(null);
     setDraggingEntityId(null);
     setRelationReferenceId(null);
@@ -1313,7 +1315,7 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell module-${activeModule}`}>
       <header className="topbar">
         <div>
           <p className="eyebrow">PROJETO EU, NÓS E O OUTRO</p>
@@ -1324,6 +1326,28 @@ export default function App() {
           {teacherOpen ? 'FECHAR PROFESSORA' : 'MODO PROFESSORA'}
         </button>
       </header>
+
+      <nav className="module-nav no-print" aria-label="Módulos do NEXO">
+        {[
+          ['scenario', 'CENÁRIO'],
+          ['time', 'TEMPO'],
+          ['narrative', 'NARRATIVA'],
+          ['perspective', 'PERSPECTIVA'],
+          ['report', 'RELATÓRIO'],
+        ].map(([id, label]) => (
+          <button
+            type="button"
+            key={id}
+            className={activeModule === id ? 'active' : ''}
+            onClick={() => {
+              setActiveModule(id as typeof activeModule);
+              setReportOpen(id === 'report');
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
       {teacherOpen && (
         <section className="teacher-panel">
