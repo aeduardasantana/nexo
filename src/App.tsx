@@ -120,6 +120,7 @@ export default function App() {
     instruction: 'COLOQUE O ELEMENTO NO LUGAR CERTO',
   });
   const [spatialTaskActive, setSpatialTaskActive] = useState(false);
+  const [spatialIssueField, setSpatialIssueField] = useState<'subject' | 'reference' | null>(null);
   const [temporalTaskActive, setTemporalTaskActive] = useState(false);
   const [temporalOptionDays, setTemporalOptionDays] = useState<TemporalDay[]>([]);
   const [expectedTemporalDay, setExpectedTemporalDay] = useState<TemporalDay>('today');
@@ -344,6 +345,7 @@ export default function App() {
     setDraggingEntityId(null);
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
+    setSpatialIssueField(null);
     setTemporalTaskActive(false);
     setWeekTaskActive(false);
     setWeekOptionDays([]);
@@ -1357,28 +1359,43 @@ export default function App() {
   }
 
   function startSpatialTask() {
-    if (!spatialTask.subjectId || !spatialTask.referenceId) {
-      setFeedback('ESCOLHA OS DOIS ELEMENTOS DA ATIVIDADE');
+    if (!spatialTask.subjectId) {
+      setSpatialIssueField('subject');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA O ELEMENTO DA ATIVIDADE');
       return;
     }
+    if (!spatialTask.referenceId) {
+      setSpatialIssueField('reference');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA A REFERÊNCIA');
+      return;
+    }
+    setSpatialIssueField(null);
     setSpatialTaskActive(true);
     setSelectedEntityId(spatialTask.kind === 'place' ? spatialTask.subjectId : null);
     setFeedback(null);
   }
 
   function validateSpatialTask() {
-    if (!spatialTaskSubject || !spatialTaskReference) {
-      setFeedback('ATIVIDADE INCOMPLETA');
+    if (!spatialTaskSubject) {
+      setSpatialIssueField('subject');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA O ELEMENTO DA ATIVIDADE');
+      return;
+    }
+    if (!spatialTaskReference) {
+      setSpatialIssueField('reference');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA A REFERÊNCIA');
       return;
     }
 
     const result = evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation);
     const correct = result.matched;
 
-    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setSpatialIssueField(correct ? null : 'subject');
+    setFeedback(correct ? '✓ CORRETO' : '❌ RESPOSTA INCORRETA - AJUSTE A POSIÇÃO');
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
+      errorKind: correct ? undefined : 'incorrect',
       label: `RELAÇÃO ${result.label}`,
       createdAt: new Date().toISOString(),
     }]);
@@ -1396,10 +1413,12 @@ export default function App() {
     const correct = result.matched;
 
     setSelectedEntityId(instanceId);
-    setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
+    setSpatialIssueField(correct ? null : 'subject');
+    setFeedback(correct ? '✓ CORRETO' : '❌ RESPOSTA INCORRETA - ESCOLHA OUTRO ELEMENTO');
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
       type: correct ? 'correct' : 'error',
+      errorKind: correct ? undefined : 'incorrect',
       label: `IDENTIFICAR ${result.label}`,
       createdAt: new Date().toISOString(),
     }]);
@@ -1590,6 +1609,7 @@ export default function App() {
     setDraggingEntityId(null);
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
+    setSpatialIssueField(null);
     setTemporalTaskActive(false);
     setTemporalOptionDays([]);
     setTemporalEventQuestionId(null);
@@ -1668,6 +1688,7 @@ export default function App() {
     setDraggingEntityId(null);
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
+    setSpatialIssueField(null);
     setTemporalTaskActive(false);
     setTemporalOptionDays([]);
     setTemporalEventQuestionId(null);
@@ -3533,14 +3554,18 @@ export default function App() {
                 </select>
               </label>
 
-              <label>
+              <label className={spatialIssueField === 'subject' ? 'task-field issue' : 'task-field'}>
                 <span>{spatialTask.kind === 'place' ? 'MOVER' : 'RESPOSTA-ALVO'}</span>
                 <select
                   value={spatialTask.subjectId ?? ''}
-                  onChange={(event) => setSpatialTask((current) => ({
-                    ...current,
-                    subjectId: event.target.value || undefined,
-                  }))}
+                  onChange={(event) => {
+                    setSpatialTask((current) => ({
+                      ...current,
+                      subjectId: event.target.value || undefined,
+                    }));
+                    setSpatialIssueField(null);
+                    setFeedback(null);
+                  }}
                 >
                   <option value="">?</option>
                   {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
@@ -3567,14 +3592,18 @@ export default function App() {
                 </select>
               </label>
 
-              <label>
+              <label className={spatialIssueField === 'reference' ? 'task-field issue' : 'task-field'}>
                 <span>REFERÊNCIA</span>
                 <select
                   value={spatialTask.referenceId ?? ''}
-                  onChange={(event) => setSpatialTask((current) => ({
-                    ...current,
-                    referenceId: event.target.value || undefined,
-                  }))}
+                  onChange={(event) => {
+                    setSpatialTask((current) => ({
+                      ...current,
+                      referenceId: event.target.value || undefined,
+                    }));
+                    setSpatialIssueField(null);
+                    setFeedback(null);
+                  }}
                 >
                   <option value="">?</option>
                   {currentScene.entities
@@ -3623,7 +3652,7 @@ export default function App() {
             </div>
 
             {spatialTaskActive && spatialTask.kind === 'identify' && (
-              <div className="identify-options">
+              <div className={spatialIssueField === 'subject' ? 'identify-options issue' : 'identify-options'}>
                 {currentScene.entities
                   .filter((entity) => !entity.consumed && entity.instanceId !== spatialTask.referenceId)
                   .map((entity) => (
