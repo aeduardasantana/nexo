@@ -264,6 +264,7 @@ export type SessionReport = {
   metadata: SessionMetadata;
   scenes: SceneState[];
   storyArchive?: SceneState[][];
+  personNames?: Record<string, string>;
   mediationEvents: MediationEvent[];
   mediationAssessments: MediationAssessment[];
   mentalStates: MentalState[];
