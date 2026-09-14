@@ -1489,7 +1489,18 @@ export default function App() {
 
   function updateDraft<K extends keyof ActionDraft>(key: K, value: ActionDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
-    if (key === actionIssueRole || key === 'verbId') setActionIssueRole(null);
+
+    const roleByDraftKey: Partial<Record<keyof ActionDraft, 'actor' | 'object' | 'targetPerson' | 'destination' | 'seat'>> = {
+      actorId: 'actor',
+      objectId: 'object',
+      targetPersonId: 'targetPerson',
+      destinationId: 'destination',
+      seatId: 'seat',
+    };
+
+    if (key === 'verbId' || roleByDraftKey[key] === actionIssueRole) {
+      setActionIssueRole(null);
+    }
     setFeedback(null);
   }
 
