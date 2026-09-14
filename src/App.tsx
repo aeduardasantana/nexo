@@ -161,6 +161,7 @@ export default function App() {
   });
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<'scenario' | 'time' | 'narrative' | 'perspective' | 'report'>('scenario');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
@@ -1384,6 +1385,79 @@ export default function App() {
     }, 1400);
   }
 
+  function startNewSession() {
+    stopReplay();
+    setHistory([initialScene]);
+    setStoryArchive([]);
+    setHistoryIndex(0);
+    setDraft({ verbId: '' });
+    setFeedback(null);
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setRelationReferenceId(null);
+    setSpatialTaskActive(false);
+    setTemporalTaskActive(false);
+    setTemporalEventQuestionId(null);
+    setTemporalEvents([]);
+    setWeeklyEvents([]);
+    setWeekTaskActive(false);
+    setNarrativeTask({ kind: 'first', sceneIds: [] });
+    setNarrativeTaskActive(false);
+    setNarrativeAnswer([]);
+    setNarrativeOptionIds([]);
+    setCausalTask({ kind: 'what_after' });
+    setCausalTaskActive(false);
+    setCausalAnswer([]);
+    setCausalOptionIds([]);
+    setMentalStates([]);
+    setMentalTask({ kind: 'choose_self' });
+    setMentalTaskActive(false);
+    setMentalTargetLabel('');
+    setPerspectiveTask({ kind: 'same_different' });
+    setPerspectiveTaskActive(false);
+    setInformationAccess([]);
+    setAccessTask({ kind: 'who_saw' });
+    setAccessTaskActive(false);
+    setAccessAnswerPersonIds([]);
+    setHiddenInfoTask({ witnessPersonIds: [] });
+    setHiddenInfoTaskActive(false);
+    setHiddenInfoAnswerPersonIds([]);
+    setRelocationTask({
+      initialWitnessPersonIds: [],
+      sawMovePersonIds: [],
+    });
+    setRelocationTaskActive(false);
+    setRelocationSequence({
+      step: 'current_location',
+      completedSteps: [],
+    });
+    setRelocationSequenceActive(false);
+    setSequenceWitnessAnswer([]);
+    setMediationEvents([]);
+    setMediationAssessments([]);
+    setSupportConfig({
+      difficulty: 1,
+      optionCount: 2,
+      useDistractors: false,
+    });
+    setActivityMode('free');
+    setDirectedActivity({
+      instruction: 'ESCOLHA A AÇÃO',
+      allowUnknown: true,
+      allowNotUnderstood: true,
+    });
+    setSessionMetadata({
+      participant: '',
+      date: new Date().toISOString().slice(0, 10),
+      objective: '',
+      notes: '',
+    });
+    setCompareMode('now');
+    setReportOpen(false);
+    setActiveModule('scenario');
+    setNewSessionConfirmOpen(false);
+  }
+
   function clearStory() {
     stopReplay();
     if (history.length > 1) {
@@ -1608,6 +1682,13 @@ export default function App() {
                 setReportOpen(true);
               }}>VER RELATÓRIO</button>
               <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => setNewSessionConfirmOpen(true)}
+              >
+                NOVA SESSÃO
+              </button>
               <input
                 ref={importInputRef}
                 className="session-import-input"
@@ -1619,6 +1700,24 @@ export default function App() {
                 }}
               />
             </div>
+
+            {newSessionConfirmOpen && (
+              <div className="session-confirm" role="alertdialog" aria-modal="true" aria-labelledby="new-session-title">
+                <div>
+                  <strong id="new-session-title">INICIAR NOVA SESSÃO?</strong>
+                  <p>
+                    ESTA AÇÃO APAGA DA TELA A SESSÃO ATUAL, INCLUINDO HISTÓRIAS, EVENTOS, MEDIAÇÕES, CALENDÁRIO E ESTADOS DECLARADOS.
+                  </p>
+                  <p>EXPORTE O JSON ANTES, CASO QUEIRA GUARDAR ESTA SESSÃO.</p>
+                </div>
+                <div className="session-confirm-actions">
+                  <button type="button" onClick={() => setNewSessionConfirmOpen(false)}>CANCELAR</button>
+                  <button type="button" className="danger-button" onClick={startNewSession}>
+                    APAGAR E INICIAR NOVA SESSÃO
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="teacher-support">
@@ -1925,7 +2024,7 @@ export default function App() {
                   {selectedEntity && relationReference && (
                     <div className="relation-badge">
                       {detectedRelations.length > 0
-                        ? detectedRelations.map((relation) => relation.label).join(' • ')
+                        ? detectedRelations.map((relation) => relation.label).join(' - ')
                         : 'SEM RELAÇÃO MARCADA'}
                     </div>
                   )}
@@ -3092,7 +3191,7 @@ export default function App() {
           <section className="temporal-builder">
             <div className="builder-title">
               <p className="section-kicker">TEMPO</p>
-              <strong>ONTEM • HOJE • AMANHÃ</strong>
+              <strong>ONTEM - HOJE - AMANHÃ</strong>
             </div>
 
             <div className="temporal-strip" aria-label="Linha temporal">
