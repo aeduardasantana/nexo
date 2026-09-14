@@ -74,6 +74,15 @@ function findLabel(scene: SceneState, instanceId?: string) {
   return scene.entities.find((entity) => entity.instanceId === instanceId)?.label ?? ' - ';
 }
 
+function shuffledCopy<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
+  }
+  return copy;
+}
+
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
   const [history, setHistory] = useState<SceneState[]>([initialScene]);
@@ -115,9 +124,11 @@ export default function App() {
   const [narrativeTask, setNarrativeTask] = useState<NarrativeTask>({ kind: 'first', sceneIds: [] });
   const [narrativeTaskActive, setNarrativeTaskActive] = useState(false);
   const [narrativeAnswer, setNarrativeAnswer] = useState<string[]>([]);
+  const [narrativeOptionIds, setNarrativeOptionIds] = useState<string[]>([]);
   const [causalTask, setCausalTask] = useState<CausalTask>({ kind: 'what_after' });
   const [causalTaskActive, setCausalTaskActive] = useState(false);
   const [causalAnswer, setCausalAnswer] = useState<string[]>([]);
+  const [causalOptionIds, setCausalOptionIds] = useState<string[]>([]);
   const [mentalStates, setMentalStates] = useState<MentalState[]>([]);
   const [mentalTask, setMentalTask] = useState<MentalTask>({ kind: 'choose_self' });
   const [mentalTaskActive, setMentalTaskActive] = useState(false);
@@ -505,11 +516,13 @@ export default function App() {
       setFeedback('CRIE PELO MENOS DUAS CENAS NA HISTÓRIA');
       return;
     }
+    const orderedSceneIds = scenes.map((scene) => scene.id);
     setNarrativeTask((current) => ({
       ...current,
-      sceneIds: scenes.map((scene) => scene.id),
+      sceneIds: orderedSceneIds,
     }));
     setNarrativeAnswer([]);
+    setNarrativeOptionIds(shuffledCopy(orderedSceneIds));
     setNarrativeTaskActive(true);
     setFeedback(null);
   }
@@ -566,6 +579,11 @@ export default function App() {
       return;
     }
     setCausalAnswer([]);
+    setCausalOptionIds(shuffledCopy([
+      causalTask.problemSceneId,
+      causalTask.actionSceneId,
+      causalTask.resultSceneId,
+    ]));
     setCausalTaskActive(true);
     setFeedback(null);
   }
@@ -1276,8 +1294,10 @@ export default function App() {
     setWeekTaskActive(false);
     setNarrativeTaskActive(false);
     setNarrativeAnswer([]);
+    setNarrativeOptionIds([]);
     setCausalTaskActive(false);
     setCausalAnswer([]);
+    setCausalOptionIds([]);
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
@@ -2560,9 +2580,7 @@ export default function App() {
                 </div>
 
                 <div className="causal-options">
-                  {[causalTask.problemSceneId, causalTask.actionSceneId, causalTask.resultSceneId]
-                    .filter((id): id is string => Boolean(id))
-                    .map((sceneId) => {
+                  {causalOptionIds.map((sceneId) => {
                       const scene = history.find((item) => item.id === sceneId);
                       if (!scene) return null;
                       const order = causalAnswer.indexOf(sceneId);
@@ -2627,7 +2645,7 @@ export default function App() {
                 </div>
 
                 <div className="narrative-options">
-                  {narrativeTask.sceneIds.map((sceneId, index) => {
+                  {narrativeOptionIds.map((sceneId) => {
                     const scene = history.find((item) => item.id === sceneId);
                     if (!scene) return null;
                     const selectedOrder = narrativeAnswer.indexOf(sceneId);
@@ -2639,7 +2657,7 @@ export default function App() {
                         onClick={() => answerNarrativeScene(sceneId)}
                       >
                         {selectedOrder >= 0 && <span className="order-number">{selectedOrder + 1}</span>}
-                        <strong>CENA {index + 1}</strong>
+                        <strong>CENA</strong>
                         <small>{scene.actionLabel ?? 'AÇÃO'}</small>
                         <div className="narrative-thumb">
                           {scene.entities
