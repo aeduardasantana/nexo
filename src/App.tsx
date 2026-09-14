@@ -140,7 +140,10 @@ export default function App() {
   const [accessTaskActive, setAccessTaskActive] = useState(false);
   const [hiddenInfoTask, setHiddenInfoTask] = useState<HiddenInfoTask>({ witnessPersonIds: [] });
   const [hiddenInfoTaskActive, setHiddenInfoTaskActive] = useState(false);
-  const [relocationTask, setRelocationTask] = useState<RelocationPerspectiveTask>({ sawMovePersonIds: [] });
+  const [relocationTask, setRelocationTask] = useState<RelocationPerspectiveTask>({
+    initialWitnessPersonIds: [],
+    sawMovePersonIds: [],
+  });
   const [relocationTaskActive, setRelocationTaskActive] = useState(false);
   const [relocationSequence, setRelocationSequence] = useState<RelocationSequenceState>({
     step: 'current_location',
@@ -908,6 +911,15 @@ export default function App() {
     if (correct) setHiddenInfoTaskActive(false);
   }
 
+  function toggleInitialWitness(personId: string) {
+    setRelocationTask((current) => ({
+      ...current,
+      initialWitnessPersonIds: current.initialWitnessPersonIds.includes(personId)
+        ? current.initialWitnessPersonIds.filter((id) => id !== personId)
+        : [...current.initialWitnessPersonIds, personId],
+    }));
+  }
+
   function toggleSawMove(personId: string) {
     setRelocationTask((current) => ({
       ...current,
@@ -930,13 +942,17 @@ export default function App() {
     setFeedback(null);
   }
 
-  function expectedSearchLocationForPerson(personId: string) {
-    return relocationTask.sawMovePersonIds.includes(personId)
-      ? relocationTask.currentLocationId
-      : relocationTask.initialLocationId;
+  function expectedSearchLocationForPerson(personId: string): string | null {
+    if (relocationTask.sawMovePersonIds.includes(personId)) {
+      return relocationTask.currentLocationId ?? null;
+    }
+    if (relocationTask.initialWitnessPersonIds.includes(personId)) {
+      return relocationTask.initialLocationId ?? null;
+    }
+    return null;
   }
 
-  function answerRelocationTask(locationId: string) {
+  function answerRelocationTask(locationId: string | null) {
     if (!relocationTaskActive || !relocationTask.referencePersonId) return;
     const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
     const correct = locationId === expected;
@@ -1018,7 +1034,7 @@ export default function App() {
     }
   }
 
-  function answerSequenceSearchLocation(locationId: string) {
+  function answerSequenceSearchLocation(locationId: string | null) {
     if (!relocationSequenceActive || relocationSequence.step !== 'person_search' || !relocationTask.referencePersonId) return;
     const expected = expectedSearchLocationForPerson(relocationTask.referencePersonId);
     const correct = locationId === expected;
@@ -1332,6 +1348,11 @@ export default function App() {
     setRelocationTaskActive(false);
     setRelocationSequenceActive(false);
     setRelocationSequence({ step: 'current_location', completedSteps: [] });
+    setRelocationTask((current) => ({
+      ...current,
+      initialWitnessPersonIds: current.initialWitnessPersonIds ?? [],
+      sawMovePersonIds: current.sawMovePersonIds ?? [],
+    }));
     setSequenceWitnessAnswer([]);
     setCompareMode('now');
   }
@@ -1921,6 +1942,27 @@ export default function App() {
             </div>
 
             <div className="relocation-witnesses">
+              <span>QUEM VIU A COLOCAÇÃO INICIAL?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = relocationTask.initialWitnessPersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleInitialWitness(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU O LOCAL INICIAL' : 'NÃO VIU O LOCAL INICIAL'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="relocation-witnesses">
               <span>QUEM VIU O OBJETO MUDAR DE LOCAL?</span>
               <div>
                 {people.map((person) => {
@@ -1963,6 +2005,9 @@ export default function App() {
                         <span>{findLabel(currentScene, locationId)}</span>
                       </button>
                     ))}
+                  <button type="button" onClick={() => answerRelocationTask(null)}>
+                    <span>SEM INFORMAÇÃO</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -2043,6 +2088,9 @@ export default function App() {
                             {findLabel(currentScene, locationId)}
                           </button>
                         ))}
+                      <button type="button" onClick={() => answerSequenceSearchLocation(null)}>
+                        SEM INFORMAÇÃO
+                      </button>
                     </div>
                   </div>
                 )}
@@ -2060,6 +2108,11 @@ export default function App() {
               <span>ANTES: {findLabel(currentScene, relocationTask.initialLocationId)}</span>
               <span>AGORA: {findLabel(currentScene, relocationTask.currentLocationId)}</span>
               <span>
+                VIU O INÍCIO: {relocationTask.initialWitnessPersonIds.length
+                  ? relocationTask.initialWitnessPersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+              <span>
                 VIU A MUDANÇA: {relocationTask.sawMovePersonIds.length
                   ? relocationTask.sawMovePersonIds.map((id) => findLabel(currentScene, id)).join(', ')
                   : 'NINGUÉM MARCADO'}
@@ -2067,7 +2120,7 @@ export default function App() {
             </div>
 
             <p className="access-note">
-              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA RECEBE O LOCAL ATUAL; QUEM NÃO VIU MANTÉM O ÚLTIMO LOCAL DISPONÍVEL.
+              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA TEM O LOCAL ATUAL; QUEM VIU APENAS O INÍCIO TEM O LOCAL INICIAL; QUEM NÃO VIU NENHUM DOS DOIS FICA SEM INFORMAÇÃO.
             </p>
           </section>
 
