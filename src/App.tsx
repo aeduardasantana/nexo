@@ -143,6 +143,7 @@ export default function App() {
     useDistractors: false,
   });
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
     participant: '',
     date: new Date().toISOString().slice(0, 10),
@@ -282,6 +283,27 @@ export default function App() {
       '\uFEFF' + csv,
       'text/csv;charset=utf-8',
     );
+  }
+
+  function mediationCounts() {
+    return {
+      correct: mediationEvents.filter((event) => event.type === 'correct').length,
+      error: mediationEvents.filter((event) => event.type === 'error').length,
+      unknown: mediationEvents.filter((event) => event.type === 'unknown').length,
+      notUnderstood: mediationEvents.filter((event) => event.type === 'not_understood').length,
+    };
+  }
+
+  function assessmentCounts() {
+    return ([0, 1, 2, 3] as MediationLevel[]).map((level) => ({
+      level,
+      count: mediationAssessments.filter((assessment) => assessment.level === level).length,
+    }));
+  }
+
+  function printSessionReport() {
+    setReportOpen(true);
+    window.setTimeout(() => window.print(), 50);
   }
 
   function setSceneTemporalDay(day: TemporalDay) {
@@ -1336,6 +1358,8 @@ export default function App() {
             <div className="session-export">
               <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
               <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
+              <button type="button" onClick={() => setReportOpen(true)}>VER RELATÓRIO</button>
+              <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
             </div>
           </div>
 
@@ -1401,6 +1425,135 @@ export default function App() {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {reportOpen && (
+        <section className="session-report-view">
+          <header className="report-header">
+            <div>
+              <p>PROJETO EU, NÓS E O OUTRO</p>
+              <h2>RELATÓRIO DE SESSÃO — NEXO</h2>
+            </div>
+            <div className="report-actions no-print">
+              <button type="button" onClick={() => setReportOpen(false)}>FECHAR</button>
+              <button type="button" onClick={() => window.print()}>IMPRIMIR / PDF</button>
+            </div>
+          </header>
+
+          <section className="report-identification">
+            <div><span>PARTICIPANTE</span><strong>{sessionMetadata.participant || 'NÃO INFORMADO'}</strong></div>
+            <div><span>DATA</span><strong>{sessionMetadata.date || 'NÃO INFORMADA'}</strong></div>
+            <div className="wide"><span>OBJETIVO</span><strong>{sessionMetadata.objective || 'NÃO INFORMADO'}</strong></div>
+          </section>
+
+          <section className="report-kpis">
+            <div><strong>{Math.max(0, history.length - 1)}</strong><span>CENAS</span></div>
+            <div><strong>{mediationEvents.length}</strong><span>EVENTOS</span></div>
+            <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0–3</span></div>
+            <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
+          </section>
+
+          <section className="report-section">
+            <h3>RESPOSTAS REGISTRADAS</h3>
+            <div className="report-response-grid">
+              <div><strong>{mediationCounts().correct}</strong><span>CORRETAS</span></div>
+              <div><strong>{mediationCounts().error}</strong><span>ERROS</span></div>
+              <div><strong>{mediationCounts().unknown}</strong><span>NÃO SEI</span></div>
+              <div><strong>{mediationCounts().notUnderstood}</strong><span>NÃO ENTENDI</span></div>
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ESCALA DE MEDIAÇÃO 0–3</h3>
+            <div className="report-mediation-grid">
+              {assessmentCounts().map(({ level, count }) => (
+                <div key={level}>
+                  <strong>{level}</strong>
+                  <span>{mediationLevelLabel(level)}</span>
+                  <em>{count} REGISTRO(S)</em>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ATIVIDADES / EVENTOS DA SESSÃO</h3>
+            <div className="report-event-list">
+              {mediationEvents.length === 0 ? (
+                <p>SEM EVENTOS REGISTRADOS.</p>
+              ) : (
+                mediationEvents.map((event, index) => {
+                  const assessment = mediationAssessments.find((item) => item.sourceEventId === event.id);
+                  return (
+                    <article key={event.id}>
+                      <span>{index + 1}</span>
+                      <div>
+                        <strong>{event.label}</strong>
+                        <small>
+                          {event.type.toUpperCase()}
+                          {assessment ? ` • MEDIAÇÃO ${assessment.level} • DIFICULDADE ${assessment.difficulty} • ${assessment.optionCount} OPÇÕES` : ''}
+                        </small>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>CENAS TRABALHADAS</h3>
+            <div className="report-scenes">
+              {history.slice(1).map((scene, index) => (
+                <article key={scene.id}>
+                  <header>
+                    <strong>CENA {index + 1}</strong>
+                    <span>{scene.actionLabel ?? 'SEM AÇÃO NOMEADA'}</span>
+                    <small>{temporalLabel(scene.temporalDay)}</small>
+                  </header>
+                  <div>
+                    {scene.entities
+                      .filter((entity) => !entity.consumed)
+                      .slice(0, 8)
+                      .map((entity) => (
+                        <div key={entity.instanceId}>
+                          <AssetVisual asset={entity} size={42} />
+                          <span>{entity.label}</span>
+                        </div>
+                      ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ESTADOS DECLARADOS</h3>
+            <div className="report-tags">
+              {mentalStates.length === 0 ? (
+                <span>SEM ESTADOS DECLARADOS.</span>
+              ) : (
+                mentalStates.map((state) => (
+                  <span key={state.id}>
+                    {findLabel(currentScene, state.personId)} — {mentalLabel(state.kind, state.value)}
+                    {state.targetLabel ? ` — ${state.targetLabel}` : ''}
+                  </span>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>OBSERVAÇÕES DA PROFESSORA</h3>
+            <p className="report-notes">{sessionMetadata.notes || 'SEM OBSERVAÇÕES REGISTRADAS.'}</p>
+          </section>
+
+          <footer className="report-footer">
+            <p>
+              RELATÓRIO DESCRITIVO DE SESSÃO. OS DADOS REPRESENTAM RESPOSTAS E MEDIAÇÕES REGISTRADAS NO NEXO E NÃO CONSTITUEM DIAGNÓSTICO.
+            </p>
+          </footer>
         </section>
       )}
 
