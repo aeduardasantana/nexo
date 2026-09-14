@@ -1,4 +1,4 @@
-# Verbos e regras — MVP
+# Verbos e regras - MVP
 
 ## ANDAR
 Requer: personagem.
