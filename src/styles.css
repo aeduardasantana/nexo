@@ -3306,3 +3306,24 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     margin: 12mm;
   }
 }
+
+
+.session-import-input {
+  display: none;
+}
+
+.session-export {
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+}
+
+@media (max-width: 1000px) {
+  .session-export {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .session-export {
+    grid-template-columns: 1fr;
+  }
+}
