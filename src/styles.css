@@ -3496,3 +3496,213 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     display: none !important;
   }
 }
+
+
+/* Mobile UX refinement */
+@media (max-width: 640px) {
+  body {
+    padding-bottom: 72px;
+  }
+
+  .topbar {
+    position: relative;
+    padding: 12px 14px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .topbar h1 {
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  .eyebrow {
+    font-size: .56rem;
+    margin-bottom: 3px;
+  }
+
+  .subtitle {
+    font-size: .68rem;
+    line-height: 1.2;
+  }
+
+  .teacher-button {
+    min-height: 40px;
+    max-width: 122px;
+    font-size: .62rem;
+    line-height: 1.15;
+  }
+
+  .module-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid #d8d3ca;
+    border-bottom: 0;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 -6px 18px rgba(0,0,0,.06);
+    overflow: visible;
+  }
+
+  .module-nav button {
+    min-width: 0;
+    min-height: 48px;
+    padding: 6px 3px;
+    border: 0;
+    border-radius: 9px;
+    font-size: .52rem;
+    letter-spacing: .02em;
+  }
+
+  .workspace,
+  .module-time .workspace,
+  .module-narrative .workspace,
+  .module-perspective .workspace {
+    min-height: auto;
+  }
+
+  .stage-panel {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .stage-heading {
+    gap: 8px;
+  }
+
+  .stage-heading h2 {
+    font-size: .9rem;
+  }
+
+  .stage-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .stage-actions button {
+    min-height: 42px;
+    padding: 7px 5px;
+    font-size: .58rem;
+  }
+
+  .stage {
+    min-height: 58vh;
+    border-radius: 14px;
+  }
+
+  .spatial-scene {
+    min-height: 58vh;
+  }
+
+  .spatial-scene .scene-item .asset-svg {
+    width: 64px;
+    height: 64px;
+  }
+
+  .spatial-scene .scene-item small {
+    font-size: .58rem;
+  }
+
+  .library {
+    padding: 10px;
+  }
+
+  .category-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    background: #f8f7f3;
+    padding: 6px 0;
+    margin-bottom: 8px;
+  }
+
+  .asset-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .asset-card {
+    min-height: 86px;
+    aspect-ratio: auto;
+    border-radius: 11px;
+  }
+
+  .asset-card .asset-svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .asset-label {
+    font-size: .56rem;
+  }
+
+  .action-builder,
+  .spatial-task-builder,
+  .relation-builder,
+  .temporal-builder,
+  .calendar-builder,
+  .week-builder,
+  .narrative-task-builder,
+  .causal-task-builder,
+  .mental-state-builder,
+  .perspective-builder,
+  .access-builder,
+  .hidden-info-builder,
+  .relocation-builder {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .builder-title {
+    display: grid;
+    gap: 3px;
+  }
+
+  .builder-title strong {
+    font-size: .82rem;
+  }
+
+  .visual-option {
+    min-width: 72px;
+    min-height: 78px;
+  }
+
+  .visual-option .asset-svg {
+    width: 46px;
+    height: 46px;
+  }
+
+  .visual-execute {
+    position: sticky;
+    bottom: 78px;
+    z-index: 20;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+  }
+
+  .teacher-panel {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .session-panel {
+    padding: 10px;
+  }
+
+  .session-report-view {
+    margin: 8px;
+    padding: 12px;
+  }
+
+  .report-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
