@@ -53,7 +53,7 @@ export type ActionErrorKind = 'incomplete' | 'impossible' | 'unexpected' | 'inco
 
 export type ActionExecution =
   | { ok: true; scene: SceneState }
-  | { ok: false; error: string; errorKind: ActionErrorKind };
+  | { ok: false; error: string; errorKind: ActionErrorKind; role?: RequiredRole };
 
 export type ActivityMode = 'free' | 'directed';
 
