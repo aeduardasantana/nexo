@@ -3507,9 +3507,7 @@ export default function App() {
             </div>
 
             <div className="calendar-columns">
-              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[])
-                .filter((day) => !temporalTaskActive || temporalOptionDays.includes(day))
-                .map((day) => (
+              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
                 <section className="calendar-day" key={day}>
                   <header>
                     <span>{temporalSymbol(day)}</span>
@@ -3578,7 +3576,9 @@ export default function App() {
             </div>
 
             <div className="temporal-strip" aria-label="Linha temporal">
-              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
+              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[])
+                .filter((day) => !temporalTaskActive || temporalOptionDays.includes(day))
+                .map((day) => (
                 <button
                   type="button"
                   key={day}
