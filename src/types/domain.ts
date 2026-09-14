@@ -215,6 +215,7 @@ export type RelocationPerspectiveTask = {
   objectId?: string;
   initialLocationId?: string;
   currentLocationId?: string;
+  initialWitnessPersonIds: string[];
   sawMovePersonIds: string[];
   referencePersonId?: string;
 };
