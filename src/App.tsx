@@ -104,6 +104,7 @@ export default function App() {
   const [isReplaying, setIsReplaying] = useState(false);
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [activityMode, setActivityMode] = useState<ActivityMode>('free');
+  const [directedIssueField, setDirectedIssueField] = useState<'instruction' | 'expected' | null>(null);
   const [directedActivity, setDirectedActivity] = useState<DirectedActivity>({
     instruction: 'ESCOLHA A AÇÃO',
     allowUnknown: true,
@@ -1474,6 +1475,14 @@ export default function App() {
   }
 
   function runAction() {
+    if (activityMode === 'directed' && !directedActivity.instruction.trim()) {
+      setDirectedIssueField('instruction');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - INFORME A INSTRUÇÃO DA ATIVIDADE');
+      return;
+    }
+
+    setDirectedIssueField(null);
+
     if (historyIndex !== history.length - 1) {
       setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA CRIAR UMA NOVA AÇÃO');
       return;
@@ -1812,7 +1821,14 @@ export default function App() {
 
           <label>
             <span>TIPO DE ATIVIDADE</span>
-            <select value={activityMode} onChange={(event) => setActivityMode(event.target.value as ActivityMode)}>
+            <select
+              value={activityMode}
+              onChange={(event) => {
+                setActivityMode(event.target.value as ActivityMode);
+                setDirectedIssueField(null);
+                setFeedback(null);
+              }}
+            >
               <option value="free">LIVRE</option>
               <option value="directed">DIRIGIDA</option>
             </select>
@@ -1820,18 +1836,24 @@ export default function App() {
 
           {activityMode === 'directed' && (
             <>
-              <label>
+              <label className={directedIssueField === 'instruction' ? 'task-field issue' : 'task-field'}>
                 <span>INSTRUÇÃO</span>
                 <input
                   value={directedActivity.instruction}
-                  onChange={(event) => setDirectedActivity((current) => ({ ...current, instruction: event.target.value.toUpperCase() }))}
+                  onChange={(event) => {
+                    setDirectedActivity((current) => ({ ...current, instruction: event.target.value.toUpperCase() }));
+                    setDirectedIssueField(null);
+                    setFeedback(null);
+                  }}
                 />
               </label>
-              <label>
+              <label className={directedIssueField === 'expected' ? 'task-field issue' : 'task-field'}>
                 <span>RESPOSTA ESPERADA</span>
                 <select
                   value={directedActivity.expectedUnknown ? '__unknown__' : (directedActivity.expectedVerbId ?? '')}
                   onChange={(event) => {
+                    setDirectedIssueField(null);
+                    setFeedback(null);
                     const value = event.target.value;
                     setDirectedActivity((current) => ({
                       ...current,
