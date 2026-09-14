@@ -2,6 +2,7 @@
 import type {
   ActionDraft,
   ActionExecution,
+  ActionErrorKind,
   EntityState,
   SceneState,
   VerbRule,
@@ -20,37 +21,37 @@ export function validateAction(
   scene: SceneState,
   draft: ActionDraft,
   rule: VerbRule,
-): string | null {
+): { message: string; kind: ActionErrorKind } | null {
   const actor = scene.entities.find((entity) => entity.instanceId === draft.actorId);
-  if (!actor) return 'FALTA QUEM';
+  if (!actor) return { message: 'FALTA QUEM', kind: 'incomplete' };
 
-  if (rule.requires.includes('object') && !draft.objectId) return 'FALTA OBJETO';
-  if (rule.requires.includes('targetPerson') && !draft.targetPersonId) return 'FALTA OUTRA PESSOA';
-  if (rule.requires.includes('destination') && !draft.destinationId) return 'FALTA DESTINO';
-  if (rule.requires.includes('seat') && !draft.seatId) return 'FALTA ONDE SENTAR';
+  if (rule.requires.includes('object') && !draft.objectId) return { message: 'FALTA OBJETO', kind: 'incomplete' };
+  if (rule.requires.includes('targetPerson') && !draft.targetPersonId) return { message: 'FALTA OUTRA PESSOA', kind: 'incomplete' };
+  if (rule.requires.includes('destination') && !draft.destinationId) return { message: 'FALTA DESTINO', kind: 'incomplete' };
+  if (rule.requires.includes('seat') && !draft.seatId) return { message: 'FALTA ONDE SENTAR', kind: 'incomplete' };
 
   const object = scene.entities.find((entity) => entity.instanceId === draft.objectId);
 
   switch (rule.id) {
     case 'stand':
-      if (actor.posture !== 'sitting') return 'A PESSOA NÃO ESTÁ SENTADA';
+      if (actor.posture !== 'sitting') return { message: 'A PESSOA NÃO ESTÁ SENTADA', kind: 'impossible' };
       break;
     case 'take':
-      if (!object || object.consumed) return 'OBJETO INDISPONÍVEL';
-      if (object.ownerId) return 'OBJETO JÁ ESTÁ COM ALGUÉM';
+      if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible' };
+      if (object.ownerId) return { message: 'OBJETO JÁ ESTÁ COM ALGUÉM', kind: 'impossible' };
       break;
     case 'give':
-      if (!object || object.ownerId !== actor.instanceId) return 'A PESSOA NÃO ESTÁ COM O OBJETO';
-      if (draft.targetPersonId === actor.instanceId) return 'ESCOLHA OUTRA PESSOA';
+      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible' };
+      if (draft.targetPersonId === actor.instanceId) return { message: 'ESCOLHA OUTRA PESSOA', kind: 'impossible' };
       break;
     case 'put':
-      if (!object || object.ownerId !== actor.instanceId) return 'A PESSOA NÃO ESTÁ COM O OBJETO';
+      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible' };
       break;
     case 'eat':
-      if (!object || object.label !== 'COMIDA' || object.consumed) return 'ESCOLHA COMIDA';
+      if (!object || object.label !== 'COMIDA' || object.consumed) return { message: 'ESCOLHA COMIDA', kind: 'impossible' };
       break;
     case 'drink':
-      if (!object || !['ÁGUA', 'COPO'].includes(object.label) || object.consumed) return 'ESCOLHA ÁGUA OU COPO';
+      if (!object || !['ÁGUA', 'COPO'].includes(object.label) || object.consumed) return { message: 'ESCOLHA ÁGUA OU COPO', kind: 'impossible' };
       break;
     default:
       break;
@@ -64,8 +65,14 @@ export function executeAction(
   draft: ActionDraft,
   rule: VerbRule,
 ): ActionExecution {
-  const error = validateAction(scene, draft, rule);
-  if (error) return { ok: false, error };
+  const validation = validateAction(scene, draft, rule);
+  if (validation) {
+    return {
+      ok: false,
+      error: validation.message,
+      errorKind: validation.kind,
+    };
+  }
 
   const entities = cloneEntities(scene.entities);
   const actor = entities.find((entity) => entity.instanceId === draft.actorId)!;
@@ -152,7 +159,7 @@ export function executeAction(
       }
       break;
     default:
-      return { ok: false, error: 'AÇÃO NÃO IMPLEMENTADA' };
+      return { ok: false, error: 'AÇÃO NÃO IMPLEMENTADA', errorKind: 'impossible' };
   }
 
   return {
