@@ -228,6 +228,8 @@ export default function App() {
       mediationAssessments,
       mentalStates,
       informationAccess,
+      temporalEvents,
+      weeklyEvents,
       supportConfig,
       generatedAt: new Date().toISOString(),
     };
@@ -270,6 +272,8 @@ export default function App() {
     setMediationAssessments(report.mediationAssessments);
     setMentalStates(report.mentalStates);
     setInformationAccess(report.informationAccess);
+    setTemporalEvents(report.temporalEvents ?? []);
+    setWeeklyEvents(report.weeklyEvents ?? []);
     setSupportConfig(report.supportConfig);
     setDraft({ verbId: '' });
     setFeedback('SESSÃO RESTAURADA');
@@ -381,8 +385,9 @@ export default function App() {
 
   function temporalLabel(day?: TemporalDay) {
     if (day === 'yesterday') return 'ONTEM';
+    if (day === 'today') return 'HOJE';
     if (day === 'tomorrow') return 'AMANHÃ';
-    return 'HOJE';
+    return 'SEM MARCAÇÃO';
   }
 
   function temporalSymbol(day?: TemporalDay) {
@@ -990,11 +995,13 @@ export default function App() {
       setFeedback('DIGITE O NOME DO EVENTO SEMANAL');
       return;
     }
+    const matchingDate = getWeekDays().find((item) => item.weekday === newWeeklyEventDay)?.date;
     setWeeklyEvents((events) => [...events, {
       id: crypto.randomUUID(),
       label,
       weekday: newWeeklyEventDay,
       recurring: newWeeklyEventRecurring,
+      date: newWeeklyEventRecurring || !matchingDate ? undefined : matchingDate.toISOString().slice(0, 10),
     }]);
     setNewWeeklyEventLabel('');
     setFeedback(null);
@@ -2685,14 +2692,20 @@ export default function App() {
                   </header>
                   <div className="week-events">
                     {weeklyEvents
-                      .filter((event) => event.weekday === weekday)
+                      .filter((event) =>
+                        event.weekday === weekday &&
+                        (event.recurring || event.date === date.toISOString().slice(0, 10))
+                      )
                       .map((event) => (
                         <div className="week-event" key={event.id}>
                           <strong>{event.label}</strong>
                           {event.recurring && <small>SEMANAL</small>}
                         </div>
                       ))}
-                    {weeklyEvents.every((event) => event.weekday !== weekday) && (
+                    {weeklyEvents.every((event) =>
+                      event.weekday !== weekday ||
+                      (!event.recurring && event.date !== date.toISOString().slice(0, 10))
+                    ) && (
                       <div className="week-empty">—</div>
                     )}
                   </div>
