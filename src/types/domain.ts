@@ -49,9 +49,11 @@ export type ActionDraft = {
   seatId?: string;
 };
 
+export type ActionErrorKind = 'incomplete' | 'impossible' | 'unexpected' | 'incorrect';
+
 export type ActionExecution =
   | { ok: true; scene: SceneState }
-  | { ok: false; error: string };
+  | { ok: false; error: string; errorKind: ActionErrorKind };
 
 export type ActivityMode = 'free' | 'directed';
 
@@ -70,6 +72,7 @@ export type MediationEvent = {
   type: MediationEventType;
   label: string;
   createdAt: string;
+  errorKind?: ActionErrorKind;
   difficulty?: DifficultyLevel;
   optionCount?: 2 | 3 | 4;
   useDistractors?: boolean;
