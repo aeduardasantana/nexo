@@ -259,6 +259,8 @@ export default function App() {
       temporalEvents,
       weeklyEvents,
       supportConfig,
+      activityMode,
+      directedActivity,
       generatedAt: new Date().toISOString(),
     };
   }
@@ -303,6 +305,12 @@ export default function App() {
     setTemporalEvents(report.temporalEvents ?? []);
     setWeeklyEvents(report.weeklyEvents ?? []);
     setSupportConfig(report.supportConfig);
+    setActivityMode(report.activityMode ?? 'free');
+    setDirectedActivity(report.directedActivity ?? {
+      instruction: 'ESCOLHA A AÇÃO',
+      allowUnknown: true,
+      allowNotUnderstood: true,
+    });
     setDraft({ verbId: '' });
     setFeedback('SESSÃO RESTAURADA');
     setCompareMode('now');
