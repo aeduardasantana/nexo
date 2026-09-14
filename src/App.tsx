@@ -1025,6 +1025,10 @@ export default function App() {
   }
 
   function addToScene(asset: SceneAsset) {
+    if (historyIndex !== history.length - 1) {
+      setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA EDITAR');
+      return;
+    }
     const entity = toEntity(asset, currentScene.entities.length);
     const editedScene: SceneState = {
       ...currentScene,
@@ -1153,6 +1157,11 @@ export default function App() {
   }
 
   function runAction() {
+    if (historyIndex !== history.length - 1) {
+      setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA CRIAR UMA NOVA AÇÃO');
+      return;
+    }
+
     if (!selectedRule) {
       setFeedback('❌ ESCOLHA UMA AÇÃO');
       return;
@@ -1202,6 +1211,9 @@ export default function App() {
   function undo() {
     if (historyIndex === 0) return;
     setHistoryIndex((index) => index - 1);
+    setDraft({ verbId: '' });
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
     setCompareMode('now');
     setFeedback(null);
   }
@@ -1209,6 +1221,9 @@ export default function App() {
   function redo() {
     if (historyIndex >= history.length - 1) return;
     setHistoryIndex((index) => index + 1);
+    setDraft({ verbId: '' });
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
     setCompareMode('now');
     setFeedback(null);
   }
@@ -1264,7 +1279,6 @@ export default function App() {
     setRelocationSequenceActive(false);
     setRelocationSequence({ step: 'current_location', completedSteps: [] });
     setSequenceWitnessAnswer([]);
-    setMediationAssessments([]);
     setCompareMode('now');
   }
 
@@ -1449,7 +1463,10 @@ export default function App() {
               <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
               <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
               <button type="button" onClick={() => importInputRef.current?.click()}>IMPORTAR JSON</button>
-              <button type="button" onClick={() => setReportOpen(true)}>VER RELATÓRIO</button>
+              <button type="button" onClick={() => {
+                setActiveModule('report');
+                setReportOpen(true);
+              }}>VER RELATÓRIO</button>
               <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
               <input
                 ref={importInputRef}
@@ -1537,7 +1554,10 @@ export default function App() {
               <h2>RELATÓRIO DE SESSÃO — NEXO</h2>
             </div>
             <div className="report-actions no-print">
-              <button type="button" onClick={() => setReportOpen(false)}>FECHAR</button>
+              <button type="button" onClick={() => {
+                setReportOpen(false);
+                setActiveModule('scenario');
+              }}>FECHAR</button>
               <button type="button" onClick={() => window.print()}>IMPRIMIR / PDF</button>
             </div>
           </header>
@@ -3306,6 +3326,9 @@ export default function App() {
                 onClick={() => {
                   stopReplay();
                   setHistoryIndex(index + 1);
+                  setDraft({ verbId: '' });
+                  setSelectedEntityId(null);
+                  setDraggingEntityId(null);
                   setCompareMode('now');
                 }}
               >
