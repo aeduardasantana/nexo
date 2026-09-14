@@ -3915,3 +3915,57 @@ body {
   color: #fff;
   border-color: #161616;
 }
+
+
+.danger-button {
+  border-color: #7f1d1d !important;
+  background: #7f1d1d !important;
+  color: #fff !important;
+}
+
+.session-confirm {
+  grid-column: 1 / -1;
+  border: 1px solid #b99191;
+  border-radius: 12px;
+  background: #fff8f8;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.session-confirm > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.session-confirm strong {
+  font-size: .72rem;
+}
+
+.session-confirm p {
+  margin: 0;
+  font-size: .62rem;
+  line-height: 1.45;
+  color: #5f5555;
+}
+
+.session-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.session-confirm-actions button {
+  min-height: 42px;
+  border: 1px solid #c9c5bc;
+  border-radius: 9px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .session-confirm-actions {
+    grid-template-columns: 1fr;
+  }
+}
