@@ -86,6 +86,7 @@ function shuffledCopy<T>(items: T[]): T[] {
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
   const [history, setHistory] = useState<SceneState[]>([initialScene]);
+  const [storyArchive, setStoryArchive] = useState<SceneState[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [draft, setDraft] = useState<ActionDraft>({ verbId: '' });
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -172,6 +173,10 @@ export default function App() {
   const replayTimer = useRef<number | null>(null);
 
   const currentScene = history[historyIndex];
+  const allSessionScenes = [
+    ...storyArchive.flat(),
+    ...history.slice(1),
+  ];
   const beforeScene = history[Math.max(0, historyIndex - 1)];
   const afterScene = history[Math.min(history.length - 1, historyIndex + 1)];
   const displayedScene =
@@ -252,6 +257,7 @@ export default function App() {
     return {
       metadata: sessionMetadata,
       scenes: history,
+      storyArchive,
       mediationEvents,
       mediationAssessments,
       mentalStates,
@@ -297,6 +303,7 @@ export default function App() {
     const scenes = report.scenes.length > 0 ? report.scenes : [initialScene];
     setSessionMetadata(report.metadata);
     setHistory(scenes);
+    setStoryArchive(report.storyArchive ?? []);
     setHistoryIndex(Math.max(0, scenes.length - 1));
     setMediationEvents(report.mediationEvents);
     setMediationAssessments(report.mediationAssessments);
@@ -1379,6 +1386,9 @@ export default function App() {
 
   function clearStory() {
     stopReplay();
+    if (history.length > 1) {
+      setStoryArchive((stories) => [...stories, history.slice(1)]);
+    }
     setHistory([initialScene]);
     setHistoryIndex(0);
     setDraft({ verbId: '' });
@@ -1583,7 +1593,7 @@ export default function App() {
             </label>
 
             <div className="session-summary">
-              <span>CENAS {Math.max(0, history.length - 1)}</span>
+              <span>CENAS {allSessionScenes.length}</span>
               <span>EVENTOS {mediationEvents.length}</span>
               <span>MEDIAÇÕES {mediationAssessments.length}</span>
               <span>ESTADOS DECLARADOS {mentalStates.length}</span>
@@ -1699,7 +1709,7 @@ export default function App() {
           </section>
 
           <section className="report-kpis">
-            <div><strong>{Math.max(0, history.length - 1)}</strong><span>CENAS</span></div>
+            <div><strong>{allSessionScenes.length}</strong><span>CENAS</span></div>
             <div><strong>{mediationEvents.length}</strong><span>EVENTOS</span></div>
             <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0 - 3</span></div>
             <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
@@ -1743,7 +1753,7 @@ export default function App() {
                         <strong>{event.label}</strong>
                         <small>
                           {event.type.toUpperCase()}
-                          {assessment ? ` • MEDIAÇÃO ${assessment.level} • DIFICULDADE ${assessment.difficulty} • ${assessment.optionCount} OPÇÕES` : ''}
+                          {assessment ? ` - MEDIAÇÃO ${assessment.level} - DIFICULDADE ${assessment.difficulty} - ${assessment.optionCount} OPÇÕES` : ''}
                         </small>
                       </div>
                     </article>
@@ -1756,7 +1766,7 @@ export default function App() {
           <section className="report-section">
             <h3>CENAS TRABALHADAS</h3>
             <div className="report-scenes">
-              {history.slice(1).map((scene, index) => (
+              {allSessionScenes.map((scene, index) => (
                 <article key={scene.id}>
                   <header>
                     <strong>CENA {index + 1}</strong>
