@@ -21,37 +21,37 @@ export function validateAction(
   scene: SceneState,
   draft: ActionDraft,
   rule: VerbRule,
-): { message: string; kind: ActionErrorKind } | null {
+): { message: string; kind: ActionErrorKind; role?: 'actor' | 'object' | 'targetPerson' | 'destination' | 'seat' } | null {
   const actor = scene.entities.find((entity) => entity.instanceId === draft.actorId);
-  if (!actor) return { message: 'FALTA QUEM', kind: 'incomplete' };
+  if (!actor) return { message: 'FALTA QUEM', kind: 'incomplete', role: 'actor' };
 
-  if (rule.requires.includes('object') && !draft.objectId) return { message: 'FALTA OBJETO', kind: 'incomplete' };
-  if (rule.requires.includes('targetPerson') && !draft.targetPersonId) return { message: 'FALTA OUTRA PESSOA', kind: 'incomplete' };
-  if (rule.requires.includes('destination') && !draft.destinationId) return { message: 'FALTA DESTINO', kind: 'incomplete' };
-  if (rule.requires.includes('seat') && !draft.seatId) return { message: 'FALTA ONDE SENTAR', kind: 'incomplete' };
+  if (rule.requires.includes('object') && !draft.objectId) return { message: 'FALTA OBJETO', kind: 'incomplete', role: 'object' };
+  if (rule.requires.includes('targetPerson') && !draft.targetPersonId) return { message: 'FALTA OUTRA PESSOA', kind: 'incomplete', role: 'targetPerson' };
+  if (rule.requires.includes('destination') && !draft.destinationId) return { message: 'FALTA DESTINO', kind: 'incomplete', role: 'destination' };
+  if (rule.requires.includes('seat') && !draft.seatId) return { message: 'FALTA ONDE SENTAR', kind: 'incomplete', role: 'seat' };
 
   const object = scene.entities.find((entity) => entity.instanceId === draft.objectId);
 
   switch (rule.id) {
     case 'stand':
-      if (actor.posture !== 'sitting') return { message: 'A PESSOA NÃO ESTÁ SENTADA', kind: 'impossible' };
+      if (actor.posture !== 'sitting') return { message: 'A PESSOA NÃO ESTÁ SENTADA', kind: 'impossible', role: 'actor' };
       break;
     case 'take':
-      if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible' };
-      if (object.ownerId) return { message: 'OBJETO JÁ ESTÁ COM ALGUÉM', kind: 'impossible' };
+      if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible', role: 'object' };
+      if (object.ownerId) return { message: 'OBJETO JÁ ESTÁ COM ALGUÉM', kind: 'impossible', role: 'object' };
       break;
     case 'give':
-      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible' };
-      if (draft.targetPersonId === actor.instanceId) return { message: 'ESCOLHA OUTRA PESSOA', kind: 'impossible' };
+      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible', role: 'object' };
+      if (draft.targetPersonId === actor.instanceId) return { message: 'ESCOLHA OUTRA PESSOA', kind: 'impossible', role: 'targetPerson' };
       break;
     case 'put':
-      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible' };
+      if (!object || object.ownerId !== actor.instanceId) return { message: 'A PESSOA NÃO ESTÁ COM O OBJETO', kind: 'impossible', role: 'object' };
       break;
     case 'eat':
-      if (!object || object.label !== 'COMIDA' || object.consumed) return { message: 'ESCOLHA COMIDA', kind: 'impossible' };
+      if (!object || object.label !== 'COMIDA' || object.consumed) return { message: 'ESCOLHA COMIDA', kind: 'impossible', role: 'object' };
       break;
     case 'drink':
-      if (!object || !['ÁGUA', 'COPO'].includes(object.label) || object.consumed) return { message: 'ESCOLHA ÁGUA OU COPO', kind: 'impossible' };
+      if (!object || !['ÁGUA', 'COPO'].includes(object.label) || object.consumed) return { message: 'ESCOLHA ÁGUA OU COPO', kind: 'impossible', role: 'object' };
       break;
     default:
       break;
@@ -71,6 +71,7 @@ export function executeAction(
       ok: false,
       error: validation.message,
       errorKind: validation.kind,
+      role: validation.role,
     };
   }
 
