@@ -39,6 +39,8 @@ import type {
   ActivitySupportConfig,
   MediationAssessment,
   MediationLevel,
+  SessionMetadata,
+  SessionReport,
 } from './types/domain';
 
 const categoryLabels: Record<AssetCategory, string> = {
@@ -141,6 +143,12 @@ export default function App() {
     useDistractors: false,
   });
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
+  const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
+    participant: '',
+    date: new Date().toISOString().slice(0, 10),
+    objective: '',
+    notes: '',
+  });
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const replayTimer = useRef<number | null>(null);
 
@@ -207,6 +215,73 @@ export default function App() {
       createdAt: new Date().toISOString(),
     }]);
     setFeedback(`MEDIAÇÃO ${level} — ${mediationLevelLabel(level)}`);
+  }
+
+  function buildSessionReport(): SessionReport {
+    return {
+      metadata: sessionMetadata,
+      scenes: history,
+      mediationEvents,
+      mediationAssessments,
+      mentalStates,
+      informationAccess,
+      supportConfig,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  function downloadTextFile(filename: string, content: string, type: string) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportSessionJson() {
+    const report = buildSessionReport();
+    const safeParticipant = (sessionMetadata.participant || 'SESSAO').trim().replace(/[^A-Za-z0-9_-]+/g, '_');
+    downloadTextFile(
+      `NEXO_${safeParticipant}_${sessionMetadata.date}.json`,
+      JSON.stringify(report, null, 2),
+      'application/json',
+    );
+  }
+
+  function exportSessionCsv() {
+    const rows = [
+      ['DATA', 'TIPO', 'DESCRICAO', 'NIVEL_MEDIACAO', 'DIFICULDADE', 'OPCOES', 'DISTRATORES'],
+    ];
+
+    for (const event of mediationEvents) {
+      const assessment = [...mediationAssessments]
+        .reverse()
+        .find((item) => item.sourceEventId === event.id);
+      rows.push([
+        event.createdAt,
+        event.type,
+        event.label,
+        assessment ? String(assessment.level) : '',
+        assessment ? String(assessment.difficulty) : '',
+        assessment ? String(assessment.optionCount) : '',
+        assessment ? (assessment.useDistractors ? 'SIM' : 'NAO') : '',
+      ]);
+    }
+
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(';'))
+      .join('\n');
+
+    const safeParticipant = (sessionMetadata.participant || 'SESSAO').trim().replace(/[^A-Za-z0-9_-]+/g, '_');
+    downloadTextFile(
+      `NEXO_${safeParticipant}_${sessionMetadata.date}.csv`,
+      '\uFEFF' + csv,
+      'text/csv;charset=utf-8',
+    );
   }
 
   function setSceneTemporalDay(day: TemporalDay) {
@@ -1201,6 +1276,68 @@ export default function App() {
               </label>
             </>
           )}
+
+          <div className="session-panel">
+            <label>
+              <span>PARTICIPANTE</span>
+              <input
+                value={sessionMetadata.participant}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  participant: event.target.value.toUpperCase(),
+                }))}
+                placeholder="NOME"
+              />
+            </label>
+
+            <label>
+              <span>DATA</span>
+              <input
+                type="date"
+                value={sessionMetadata.date}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  date: event.target.value,
+                }))}
+              />
+            </label>
+
+            <label className="session-wide">
+              <span>OBJETIVO</span>
+              <input
+                value={sessionMetadata.objective}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  objective: event.target.value.toUpperCase(),
+                }))}
+                placeholder="OBJETIVO DA SESSÃO"
+              />
+            </label>
+
+            <label className="session-wide">
+              <span>OBSERVAÇÕES</span>
+              <textarea
+                value={sessionMetadata.notes}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  notes: event.target.value,
+                }))}
+                placeholder="REGISTRO LIVRE DA PROFESSORA"
+              />
+            </label>
+
+            <div className="session-summary">
+              <span>CENAS {Math.max(0, history.length - 1)}</span>
+              <span>EVENTOS {mediationEvents.length}</span>
+              <span>MEDIAÇÕES {mediationAssessments.length}</span>
+              <span>ESTADOS DECLARADOS {mentalStates.length}</span>
+            </div>
+
+            <div className="session-export">
+              <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
+              <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
+            </div>
+          </div>
 
           <div className="teacher-support">
             <label>
