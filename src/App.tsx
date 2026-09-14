@@ -138,8 +138,10 @@ export default function App() {
   const [informationAccess, setInformationAccess] = useState<InformationAccess[]>([]);
   const [accessTask, setAccessTask] = useState<AccessTask>({ kind: 'who_saw' });
   const [accessTaskActive, setAccessTaskActive] = useState(false);
+  const [accessAnswerPersonIds, setAccessAnswerPersonIds] = useState<string[]>([]);
   const [hiddenInfoTask, setHiddenInfoTask] = useState<HiddenInfoTask>({ witnessPersonIds: [] });
   const [hiddenInfoTaskActive, setHiddenInfoTaskActive] = useState(false);
+  const [hiddenInfoAnswerPersonIds, setHiddenInfoAnswerPersonIds] = useState<string[]>([]);
   const [relocationTask, setRelocationTask] = useState<RelocationPerspectiveTask>({
     initialWitnessPersonIds: [],
     sawMovePersonIds: [],
@@ -305,7 +307,9 @@ export default function App() {
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
+    setAccessAnswerPersonIds([]);
     setHiddenInfoTaskActive(false);
+    setHiddenInfoAnswerPersonIds([]);
     setRelocationTaskActive(false);
     setRelocationSequenceActive(false);
   }
@@ -854,14 +858,30 @@ export default function App() {
       setFeedback('CONFIGURE QUEM VIU OU NÃO VIU A CENA');
       return;
     }
+    setAccessAnswerPersonIds([]);
     setAccessTaskActive(true);
     setFeedback(null);
   }
 
-  function answerAccessTask(personId: string) {
+  function toggleAccessAnswer(personId: string) {
+    if (!accessTaskActive) return;
+    setAccessAnswerPersonIds((current) =>
+      current.includes(personId)
+        ? current.filter((id) => id !== personId)
+        : [...current, personId],
+    );
+  }
+
+  function verifyAccessAnswer() {
     if (!accessTaskActive || !accessTask.sceneId) return;
-    const access = getInformationAccessState(personId, accessTask.sceneId);
-    const correct = access?.state === 'saw';
+    const expected = people
+      .filter((person) => getInformationAccessState(person.instanceId, accessTask.sceneId)?.state === 'saw')
+      .map((person) => person.instanceId)
+      .sort();
+    const answer = [...accessAnswerPersonIds].sort();
+    const correct =
+      expected.length === answer.length &&
+      expected.every((id, index) => id === answer[index]);
 
     setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
     setMediationEvents((events) => [...events, {
@@ -894,13 +914,28 @@ export default function App() {
       setFeedback('MARQUE QUEM VIU A COLOCAÇÃO');
       return;
     }
+    setHiddenInfoAnswerPersonIds([]);
     setHiddenInfoTaskActive(true);
     setFeedback(null);
   }
 
-  function answerHiddenInfoTask(personId: string) {
+  function toggleHiddenInfoAnswer(personId: string) {
     if (!hiddenInfoTaskActive) return;
-    const correct = hiddenInfoTask.witnessPersonIds.includes(personId);
+    setHiddenInfoAnswerPersonIds((current) =>
+      current.includes(personId)
+        ? current.filter((id) => id !== personId)
+        : [...current, personId],
+    );
+  }
+
+  function verifyHiddenInfoAnswer() {
+    if (!hiddenInfoTaskActive) return;
+    const expected = [...hiddenInfoTask.witnessPersonIds].sort();
+    const answer = [...hiddenInfoAnswerPersonIds].sort();
+    const correct =
+      expected.length === answer.length &&
+      expected.every((id, index) => id === answer[index]);
+
     setFeedback(correct ? '✓ CORRETO' : '❌ ERRADO');
     setMediationEvents((events) => [...events, {
       id: crypto.randomUUID(),
@@ -2212,12 +2247,20 @@ export default function App() {
                 </strong>
                 <div>
                   {people.map((person) => (
-                    <button type="button" key={person.instanceId} onClick={() => answerHiddenInfoTask(person.instanceId)}>
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={hiddenInfoAnswerPersonIds.includes(person.instanceId) ? 'active' : ''}
+                      onClick={() => toggleHiddenInfoAnswer(person.instanceId)}
+                    >
                       <AssetVisual asset={person} size={46} />
                       <span>{person.label}</span>
                     </button>
                   ))}
                 </div>
+                <button className="sequence-check" type="button" onClick={verifyHiddenInfoAnswer}>
+                  CONFERIR
+                </button>
               </div>
             )}
 
@@ -2313,12 +2356,20 @@ export default function App() {
                 <strong>{accessTask.kind === 'who_saw' ? 'QUEM VIU A CENA?' : 'QUEM TEM ACESSO À INFORMAÇÃO DA CENA?'}</strong>
                 <div className="access-answer-options">
                   {people.map((person) => (
-                    <button type="button" key={person.instanceId} onClick={() => answerAccessTask(person.instanceId)}>
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={accessAnswerPersonIds.includes(person.instanceId) ? 'active' : ''}
+                      onClick={() => toggleAccessAnswer(person.instanceId)}
+                    >
                       <AssetVisual asset={person} size={46} />
                       <span>{person.label}</span>
                     </button>
                   ))}
                 </div>
+                <button className="sequence-check" type="button" onClick={verifyAccessAnswer}>
+                  CONFERIR
+                </button>
               </div>
             )}
 
