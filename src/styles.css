@@ -3907,3 +3907,11 @@ body {
     margin-bottom: 8px;
   }
 }
+
+
+.access-answer-options button.active,
+.hidden-info-question button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
