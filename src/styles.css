@@ -3706,3 +3706,204 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* Global visual refinement */
+:root {
+  --nexo-ink: #171717;
+  --nexo-muted: #6c6860;
+  --nexo-line: #d9d4ca;
+  --nexo-soft: #f4f1ea;
+  --nexo-paper: #fffdf9;
+  --nexo-surface: #ffffff;
+  --nexo-radius: 14px;
+  --nexo-shadow: 0 12px 32px rgba(26, 22, 16, .06);
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(0,0,0,.025), transparent 28%),
+    var(--nexo-soft);
+}
+
+.topbar {
+  background: rgba(255,255,255,.96);
+  padding-block: 18px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--nexo-ink);
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.topbar h1 {
+  font-weight: 900;
+  letter-spacing: -.06em;
+}
+
+.subtitle {
+  color: var(--nexo-muted);
+  font-size: .82rem;
+}
+
+.module-nav {
+  backdrop-filter: blur(10px);
+}
+
+.module-nav button {
+  transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease;
+}
+
+.module-nav button:hover {
+  transform: translateY(-1px);
+}
+
+.teacher-panel,
+.library,
+.stage-panel,
+.story-panel,
+.action-builder,
+.spatial-task-builder,
+.relation-builder,
+.temporal-builder,
+.calendar-builder,
+.week-builder,
+.narrative-task-builder,
+.causal-task-builder,
+.mental-state-builder,
+.perspective-builder,
+.access-builder,
+.hidden-info-builder,
+.relocation-builder,
+.session-report-view {
+  border-color: var(--nexo-line);
+}
+
+.stage-panel {
+  background: var(--nexo-paper);
+}
+
+.stage,
+.compare-stage > section,
+.asset-card,
+.verb-button,
+.visual-option,
+.session-panel,
+.session-report-view {
+  box-shadow: var(--nexo-shadow);
+}
+
+.asset-card,
+.verb-button,
+.visual-option,
+.narrative-option,
+.causal-option,
+.calendar-event,
+.week-day,
+.temporal-card {
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+.asset-card:hover,
+.verb-button:hover,
+.visual-option:hover,
+.narrative-option:hover,
+.causal-option:hover,
+.calendar-event:hover,
+.week-day:hover,
+.temporal-card:hover {
+  transform: translateY(-2px);
+  border-color: #aaa398;
+}
+
+.section-kicker,
+.eyebrow {
+  color: var(--nexo-muted);
+}
+
+.builder-title {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e1d9;
+}
+
+.empty-state {
+  max-width: 320px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px;
+}
+
+.empty-state span {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c9c4ba;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 2rem;
+}
+
+.empty-state strong {
+  font-size: .84rem;
+  letter-spacing: .05em;
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 260px;
+  line-height: 1.45;
+  color: var(--nexo-muted);
+}
+
+.feedback {
+  border: 1px solid var(--nexo-line);
+  box-shadow: 0 8px 18px rgba(0,0,0,.04);
+}
+
+.teacher-button {
+  border-color: var(--nexo-ink);
+}
+
+.teacher-button:hover,
+.stage-actions button:hover,
+.session-export button:hover,
+.report-actions button:hover {
+  border-color: var(--nexo-ink);
+}
+
+@media (max-width: 640px) {
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    font-size: .82rem;
+  }
+
+  .topbar {
+    background: #fff;
+  }
+
+  .stage,
+  .asset-card,
+  .verb-button,
+  .visual-option {
+    box-shadow: none;
+  }
+
+  .builder-title {
+    margin-bottom: 8px;
+  }
+}
