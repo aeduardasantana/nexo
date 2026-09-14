@@ -83,6 +83,15 @@ function shuffledCopy<T>(items: T[]): T[] {
   return copy;
 }
 
+function takeOptionsWithExpected<T>(
+  expected: T,
+  pool: T[],
+  count: number,
+): T[] {
+  const others = shuffledCopy(pool.filter((item) => item !== expected));
+  return shuffledCopy([expected, ...others.slice(0, Math.max(0, count - 1))]);
+}
+
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
   const [history, setHistory] = useState<SceneState[]>([initialScene]);
@@ -111,6 +120,7 @@ export default function App() {
   });
   const [spatialTaskActive, setSpatialTaskActive] = useState(false);
   const [temporalTaskActive, setTemporalTaskActive] = useState(false);
+  const [temporalOptionDays, setTemporalOptionDays] = useState<TemporalDay[]>([]);
   const [expectedTemporalDay, setExpectedTemporalDay] = useState<TemporalDay>('today');
   const [temporalEvents, setTemporalEvents] = useState<TemporalEvent[]>([]);
   const [newTemporalEventLabel, setNewTemporalEventLabel] = useState('');
@@ -122,6 +132,7 @@ export default function App() {
   const [newWeeklyEventRecurring, setNewWeeklyEventRecurring] = useState(true);
   const [weekTask, setWeekTask] = useState<WeekTask>({ kind: 'today' });
   const [weekTaskActive, setWeekTaskActive] = useState(false);
+  const [weekOptionDays, setWeekOptionDays] = useState<Weekday[]>([]);
   const [narrativeTask, setNarrativeTask] = useState<NarrativeTask>({ kind: 'first', sceneIds: [] });
   const [narrativeTaskActive, setNarrativeTaskActive] = useState(false);
   const [narrativeAnswer, setNarrativeAnswer] = useState<string[]>([]);
@@ -330,6 +341,7 @@ export default function App() {
     setSpatialTaskActive(false);
     setTemporalTaskActive(false);
     setWeekTaskActive(false);
+    setWeekOptionDays([]);
     setNarrativeTaskActive(false);
     setCausalTaskActive(false);
     setMentalTaskActive(false);
@@ -546,7 +558,12 @@ export default function App() {
   }
 
   function startNarrativeTask() {
-    const scenes = availableNarrativeScenes().slice(0, 3);
+    const targetCount =
+      supportConfig.difficulty === 1 ? 2 :
+      supportConfig.difficulty === 2 ? 3 :
+      4;
+    const availableScenes = availableNarrativeScenes();
+    const scenes = availableScenes.slice(0, targetCount);
     if (scenes.length < 2) {
       setFeedback('CRIE PELO MENOS DUAS CENAS NA HISTÓRIA');
       return;
@@ -557,7 +574,32 @@ export default function App() {
       sceneIds: orderedSceneIds,
     }));
     setNarrativeAnswer([]);
-    setNarrativeOptionIds(shuffledCopy(orderedSceneIds));
+
+    if (narrativeTask.kind === 'order') {
+      setNarrativeOptionIds(shuffledCopy(orderedSceneIds));
+    } else {
+      const expectedId = narrativeTask.kind === 'first' ? orderedSceneIds[0] : orderedSceneIds[1];
+      const baseOptions = takeOptionsWithExpected(
+        expectedId,
+        orderedSceneIds,
+        Math.min(supportConfig.optionCount, orderedSceneIds.length),
+      );
+
+      if (supportConfig.useDistractors) {
+        const distractorIds = availableScenes
+          .slice(targetCount)
+          .map((scene) => scene.id)
+          .filter((id) => !baseOptions.includes(id));
+        const withDistractors = [
+          ...baseOptions,
+          ...shuffledCopy(distractorIds).slice(0, Math.max(0, supportConfig.optionCount - baseOptions.length)),
+        ];
+        setNarrativeOptionIds(shuffledCopy(withDistractors.slice(0, supportConfig.optionCount)));
+      } else {
+        setNarrativeOptionIds(baseOptions);
+      }
+    }
+
     setNarrativeTaskActive(true);
     setFeedback(null);
   }
@@ -1397,6 +1439,7 @@ export default function App() {
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
     setTemporalTaskActive(false);
+    setTemporalOptionDays([]);
     setTemporalEventQuestionId(null);
     setTemporalEvents([]);
     setWeeklyEvents([]);
@@ -1472,8 +1515,10 @@ export default function App() {
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
     setTemporalTaskActive(false);
+    setTemporalOptionDays([]);
     setTemporalEventQuestionId(null);
     setWeekTaskActive(false);
+    setWeekOptionDays([]);
     setNarrativeTaskActive(false);
     setNarrativeAnswer([]);
     setNarrativeOptionIds([]);
@@ -2969,7 +3014,9 @@ export default function App() {
             </div>
 
             <div className="week-grid">
-              {getWeekDays().map(({ weekday, date, isToday }) => (
+              {getWeekDays()
+                .filter(({ weekday }) => !weekTaskActive || weekOptionDays.includes(weekday))
+                .map(({ weekday, date, isToday }) => (
                 <button
                   type="button"
                   className={[
@@ -3067,6 +3114,19 @@ export default function App() {
                       setFeedback('ESCOLHA UM EVENTO');
                       return;
                     }
+                    const expected = expectedWeekdayForTask();
+                    if (expected === null) {
+                      setFeedback('ATIVIDADE INCOMPLETA');
+                      return;
+                    }
+                    const allDays = [0,1,2,3,4,5,6] as Weekday[];
+                    setWeekOptionDays(
+                      takeOptionsWithExpected(
+                        expected,
+                        allDays,
+                        Math.min(supportConfig.optionCount, allDays.length),
+                      ),
+                    );
                     setWeekTaskActive(true);
                     setFeedback(null);
                   }}
@@ -3126,7 +3186,9 @@ export default function App() {
             </div>
 
             <div className="calendar-columns">
-              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[]).map((day) => (
+              {(['yesterday', 'today', 'tomorrow'] as TemporalDay[])
+                .filter((day) => !temporalTaskActive || temporalOptionDays.includes(day))
+                .map((day) => (
                 <section className="calendar-day" key={day}>
                   <header>
                     <span>{temporalSymbol(day)}</span>
@@ -3241,6 +3303,14 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
+                  const allDays: TemporalDay[] = ['yesterday', 'today', 'tomorrow'];
+                  setTemporalOptionDays(
+                    takeOptionsWithExpected(
+                      expectedTemporalDay,
+                      allDays,
+                      Math.min(supportConfig.optionCount, allDays.length),
+                    ),
+                  );
                   setTemporalTaskActive(true);
                   setFeedback(null);
                 }}
