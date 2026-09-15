@@ -2075,7 +2075,7 @@ export default function App() {
     if (correct) setTemporalTaskActive(false);
   }
 
-  function addToScene(asset: SceneAsset) {
+  function addToScene(asset: SceneAsset, position?: { x: number; y: number }) {
     if (activeModule !== 'scenario') {
       setActiveModule('scenario');
       setReportOpen(false);
@@ -2084,7 +2084,10 @@ export default function App() {
       setFeedback('⚠ NÃO FOI POSSÍVEL ADICIONAR - VOLTE PARA A CENA MAIS ATUAL');
       return;
     }
-    const entity = toEntity(asset, currentScene.entities.length);
+    const entity = {
+      ...toEntity(asset, currentScene.entities.length),
+      ...(position ? { x: position.x, y: position.y } : {}),
+    };
     const editedScene: SceneState = {
       ...currentScene,
       entities: [...currentScene.entities, entity],
@@ -2097,6 +2100,19 @@ export default function App() {
     setLastAddedAssetId(asset.id);
     setFeedback(`✓ ${asset.label} ADICIONADO À CENA`);
     window.setTimeout(() => setLastAddedAssetId((id) => id === asset.id ? null : id), 1200);
+  }
+
+  function handleAssetDragStart(asset: SceneAsset) {
+    setFeedback(`SOLTE ${asset.label} NO CENÁRIO`);
+  }
+
+  function handleAssetDrop(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const assetId = event.dataTransfer.getData('application/x-nexo-asset');
+    const asset = assets.find((item) => item.id === assetId);
+    const point = pointerToPercent(event.clientX, event.clientY);
+    if (!asset || !point) return;
+    addToScene(asset, point);
   }
 
   function updateEntityPosition(instanceId: string, x: number, y: number) {
@@ -3282,6 +3298,14 @@ export default function App() {
 
       <section className="workspace" id="nexo-workspace" tabIndex={-1}>
         <aside className="library">
+          <div className="library-guide" aria-live="polite">
+            <strong>{interfaceMode === 'participant' ? 'COMO MONTAR A CENA' : 'BIBLIOTECA VISUAL'}</strong>
+            <p>
+              {interfaceMode === 'participant'
+                ? '1. TOQUE EM UMA FIGURA. 2. TOQUE NO CENÁRIO PARA MUDAR DE LUGAR. NO COMPUTADOR, TAMBÉM É POSSÍVEL ARRASTAR A FIGURA ATÉ O CENÁRIO.'
+                : 'CLIQUE PARA ADICIONAR NO CENTRO OU ARRASTE ATÉ A POSIÇÃO DESEJADA. DEPOIS, TROQUE PARA PARTICIPANTE PARA A ATIVIDADE.'}
+            </p>
+          </div>
           <nav className="category-tabs" aria-label="Biblioteca visual">
             {(['person', 'object', 'place'] as AssetCategory[]).map((item) => (
               <button
@@ -3301,6 +3325,7 @@ export default function App() {
                 key={asset.id}
                 asset={asset}
                 onSelect={addToScene}
+                onDragStart={handleAssetDragStart}
                 selected={lastAddedAssetId === asset.id}
               />
             ))}
@@ -3368,17 +3393,23 @@ export default function App() {
               </section>
             </div>
           ) : (
-            <div className={isReplaying ? 'stage is-replaying' : 'stage'} aria-live="polite">
+            <div
+              className={isReplaying ? 'stage is-replaying' : 'stage'}
+              aria-live="polite"
+              ref={sceneRef}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleAssetDrop}
+            >
               {displayedScene.entities.filter((entity) => !entity.consumed).length === 0 ? (
                 <div className="empty-state">
                   <span aria-hidden="true">＋</span>
                   <strong>COMECE A CENA</strong>
-                  <p>ESCOLHA UMA PESSOA, UM OBJETO OU UM LUGAR</p>
+                  <p>TOQUE EM UMA PESSOA, OBJETO OU LUGAR NA BIBLIOTECA</p>
+                  <small>NO COMPUTADOR, VOCÊ TAMBÉM PODE ARRASTAR A FIGURA PARA CÁ.</small>
                 </div>
               ) : (
                 <div
                   className="spatial-scene"
-                  ref={sceneRef}
                   onPointerMove={handleScenePointerMove}
                   onPointerUp={handleScenePointerUp}
                   onPointerCancel={handleScenePointerUp}

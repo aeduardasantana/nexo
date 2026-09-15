@@ -65,6 +65,17 @@ button { font: inherit; }
 
 .asset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
 
+.library-guide {
+  margin: 0 0 14px;
+  padding: 11px 12px;
+  border: 1px solid #d7d3ca;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.library-guide strong { font-size: .67rem; letter-spacing: .06em; }
+.library-guide p { margin: 5px 0 0; font-size: .68rem; line-height: 1.45; font-weight: 720; color: #5d5952; }
+
 .asset-card {
   aspect-ratio: 1 / 1.06;
   border: 1px solid #d7d3ca;
@@ -77,6 +88,9 @@ button { font: inherit; }
   gap: 8px;
   cursor: pointer;
 }
+
+.asset-card[draggable="true"] { cursor: grab; }
+.asset-card[draggable="true"]:active { cursor: grabbing; }
 
 .asset-symbol { font-size: 2.6rem; line-height: 1; }
 .asset-label { font-size: .72rem; font-weight: 850; }
@@ -103,6 +117,7 @@ button { font: inherit; }
 .empty-state { text-align: center; color: #8b877e; }
 .empty-state span { font-size: 3rem; font-weight: 200; }
 .empty-state p { font-size: .75rem; font-weight: 850; letter-spacing: .08em; }
+.empty-state small { display: block; max-width: 270px; margin: 8px auto 0; font-size: .63rem; line-height: 1.45; font-weight: 700; }
 
 .scene-strip { width: 100%; display: flex; flex-wrap: wrap; align-items: end; justify-content: center; gap: 24px; padding: 30px; }
 .scene-item { display: grid; justify-items: center; gap: 7px; }

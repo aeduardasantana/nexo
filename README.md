@@ -83,6 +83,11 @@ Dificuldade de expressão no NEXO não deve ser interpretada automaticamente com
 - `src/types` - tipos do domínio
 - `docs` - documentação pedagógica e técnica
 
+### Guias da versão
+
+- [Uso rápido](docs/USO-RAPIDO.md) - fluxo de participante e mediador.
+- [QA geral](docs/QA-GERAL.md) - critérios, testes de regressão e limites conhecidos.
+
 ## Execução local
 
 ```bash
