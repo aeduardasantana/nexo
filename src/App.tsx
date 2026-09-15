@@ -73,6 +73,7 @@ function toEntity(asset: SceneAsset, index: number): EntityState {
     x: columns[index % columns.length],
     y: rows[Math.floor(index / columns.length) % rows.length],
     posture: asset.category === 'person' ? 'standing' : undefined,
+    openState: asset.id === 'door' ? 'closed' : undefined,
   };
 }
 
@@ -2657,6 +2658,7 @@ export default function App() {
           entity.consumed ? 'is-consumed' : '',
           entity.posture === 'sitting' ? 'is-sitting' : '',
           entity.posture === 'sleeping' ? 'is-sleeping' : '',
+          entity.category === 'place' ? 'is-place' : '',
         ].join(' ')}
         key={entity.instanceId}
         role="button"

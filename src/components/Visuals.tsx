@@ -2,7 +2,7 @@
 import type { SceneAsset, VerbRule } from '../types/domain';
 
 type AssetVisualProps = {
-  asset: Pick<SceneAsset, 'id' | 'label' | 'category'>;
+  asset: Pick<SceneAsset, 'id' | 'label' | 'category'> & { openState?: 'open' | 'closed' };
   size?: number;
   className?: string;
 };
@@ -20,9 +20,14 @@ export function AssetVisual({ asset, size = 72, className = '' }: AssetVisualPro
   if (asset.category === 'person') {
     return (
       <svg {...common}>
-        <circle cx="50" cy="22" r="11" fill="currentColor" opacity=".14" />
-        <circle cx="50" cy="22" r="10" fill="none" stroke="currentColor" strokeWidth="4" />
-        <path d="M50 34 L50 64 M50 44 L32 54 M50 44 L68 54 M50 64 L36 88 M50 64 L64 88" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+        <g className="person-figure">
+          <circle cx="50" cy="22" r="11" fill="currentColor" opacity=".14" />
+          <circle cx="50" cy="22" r="10" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle className="person-eye" cx="54" cy="19" r="1.7" fill="currentColor" />
+          <path className="person-mouth-closed" d="M53 27 Q57 29 60 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path className="person-mouth-open" d="M53 25 L61 29 L53 33 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M50 34 L50 64 M50 44 L32 54 M50 44 L68 54 M50 64 L36 88 M50 64 L64 88" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+        </g>
       </svg>
     );
   }
@@ -100,8 +105,15 @@ export function AssetVisual({ asset, size = 72, className = '' }: AssetVisualPro
     case 'door':
       return (
         <svg {...common}>
-          <rect x="28" y="16" width="44" height="68" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-          <circle cx="61" cy="51" r="3" fill="currentColor" />
+          <rect x="24" y="14" width="52" height="72" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
+          {asset.openState === 'open' ? (
+            <path d="M27 17 L65 25 V79 L27 83 Z" fill="currentColor" fillOpacity=".08" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+          ) : (
+            <>
+              <rect x="28" y="18" width="44" height="64" rx="1" fill="currentColor" fillOpacity=".05" stroke="currentColor" strokeWidth="3" />
+              <circle cx="62" cy="51" r="3" fill="currentColor" />
+            </>
+          )}
         </svg>
       );
     case 'plate':
@@ -169,6 +181,47 @@ export function AssetVisual({ asset, size = 72, className = '' }: AssetVisualPro
           <path d="M18 48 L50 22 L82 48 V80 H58 V58 H42 V80 H18 Z" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
         </svg>
       );
+    case 'living_room':
+      return (
+        <svg {...common}>
+          <path d="M13 18 H87 V84 H13 Z" fill="currentColor" fillOpacity=".035" stroke="currentColor" strokeWidth="3" />
+          <path d="M25 51 C25 43 32 39 40 39 H60 C68 39 75 43 75 51 V70 H25 Z M19 53 V70 H81 V53 M31 70 V78 M69 70 V78" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <rect x="37" y="75" width="26" height="5" rx="2" fill="currentColor" opacity=".18" />
+        </svg>
+      );
+    case 'bedroom':
+      return (
+        <svg {...common}>
+          <path d="M13 18 H87 V84 H13 Z" fill="currentColor" fillOpacity=".035" stroke="currentColor" strokeWidth="3" />
+          <path d="M21 68 H79 M25 68 V42 H48 C63 42 72 48 76 57 V68 M25 68 V78 M76 68 V78" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <rect x="29" y="46" width="19" height="9" rx="4" fill="none" stroke="currentColor" strokeWidth="3" />
+        </svg>
+      );
+    case 'kitchen':
+      return (
+        <svg {...common}>
+          <path d="M13 18 H87 V84 H13 Z" fill="currentColor" fillOpacity=".035" stroke="currentColor" strokeWidth="3" />
+          <path d="M20 50 H80 V78 H20 Z M50 50 V78 M20 61 H80" fill="none" stroke="currentColor" strokeWidth="3" />
+          <circle cx="34" cy="42" r="9" fill="none" stroke="currentColor" strokeWidth="3" />
+          <path d="M43 42 H55 M59 32 H77 V50 H59 Z M63 37 H73" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'bathroom':
+      return (
+        <svg {...common}>
+          <path d="M13 18 H87 V84 H13 Z" fill="currentColor" fillOpacity=".035" stroke="currentColor" strokeWidth="3" />
+          <path d="M22 34 H47 V49 H22 Z M34 49 V58 M25 58 H44 M61 27 V44 C61 56 75 56 75 44 V40 M57 27 H69" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M57 47 L53 54 M64 49 L61 57 M71 48 L70 56" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M27 68 H50 C50 78 43 82 36 82 C29 82 27 76 27 68 Z" fill="none" stroke="currentColor" strokeWidth="3" />
+        </svg>
+      );
+    case 'street':
+      return (
+        <svg {...common}>
+          <path d="M18 84 L37 18 H63 L82 84 Z" fill="currentColor" fillOpacity=".04" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M50 24 V35 M50 44 V55 M50 64 V78 M11 69 H29 M71 69 H89" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
     case 'church':
       return (
         <svg {...common}>
@@ -196,8 +249,13 @@ export function VerbVisual({ verb, size = 76, animated = false }: { verb: VerbRu
   return (
     <div className={`verb-visual verb-${verb.id} ${animated ? 'is-animated' : ''}`} style={{ width: size, height: size }} aria-label={verb.label}>
       <svg viewBox="0 0 100 100" role="img" aria-hidden="true">
-        <circle className="verb-head" cx="32" cy="25" r="8" />
-        <path className="verb-body" d="M32 34 L32 60 M32 43 L20 52 M32 43 L44 52 M32 60 L22 79 M32 60 L42 79" />
+        <g className="verb-person">
+          <circle className="verb-head" cx="32" cy="25" r="8" />
+          <circle className="verb-face-eye" cx="35" cy="23" r="1.3" />
+          <path className="verb-mouth-closed" d="M35 28 Q38 30 41 27" />
+          <path className="verb-mouth-open" d="M35 26 L42 30 L35 34 Z" />
+          <path className="verb-body" d="M32 34 L32 60 M32 43 L20 52 M32 43 L44 52 M32 60 L22 79 M32 60 L42 79" />
+        </g>
         <circle className="verb-object" cx="72" cy="58" r="9" />
         <path className="verb-arrow" d="M50 50 H76 M67 42 L76 50 L67 58" />
         <path className="verb-seat" d="M60 49 V72 H82 M66 72 V84 M81 72 V84" />

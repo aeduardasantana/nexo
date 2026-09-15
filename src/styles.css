@@ -770,6 +770,24 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   stroke-width: 4;
 }
 
+.verb-face-eye {
+  fill: currentColor;
+}
+
+.verb-mouth-closed,
+.verb-mouth-open {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.verb-mouth-open,
+.person-mouth-open {
+  opacity: 0;
+}
+
 .verb-body,
 .verb-arrow,
 .verb-seat,
@@ -814,13 +832,13 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   opacity: 1;
 }
 
-.verb-sleep .verb-body {
+.verb-sleep .verb-person {
   transform-origin: 32px 60px;
   transform: rotate(65deg) translate(8px, -8px);
 }
 
-.verb-walk.is-animated .verb-body,
-.verb-go.is-animated .verb-body {
+.verb-walk.is-animated .verb-person,
+.verb-go.is-animated .verb-person {
   animation: verbWalk 1s ease-in-out infinite alternate;
 }
 
@@ -836,14 +854,28 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   animation: verbArrow 1s ease-in-out infinite;
 }
 
-.verb-sit.is-animated .verb-body {
+.verb-sit.is-animated .verb-person {
   animation: verbSit 1.3s ease-in-out infinite;
   transform-origin: 32px 60px;
 }
 
-.verb-eat.is-animated .verb-object,
+.verb-eat.is-animated .verb-object {
+  animation: verbEat 1.2s ease-in-out infinite;
+}
+
 .verb-drink.is-animated .verb-cup {
-  animation: verbConsume 1.2s ease-in-out infinite;
+  animation: verbDrink 1.2s ease-in-out infinite;
+}
+
+.verb-eat .verb-mouth-closed,
+.verb-drink .verb-mouth-closed {
+  opacity: 0;
+}
+
+.verb-eat .verb-mouth-open,
+.verb-drink .verb-mouth-open {
+  opacity: 1;
+  animation: mouthBite .4s steps(2, end) infinite;
 }
 
 .activity-taking {
@@ -864,9 +896,14 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   animation: actorConsume .7s ease both;
 }
 
-.activity-sleeping {
-  transform: rotate(72deg);
-  transform-origin: center bottom;
+.activity-eating .person-mouth-closed,
+.activity-drinking .person-mouth-closed {
+  opacity: 0;
+}
+
+.activity-eating .person-mouth-open,
+.activity-drinking .person-mouth-open {
+  animation: sceneMouthBite .7s steps(2, end);
 }
 
 @keyframes verbWalk {
@@ -894,9 +931,25 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   70%, 100% { transform: translateY(10px) rotate(12deg); }
 }
 
-@keyframes verbConsume {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-26px, -28px) scale(.75); }
+@keyframes verbEat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  55% { transform: translate(-31px, -31px) scale(.45); opacity: 1; }
+  72% { transform: translate(-31px, -31px) scale(.08); opacity: 0; }
+}
+
+@keyframes verbDrink {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  55%, 72% { transform: translate(-27px, -23px) rotate(-32deg); }
+}
+
+@keyframes mouthBite {
+  0%, 100% { opacity: .15; }
+  50% { opacity: 1; }
+}
+
+@keyframes sceneMouthBite {
+  0%, 100% { opacity: 0; }
+  40%, 70% { opacity: 1; }
 }
 
 @keyframes actorReach {
@@ -977,7 +1030,21 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 }
 
 .scene-item.is-sleeping {
-  transform: translate(-50%, -50%) rotate(78deg);
+  transform: translate(-50%, -50%) rotate(74deg);
+}
+
+.spatial-scene .scene-item.is-place {
+  z-index: 1;
+}
+
+.spatial-scene .scene-item.is-place .asset-svg {
+  width: 142px;
+  height: 118px;
+}
+
+.spatial-scene .scene-item.is-place small {
+  display: block;
+  text-align: center;
 }
 
 @media (max-width: 640px) {

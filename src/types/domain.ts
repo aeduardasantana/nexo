@@ -27,8 +27,10 @@ export type EntityState = SceneAsset & {
   posture?: Posture;
   ownerId?: string;
   locationId?: string;
+  previousLocationId?: string;
   consumed?: boolean;
   activity?: string;
+  openState?: 'open' | 'closed';
 };
 
 export type TemporalDay = 'yesterday' | 'today' | 'tomorrow';
@@ -40,6 +42,10 @@ export type SceneState = {
   entities: EntityState[];
   actionLabel?: string;
   temporalDay?: TemporalDay;
+  pendingQuestion?: {
+    askerId: string;
+    respondentId: string;
+  };
 };
 
 export type ActionDraft = {

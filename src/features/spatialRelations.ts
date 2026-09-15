@@ -17,7 +17,14 @@ function distance(a: EntityState, b: EntityState) {
 }
 
 function isContainer(entity: EntityState) {
-  return ['CASA', 'QUARTO', 'COZINHA', 'SALA', 'MERCADO', 'IGREJA'].includes(entity.label);
+  return ['CASA', 'QUARTO', 'COZINHA', 'SALA', 'BANHEIRO', 'MERCADO', 'IGREJA'].includes(entity.label);
+}
+
+function isInsideContainer(subject: EntityState, reference: EntityState) {
+  if (!isContainer(reference)) return false;
+  const halfWidth = reference.id === 'home' ? 16 : 13;
+  const halfHeight = reference.id === 'home' ? 15 : 12;
+  return Math.abs(subject.x - reference.x) <= halfWidth && Math.abs(subject.y - reference.y) <= halfHeight;
 }
 
 export function evaluateRelation(
@@ -42,10 +49,10 @@ export function evaluateRelation(
       matched = subject.y >= reference.y + 10;
       break;
     case 'inside':
-      matched = isContainer(reference) && d <= 14;
+      matched = isInsideContainer(subject, reference);
       break;
     case 'outside':
-      matched = isContainer(reference) && d >= 24;
+      matched = isContainer(reference) && !isInsideContainer(subject, reference);
       break;
   }
 

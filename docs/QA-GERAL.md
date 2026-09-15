@@ -19,6 +19,11 @@ Cada fluxo crítico deve ter uma alternativa utilizável por toque. Arrastar nã
 | Persistência local | Indicação de salvamento local aparece no modo mediador | Aprovado na URL pública |
 | Avaliação longitudinal | Escala 0-3 e comando de registrar no histórico estão disponíveis | Aprovado na URL pública |
 | Limpeza de dados locais | Nova sessão não arquiva silenciosamente; histórico e todos os dados locais podem ser zerados por comandos explícitos | Aprovado em teste automatizado |
+| Anatomia das ações | Cabeça, rosto e corpo permanecem no mesmo grupo durante andar, ir, sentar e dormir | Corrigido nesta versão |
+| Comer e beber | Boca abre; alimento chega à boca; água é consumida sem remover o copo | Corrigido nesta versão |
+| Cômodos | Sala, quarto, cozinha, banheiro e rua possuem ilustrações próprias; dentro/fora usa a área do ambiente | Corrigido nesta versão |
+| Semântica dos verbos | OLHAR é ação; VIU/NÃO VIU permanece em perspectiva; VER e TRAZER não aparecem como ações duplicadas | Corrigido nesta versão |
+| Estados e continuidade | Porta aberta/fechada é visível; objeto carregado acompanha o dono; VOLTAR exige local anterior; RESPONDER exige pergunta | Corrigido nesta versão |
 | VLibras | Widget é carregado como apoio complementar | Aprovado na URL pública |
 | Responsividade | Estrutura possui organização específica para telas menores | Revisão manual necessária após publicação |
 | Build TypeScript/Vite | `npm install` e `npm run build` no GitHub Actions | Aprovado no deploy da versão 6825303a |

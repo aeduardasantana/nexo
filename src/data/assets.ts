@@ -31,6 +31,7 @@ export const assets: SceneAsset[] = [
   { id: 'living_room', label: 'SALA', category: 'place', symbol: '🛋️' },
   { id: 'bedroom', label: 'QUARTO', category: 'place', symbol: '🛏️' },
   { id: 'kitchen', label: 'COZINHA', category: 'place', symbol: '🍳' },
+  { id: 'bathroom', label: 'BANHEIRO', category: 'place', symbol: '🚿' },
   { id: 'street', label: 'RUA', category: 'place', symbol: '🛣️' },
   { id: 'church', label: 'IGREJA', category: 'place', symbol: '⛪' },
   { id: 'market', label: 'MERCADO', category: 'place', symbol: '🛒' },
