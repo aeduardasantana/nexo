@@ -26,6 +26,9 @@ import type {
   NarrativeTask,
   CausalTask,
   AutobiographicalRecord,
+  SocialInteraction,
+  SocialRole,
+  SharedAction,
   MentalState,
   MentalStateKind,
   MentalStateValue,
@@ -150,6 +153,11 @@ export default function App() {
     when: 'today',
   });
   const [autobiographicalRecords, setAutobiographicalRecords] = useState<AutobiographicalRecord[]>([]);
+  const [socialDraft, setSocialDraft] = useState<Partial<SocialInteraction>>({
+    role: 'AMIGO',
+    action: 'CONVERSAR',
+  });
+  const [socialInteractions, setSocialInteractions] = useState<SocialInteraction[]>([]);
   const [mentalStates, setMentalStates] = useState<MentalState[]>([]);
   const [mentalTask, setMentalTask] = useState<MentalTask>({ kind: 'choose_self' });
   const [mentalTaskActive, setMentalTaskActive] = useState(false);
@@ -399,6 +407,40 @@ export default function App() {
     return scene?.entities.find((entity) => entity.instanceId === instanceId)?.label ?? ' - ';
   }
 
+  function saveSocialInteraction() {
+    const { selfPersonId, otherPersonId, role, action } = socialDraft;
+    if (!selfPersonId || !otherPersonId || !role || !action) {
+      setFeedback('⚠ COMPLETE EU - OUTRO - VÍNCULO - AÇÃO');
+      return;
+    }
+    if (selfPersonId === otherPersonId) {
+      setFeedback('⚠ ESCOLHA DUAS PESSOAS DIFERENTES');
+      return;
+    }
+
+    const interaction: SocialInteraction = {
+      id: crypto.randomUUID(),
+      selfPersonId,
+      otherPersonId,
+      role,
+      action,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSocialInteractions((items) => [...items, interaction]);
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'correct',
+      label: `RELAÇÃO SOCIAL - ${role} - ${action}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    setSocialDraft({
+      role: 'AMIGO',
+      action: 'CONVERSAR',
+    });
+    setFeedback('✓ RELAÇÃO SOCIAL REGISTRADA');
+  }
+
   function buildSessionReport(): SessionReport {
     return {
       metadata: sessionMetadata,
@@ -406,6 +448,7 @@ export default function App() {
       storyArchive,
       personNames,
       autobiographicalRecords,
+      socialInteractions,
       mediationEvents,
       mediationAssessments,
       mentalStates,
@@ -454,6 +497,7 @@ export default function App() {
     setStoryArchive(report.storyArchive ?? []);
     setPersonNames(report.personNames ?? {});
     setAutobiographicalRecords(report.autobiographicalRecords ?? []);
+    setSocialInteractions(report.socialInteractions ?? []);
     setHistoryIndex(Math.max(0, scenes.length - 1));
     setMediationEvents(report.mediationEvents);
     setMediationAssessments(report.mediationAssessments);
@@ -1779,6 +1823,8 @@ export default function App() {
     setCausalOptionIds([]);
     setAutobiographicalDraft({ when: 'today' });
     setAutobiographicalRecords([]);
+    setSocialDraft({ role: 'AMIGO', action: 'CONVERSAR' });
+    setSocialInteractions([]);
     setMentalStates([]);
     setMentalTask({ kind: 'choose_self' });
     setMentalTaskActive(false);
@@ -1856,6 +1902,7 @@ export default function App() {
     setCausalAnswer([]);
     setCausalOptionIds([]);
     setAutobiographicalDraft({ when: 'today' });
+    setSocialDraft({ role: 'AMIGO', action: 'CONVERSAR' });
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
@@ -2263,6 +2310,7 @@ export default function App() {
             <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0 - 3</span></div>
             <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
             <div><strong>{autobiographicalRecords.length}</strong><span>RELATOS PESSOAIS</span></div>
+            <div><strong>{socialInteractions.length}</strong><span>RELAÇÕES NÓS</span></div>
           </section>
 
           <section className="report-section">
@@ -2354,6 +2402,25 @@ export default function App() {
                 ))
               )}
             </div>
+          </section>
+
+          <section className="report-section">
+            <h3>RELAÇÕES SOCIAIS - NÓS</h3>
+            {socialInteractions.length === 0 ? (
+              <p>SEM RELAÇÕES SOCIAIS REGISTRADAS.</p>
+            ) : (
+              <div className="report-social">
+                {socialInteractions.map((interaction, index) => (
+                  <article key={interaction.id}>
+                    <span>NÓS {index + 1}</span>
+                    <strong>
+                      {autobiographicalEntityLabel(interaction.selfPersonId)} + {autobiographicalEntityLabel(interaction.otherPersonId)}
+                    </strong>
+                    <small>{interaction.role} - {interaction.action}</small>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="report-section">
@@ -2997,6 +3064,114 @@ export default function App() {
             <p className="access-note">
               O NEXO REGISTRA ACESSO VISUAL À INFORMAÇÃO. ISSO NÃO É O MESMO QUE PROVAR CONHECIMENTO INTERNO.
             </p>
+          </section>
+
+          <section className="social-builder">
+            <div className="builder-title">
+              <p className="section-kicker">NÓS</p>
+              <strong>RELAÇÃO E AÇÃO COMPARTILHADA</strong>
+            </div>
+
+            <div className="social-grid">
+              <label>
+                <span>EU</span>
+                <select
+                  value={socialDraft.selfPersonId ?? ''}
+                  onChange={(event) => setSocialDraft((current) => ({
+                    ...current,
+                    selfPersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>OUTRO</span>
+                <select
+                  value={socialDraft.otherPersonId ?? ''}
+                  onChange={(event) => setSocialDraft((current) => ({
+                    ...current,
+                    otherPersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people
+                    .filter((person) => person.instanceId !== socialDraft.selfPersonId)
+                    .map((person) => (
+                      <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                    ))}
+                </select>
+              </label>
+
+              <label>
+                <span>QUEM É?</span>
+                <select
+                  value={socialDraft.role ?? 'AMIGO'}
+                  onChange={(event) => setSocialDraft((current) => ({
+                    ...current,
+                    role: event.target.value as SocialRole,
+                  }))}
+                >
+                  {(['MÃE','PAI','IRMÃO','IRMÃ','SOBRINHO','SOBRINHA','PROFESSORA','AMIGO','AMIGA'] as SocialRole[]).map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>O QUE FAZEM JUNTOS?</span>
+                <select
+                  value={socialDraft.action ?? 'CONVERSAR'}
+                  onChange={(event) => setSocialDraft((current) => ({
+                    ...current,
+                    action: event.target.value as SharedAction,
+                  }))}
+                >
+                  {(['AJUDAR','CONVERSAR','BRINCAR','TRABALHAR','REZAR','COZINHAR','IR JUNTO'] as SharedAction[]).map((action) => (
+                    <option key={action} value={action}>{action}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="social-preview">
+              <div>
+                <span>EU</span>
+                <strong>{autobiographicalEntityLabel(socialDraft.selfPersonId)}</strong>
+              </div>
+              <div className="social-link">+</div>
+              <div>
+                <span>{socialDraft.role ?? 'VÍNCULO'}</span>
+                <strong>{autobiographicalEntityLabel(socialDraft.otherPersonId)}</strong>
+              </div>
+              <div className="social-link">→</div>
+              <div>
+                <span>NÓS</span>
+                <strong>{socialDraft.action ?? 'AÇÃO'}</strong>
+              </div>
+            </div>
+
+            <button className="social-save" type="button" onClick={saveSocialInteraction}>
+              REGISTRAR NÓS
+            </button>
+
+            {socialInteractions.length > 0 && (
+              <div className="social-records">
+                {socialInteractions.map((interaction, index) => (
+                  <article key={interaction.id}>
+                    <span>NÓS {index + 1}</span>
+                    <strong>
+                      {autobiographicalEntityLabel(interaction.selfPersonId)} + {autobiographicalEntityLabel(interaction.otherPersonId)}
+                    </strong>
+                    <small>{interaction.role} - {interaction.action}</small>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="perspective-builder">
