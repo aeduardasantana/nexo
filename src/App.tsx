@@ -99,12 +99,21 @@ function takeOptionsWithExpected<T>(
 }
 
 const LOCAL_SESSION_KEY = 'nexo.session.v1';
+const LOCAL_HISTORY_KEY = 'nexo.longitudinal.v1';
 
 type LocalSessionEnvelope = {
   schemaVersion: 1;
   savedAt: string;
   report: SessionReport;
 };
+
+type LongitudinalSession = {
+  id: string;
+  archivedAt: string;
+  report: SessionReport;
+};
+
+type LongitudinalAxis = 'ACTION' | 'TIME' | 'NARRATIVE' | 'RELATION';
 
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
@@ -212,6 +221,7 @@ export default function App() {
   const [localStorageReady, setLocalStorageReady] = useState(false);
   const [localSavedAt, setLocalSavedAt] = useState<string | null>(null);
   const [localStorageStatus, setLocalStorageStatus] = useState<'loading' | 'saved' | 'empty' | 'error'>('loading');
+  const [longitudinalSessions, setLongitudinalSessions] = useState<LongitudinalSession[]>([]);
   const [pendingImportReport, setPendingImportReport] = useState<SessionReport | null>(null);
   const [pendingImportName, setPendingImportName] = useState('');
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
@@ -237,6 +247,24 @@ export default function App() {
 
   useEffect(() => {
     try {
+      const historyStored = window.localStorage.getItem(LOCAL_HISTORY_KEY);
+      if (historyStored) {
+        const parsedHistory = JSON.parse(historyStored) as unknown;
+        if (Array.isArray(parsedHistory)) {
+          setLongitudinalSessions(
+            parsedHistory.filter((item): item is LongitudinalSession =>
+              Boolean(
+                item &&
+                typeof item === 'object' &&
+                typeof (item as LongitudinalSession).id === 'string' &&
+                typeof (item as LongitudinalSession).archivedAt === 'string' &&
+                isSessionReport((item as LongitudinalSession).report)
+              )
+            )
+          );
+        }
+      }
+
       const stored = window.localStorage.getItem(LOCAL_SESSION_KEY);
       if (!stored) {
         setLocalStorageStatus('empty');
@@ -529,6 +557,113 @@ export default function App() {
       action: 'CONVERSAR',
     });
     setFeedback('✓ RELAÇÃO SOCIAL REGISTRADA');
+  }
+
+  function longitudinalAxisLabel(axis: LongitudinalAxis) {
+    if (axis === 'TIME') return 'TEMPO';
+    if (axis === 'NARRATIVE') return 'NARRATIVA';
+    if (axis === 'RELATION') return 'PERSPECTIVA / RELAÇÕES';
+    return 'AÇÃO / CENÁRIO';
+  }
+
+  function eventAxis(label: string): LongitudinalAxis {
+    const normalized = label.toUpperCase();
+    if (
+      normalized.includes('TEMPO') ||
+      normalized.includes('SEMANA') ||
+      normalized.includes('EVENTO ') ||
+      normalized.includes('ONTEM') ||
+      normalized.includes('HOJE') ||
+      normalized.includes('AMANHÃ')
+    ) return 'TIME';
+
+    if (
+      normalized.includes('NARRATIVA') ||
+      normalized.includes('CAUSA') ||
+      normalized.includes('RELATO AUTOBIOGRÁFICO')
+    ) return 'NARRATIVE';
+
+    if (
+      normalized.includes('PERSPECTIVA') ||
+      normalized.includes('RELAÇÃO SOCIAL') ||
+      normalized.includes('ACESSO') ||
+      normalized.includes('VIU') ||
+      normalized.includes('NÃO VIU') ||
+      normalized.includes('INFORMAÇÃO') ||
+      normalized.includes('REALOC')
+    ) return 'RELATION';
+
+    return 'ACTION';
+  }
+
+  function assessmentAxis(report: SessionReport, assessment: MediationAssessment): LongitudinalAxis {
+    const event = report.mediationEvents.find((item) => item.id === assessment.sourceEventId);
+    return event ? eventAxis(event.label) : 'ACTION';
+  }
+
+  function longitudinalAxisStats(report: SessionReport, axis: LongitudinalAxis) {
+    const items = report.mediationAssessments.filter((assessment) =>
+      assessmentAxis(report, assessment) === axis
+    );
+    const counts = ([0, 1, 2, 3] as MediationLevel[]).map((level) =>
+      items.filter((item) => item.level === level).length
+    );
+    const average = items.length
+      ? items.reduce((sum, item) => sum + item.level, 0) / items.length
+      : null;
+
+    return { count: items.length, counts, average };
+  }
+
+  function saveLongitudinalSessions(items: LongitudinalSession[]) {
+    setLongitudinalSessions(items);
+    try {
+      window.localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(items));
+    } catch {
+      setFeedback('❌ NÃO FOI POSSÍVEL SALVAR O HISTÓRICO LONGITUDINAL');
+    }
+  }
+
+  function archiveSessionForLongitudinal(report = buildSessionReport(), showFeedback = true) {
+    if (
+      report.scenes.length <= 1 &&
+      report.mediationEvents.length === 0 &&
+      report.mediationAssessments.length === 0
+    ) {
+      if (showFeedback) setFeedback('NÃO HÁ DADOS SUFICIENTES PARA ARQUIVAR ESTA SESSÃO');
+      return;
+    }
+
+    const existingIndex = longitudinalSessions.findIndex((item) =>
+      item.report.metadata.participant === report.metadata.participant &&
+      item.report.metadata.date === report.metadata.date
+    );
+
+    const snapshot: LongitudinalSession = {
+      id: existingIndex >= 0 ? longitudinalSessions[existingIndex].id : crypto.randomUUID(),
+      archivedAt: new Date().toISOString(),
+      report: { ...report, generatedAt: new Date().toISOString() },
+    };
+
+    const next = existingIndex >= 0
+      ? longitudinalSessions.map((item, index) => index === existingIndex ? snapshot : item)
+      : [...longitudinalSessions, snapshot];
+
+    next.sort((a, b) =>
+      (a.report.metadata.date || a.archivedAt).localeCompare(b.report.metadata.date || b.archivedAt)
+    );
+
+    saveLongitudinalSessions(next);
+    if (showFeedback) {
+      setFeedback(existingIndex >= 0
+        ? '✓ SESSÃO ATUALIZADA NO HISTÓRICO LONGITUDINAL'
+        : '✓ SESSÃO ADICIONADA AO HISTÓRICO LONGITUDINAL');
+    }
+  }
+
+  function removeLongitudinalSession(id: string) {
+    saveLongitudinalSessions(longitudinalSessions.filter((item) => item.id !== id));
+    setFeedback('SESSÃO REMOVIDA DO HISTÓRICO LONGITUDINAL');
   }
 
   function buildSessionReport(): SessionReport {
@@ -2011,6 +2146,9 @@ export default function App() {
   }
 
   function startNewSession() {
+    if (hasMeaningfulSessionData()) {
+      archiveSessionForLongitudinal(buildSessionReport(), false);
+    }
     stopReplay();
     setHistory([initialScene]);
     setStoryArchive([]);
@@ -2419,6 +2557,9 @@ export default function App() {
                 setReportOpen(true);
               }}>VER RELATÓRIO</button>
               <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
+              <button type="button" onClick={() => archiveSessionForLongitudinal()}>
+                REGISTRAR NO HISTÓRICO
+              </button>
               <button
                 type="button"
                 className="danger-button"
@@ -2592,6 +2733,79 @@ export default function App() {
             <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
             <div><strong>{autobiographicalRecords.length}</strong><span>RELATOS PESSOAIS</span></div>
             <div><strong>{socialInteractions.length}</strong><span>RELAÇÕES NÓS</span></div>
+          </section>
+
+          <section className="report-section longitudinal-report">
+            <h3>AVALIAÇÃO LONGITUDINAL</h3>
+            <p className="longitudinal-disclaimer">
+              REGISTRO OBSERVACIONAL DE DESEMPENHO COM MEDIAÇÃO. NÃO É DIAGNÓSTICO, NÃO MEDE INTELIGÊNCIA E NÃO AUTORIZA INFERIR COMPREENSÃO APENAS PELA EXPRESSÃO OBSERVADA.
+            </p>
+
+            <div className="longitudinal-current">
+              <strong>SESSÃO ATUAL</strong>
+              <span>{sessionMetadata.date || 'SEM DATA'} - {sessionMetadata.participant || 'PARTICIPANTE NÃO INFORMADO'}</span>
+              <button type="button" className="no-print" onClick={() => archiveSessionForLongitudinal()}>
+                REGISTRAR / ATUALIZAR NO HISTÓRICO
+              </button>
+            </div>
+
+            <div className="longitudinal-axis-grid">
+              {(['ACTION', 'TIME', 'NARRATIVE', 'RELATION'] as LongitudinalAxis[]).map((axis) => {
+                const stats = longitudinalAxisStats(buildSessionReport(), axis);
+                return (
+                  <article key={axis}>
+                    <strong>{longitudinalAxisLabel(axis)}</strong>
+                    <span>{stats.count} REGISTROS 0 - 3</span>
+                    <b>{stats.average === null ? 'SEM DADO' : stats.average.toFixed(2)}</b>
+                    <small>MÉDIA OBSERVACIONAL</small>
+                    <div>
+                      {stats.counts.map((count, level) => (
+                        <span key={level}>{level}: {count}</span>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="longitudinal-timeline">
+              <header>
+                <strong>LINHA DO TEMPO</strong>
+                <span>{longitudinalSessions.length} SESSÕES ARQUIVADAS NESTE NAVEGADOR</span>
+              </header>
+              {longitudinalSessions.length === 0 ? (
+                <p>AINDA NÃO HÁ SESSÕES ANTERIORES REGISTRADAS.</p>
+              ) : (
+                longitudinalSessions.map((session, index) => (
+                  <article key={session.id}>
+                    <div className="longitudinal-session-heading">
+                      <span>SESSÃO {index + 1}</span>
+                      <strong>{session.report.metadata.date || 'SEM DATA'}</strong>
+                      <small>{session.report.metadata.participant || 'PARTICIPANTE NÃO INFORMADO'}</small>
+                      <button
+                        type="button"
+                        className="no-print"
+                        onClick={() => removeLongitudinalSession(session.id)}
+                      >
+                        REMOVER
+                      </button>
+                    </div>
+                    <div className="longitudinal-session-axes">
+                      {(['ACTION', 'TIME', 'NARRATIVE', 'RELATION'] as LongitudinalAxis[]).map((axis) => {
+                        const stats = longitudinalAxisStats(session.report, axis);
+                        return (
+                          <div key={axis}>
+                            <span>{longitudinalAxisLabel(axis)}</span>
+                            <strong>{stats.average === null ? ' - ' : stats.average.toFixed(2)}</strong>
+                            <small>{stats.count} REG.</small>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
           </section>
 
           <section className="report-section">
