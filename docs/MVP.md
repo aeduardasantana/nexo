@@ -18,7 +18,7 @@ Entregar a menor versão tecnicamente funcional que permita validar a arquitetur
 10. Replay.
 11. ERRADO, NÃO SEI e NÃO ENTENDI.
 12. Modo livre.
-13. Base para modo professora.
+13. Base para modo mediador.
 14. VLibras como camada complementar.
 
 ## Fora do primeiro incremento
