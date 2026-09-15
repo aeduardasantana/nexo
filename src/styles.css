@@ -3366,6 +3366,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .causal-task-builder,
 .autobiographical-builder,
 .mental-state-builder,
+.social-builder,
 .perspective-builder,
 .access-builder,
 .hidden-info-builder,
@@ -3401,6 +3402,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-time .causal-task-builder,
 .module-time .autobiographical-builder,
 .module-time .mental-state-builder,
+.module-time .social-builder,
 .module-time .perspective-builder,
 .module-time .access-builder,
 .module-time .hidden-info-builder,
@@ -3422,6 +3424,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-narrative .calendar-builder,
 .module-narrative .week-builder,
 .module-narrative .mental-state-builder,
+.module-narrative .social-builder,
 .module-narrative .perspective-builder,
 .module-narrative .access-builder,
 .module-narrative .hidden-info-builder,
@@ -3431,6 +3434,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 
 /* PERSPECTIVA */
 .module-perspective .mental-state-builder,
+.module-perspective .social-builder,
 .module-perspective .perspective-builder,
 .module-perspective .access-builder,
 .module-perspective .hidden-info-builder,
@@ -3658,6 +3662,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   .causal-task-builder,
   .autobiographical-builder,
   .mental-state-builder,
+  .social-builder,
   .perspective-builder,
   .access-builder,
   .hidden-info-builder,
@@ -4244,7 +4249,7 @@ body {
 }
 
 .report-kpis {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 @media (max-width: 900px) {
@@ -4276,5 +4281,149 @@ body {
 @media print {
   .report-autobiographical article {
     break-inside: avoid;
+  }
+}
+
+
+.social-builder {
+  border: 1px solid var(--nexo-line, #d9d4ca);
+  border-radius: 16px;
+  padding: 14px;
+  background: #f8f7f3;
+}
+
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.social-grid label {
+  display: grid;
+  gap: 5px;
+}
+
+.social-grid label > span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.social-grid select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #c9c5bc;
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px 9px;
+  font-weight: 750;
+}
+
+.social-preview {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.social-preview > div:not(.social-link) {
+  min-height: 76px;
+  border: 1px solid #d5d0c6;
+  border-radius: 10px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: 8px;
+  text-align: center;
+}
+
+.social-preview span {
+  font-size: .56rem;
+  font-weight: 850;
+  color: #6c6860;
+}
+
+.social-preview strong {
+  font-size: .72rem;
+}
+
+.social-link {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #6c6860;
+}
+
+.social-save {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.social-records,
+.report-social {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.social-records article,
+.report-social article {
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px;
+  display: grid;
+  gap: 3px;
+}
+
+.social-records span,
+.social-records small,
+.report-social span,
+.report-social small {
+  font-size: .58rem;
+  font-weight: 800;
+  color: #6c6860;
+}
+
+.social-records strong,
+.report-social strong {
+  font-size: .68rem;
+}
+
+@media (max-width: 900px) {
+  .social-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .report-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .social-builder {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .social-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .social-link {
+    text-align: center;
   }
 }
