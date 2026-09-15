@@ -165,6 +165,35 @@ export type AutobiographicalRecord = {
   createdAt: string;
 };
 
+export type SocialRole =
+  | 'MÃE'
+  | 'PAI'
+  | 'IRMÃO'
+  | 'IRMÃ'
+  | 'SOBRINHO'
+  | 'SOBRINHA'
+  | 'PROFESSORA'
+  | 'AMIGO'
+  | 'AMIGA';
+
+export type SharedAction =
+  | 'AJUDAR'
+  | 'CONVERSAR'
+  | 'BRINCAR'
+  | 'TRABALHAR'
+  | 'REZAR'
+  | 'COZINHAR'
+  | 'IR JUNTO';
+
+export type SocialInteraction = {
+  id: string;
+  selfPersonId: string;
+  otherPersonId: string;
+  role: SocialRole;
+  action: SharedAction;
+  createdAt: string;
+};
+
 
 export type MentalStateKind = 'want' | 'know' | 'understand' | 'like';
 
@@ -277,6 +306,7 @@ export type SessionReport = {
   storyArchive?: SceneState[][];
   personNames?: Record<string, string>;
   autobiographicalRecords?: AutobiographicalRecord[];
+  socialInteractions?: SocialInteraction[];
   mediationEvents: MediationEvent[];
   mediationAssessments: MediationAssessment[];
   mentalStates: MentalState[];
