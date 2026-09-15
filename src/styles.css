@@ -748,8 +748,17 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .verb-seat,
 .verb-cup,
 .verb-object,
-.verb-arrow {
+.verb-arrow,
+.verb-eye,
+.verb-speech,
+.verb-door,
+.verb-return {
   opacity: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .verb-take .verb-object,
@@ -3360,6 +3369,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 
 /* Default: hide pedagogical modules until their navigation section is active. */
 .temporal-builder,
+.expanded-time-builder,
 .calendar-builder,
 .week-builder,
 .narrative-task-builder,
@@ -3390,6 +3400,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 
 /* TEMPO */
 .module-time .temporal-builder,
+.module-time .expanded-time-builder,
 .module-time .calendar-builder,
 .module-time .week-builder {
   display: block;
@@ -3421,6 +3432,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-narrative .spatial-task-builder,
 .module-narrative .relation-builder,
 .module-narrative .temporal-builder,
+.module-narrative .expanded-time-builder,
 .module-narrative .calendar-builder,
 .module-narrative .week-builder,
 .module-narrative .mental-state-builder,
@@ -3446,6 +3458,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-perspective .spatial-task-builder,
 .module-perspective .relation-builder,
 .module-perspective .temporal-builder,
+.module-perspective .expanded-time-builder,
 .module-perspective .calendar-builder,
 .module-perspective .week-builder,
 .module-perspective .narrative-task-builder,
@@ -3656,6 +3669,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   .spatial-task-builder,
   .relation-builder,
   .temporal-builder,
+  .expanded-time-builder,
   .calendar-builder,
   .week-builder,
   .narrative-task-builder,
@@ -4425,5 +4439,299 @@ body {
 
   .social-link {
     text-align: center;
+  }
+}
+
+
+.verb-see .verb-eye,
+.verb-look .verb-eye,
+.verb-ask .verb-speech,
+.verb-answer .verb-speech,
+.verb-tell .verb-speech,
+.verb-open .verb-door,
+.verb-close .verb-door,
+.verb-return .verb-return,
+.verb-carry .verb-object,
+.verb-carry .verb-arrow,
+.verb-bring .verb-object,
+.verb-bring .verb-arrow,
+.verb-leave .verb-arrow,
+.verb-show .verb-object,
+.verb-show .verb-arrow {
+  opacity: 1;
+}
+
+.verb-bring .verb-arrow,
+.verb-return .verb-return {
+  transform-origin: center;
+}
+
+.verb-bring .verb-arrow {
+  transform: rotate(180deg);
+  transform-origin: 64px 50px;
+}
+
+.verb-close .verb-door {
+  opacity: .55;
+}
+
+.verb-see.is-animated .verb-eye,
+.verb-look.is-animated .verb-eye {
+  animation: verbObserve 1.2s ease-in-out infinite;
+}
+
+.verb-ask.is-animated .verb-speech,
+.verb-answer.is-animated .verb-speech,
+.verb-tell.is-animated .verb-speech {
+  animation: verbSpeak 1s ease-in-out infinite alternate;
+}
+
+.verb-open.is-animated .verb-door {
+  animation: verbDoorOpen 1.3s ease-in-out infinite alternate;
+  transform-origin: 58px 49px;
+}
+
+.verb-return.is-animated .verb-return {
+  animation: verbReturn 1.2s ease-in-out infinite;
+}
+
+@keyframes verbObserve {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes verbSpeak {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+@keyframes verbDoorOpen {
+  from { transform: skewY(0deg) scaleX(1); }
+  to { transform: skewY(-8deg) scaleX(.72); }
+}
+
+@keyframes verbReturn {
+  0% { transform: translateX(3px); opacity: .45; }
+  50% { transform: translateX(-3px); opacity: 1; }
+  100% { transform: translateX(3px); opacity: .45; }
+}
+
+.expanded-time-builder {
+  border: 1px solid var(--nexo-line, #d9d4ca);
+  border-radius: 16px;
+  padding: 14px;
+  background: #f8f7f3;
+}
+
+.day-period-grid,
+.relative-week-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.day-period-grid button,
+.relative-week-grid button {
+  min-height: 84px;
+  border: 1px solid #d0cbc1;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.day-period-grid button.active,
+.relative-week-grid button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.day-period-grid span {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.day-period-grid strong,
+.relative-week-grid strong {
+  font-size: .68rem;
+}
+
+.relative-week-grid small {
+  font-size: .56rem;
+  font-weight: 750;
+}
+
+.clock-builder {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #d8d3ca;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.clock-face {
+  width: 132px;
+  height: 132px;
+  border: 3px solid #272727;
+  border-radius: 50%;
+  position: relative;
+  margin: 0 auto;
+}
+
+.clock-number {
+  position: absolute;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+.clock-number.n12 { top: 7px; left: 50%; transform: translateX(-50%); }
+.clock-number.n3 { right: 9px; top: 50%; transform: translateY(-50%); }
+.clock-number.n6 { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.clock-number.n9 { left: 9px; top: 50%; transform: translateY(-50%); }
+
+.clock-hand {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 4px;
+  height: 38px;
+  background: #272727;
+  border-radius: 999px;
+  transform-origin: 50% 100%;
+}
+
+.clock-center {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: #272727;
+  transform: translate(-50%, -50%);
+}
+
+.clock-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.clock-controls label {
+  display: grid;
+  gap: 5px;
+}
+
+.clock-controls label span {
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+.clock-controls select,
+.clock-controls button {
+  min-height: 42px;
+  border: 1px solid #c9c5bc;
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px 9px;
+  font-weight: 800;
+}
+
+.month-calendar {
+  margin-top: 12px;
+  border: 1px solid #d8d3ca;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+}
+
+.month-calendar > header {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+}
+
+.month-calendar > header button,
+.month-current {
+  min-height: 38px;
+  border: 1px solid #cbc6bc;
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.month-weekdays,
+.month-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.month-weekdays {
+  margin-top: 10px;
+}
+
+.month-weekdays span {
+  text-align: center;
+  font-size: .54rem;
+  font-weight: 900;
+  color: #6c6860;
+}
+
+.month-days {
+  margin-top: 4px;
+}
+
+.month-days div {
+  min-height: 38px;
+  border: 1px solid #ece8e0;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: .64rem;
+  font-weight: 800;
+}
+
+.month-days div.today {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.month-current {
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .expanded-time-builder {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .day-period-grid,
+  .relative-week-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clock-builder {
+    grid-template-columns: 1fr;
+  }
+
+  .month-days div {
+    min-height: 32px;
+    font-size: .58rem;
   }
 }
