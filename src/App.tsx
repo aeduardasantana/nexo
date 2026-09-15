@@ -19,6 +19,8 @@ import type {
   SpatialRelation,
   SpatialTask,
   TemporalDay,
+  DayPeriod,
+  RelativeWeek,
   TemporalEvent,
   Weekday,
   WeeklyEvent,
@@ -130,6 +132,10 @@ export default function App() {
   const [temporalTaskActive, setTemporalTaskActive] = useState(false);
   const [temporalOptionDays, setTemporalOptionDays] = useState<TemporalDay[]>([]);
   const [expectedTemporalDay, setExpectedTemporalDay] = useState<TemporalDay>('today');
+  const [dayPeriod, setDayPeriod] = useState<DayPeriod>('morning');
+  const [clockHour, setClockHour] = useState(8);
+  const [relativeWeek, setRelativeWeek] = useState<RelativeWeek>('current');
+  const [monthOffset, setMonthOffset] = useState(0);
   const [temporalEvents, setTemporalEvents] = useState<TemporalEvent[]>([]);
   const [newTemporalEventLabel, setNewTemporalEventLabel] = useState('');
   const [newTemporalEventDay, setNewTemporalEventDay] = useState<TemporalDay>('today');
@@ -455,6 +461,10 @@ export default function App() {
       informationAccess,
       temporalEvents,
       weeklyEvents,
+      dayPeriod,
+      clockHour,
+      relativeWeek,
+      monthOffset,
       supportConfig,
       activityMode,
       directedActivity,
@@ -505,6 +515,10 @@ export default function App() {
     setInformationAccess(report.informationAccess);
     setTemporalEvents(report.temporalEvents ?? []);
     setWeeklyEvents(report.weeklyEvents ?? []);
+    setDayPeriod(report.dayPeriod ?? 'morning');
+    setClockHour(report.clockHour ?? 8);
+    setRelativeWeek(report.relativeWeek ?? 'current');
+    setMonthOffset(report.monthOffset ?? 0);
     setSupportConfig(report.supportConfig);
     setActivityMode(report.activityMode ?? 'free');
     setDirectedActivity(report.directedActivity ?? {
@@ -675,6 +689,71 @@ export default function App() {
       createdAt: new Date().toISOString(),
     }]);
     if (correct) setTemporalEventQuestionId(null);
+  }
+
+  function dayPeriodLabel(period: DayPeriod) {
+    if (period === 'morning') return 'MANHÃ';
+    if (period === 'afternoon') return 'TARDE';
+    return 'NOITE';
+  }
+
+  function dayPeriodSymbol(period: DayPeriod) {
+    if (period === 'morning') return '☀';
+    if (period === 'afternoon') return '◐';
+    return '☾';
+  }
+
+  function relativeWeekLabel(value: RelativeWeek) {
+    if (value === 'previous') return 'SEMANA PASSADA';
+    if (value === 'next') return 'PRÓXIMA SEMANA';
+    return 'ESTA SEMANA';
+  }
+
+  function getRelativeWeekRange(value: RelativeWeek) {
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(today.getDate() - today.getDay() + (value === 'previous' ? -7 : value === 'next' ? 7 : 0));
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const format = (date: Date) =>
+      `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+    return `${format(start)} - ${format(end)}`;
+  }
+
+  function getMonthCalendar(offset = 0) {
+    const base = new Date();
+    const year = base.getFullYear();
+    const month = base.getMonth() + offset;
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const leading = first.getDay();
+    const days: Array<{ day?: number; isToday?: boolean }> = [];
+
+    for (let index = 0; index < leading; index += 1) days.push({});
+    for (let day = 1; day <= last.getDate(); day += 1) {
+      const date = new Date(first.getFullYear(), first.getMonth(), day);
+      days.push({
+        day,
+        isToday: date.toDateString() === base.toDateString(),
+      });
+    }
+
+    return {
+      label: new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' })
+        .format(first)
+        .toUpperCase(),
+      days,
+    };
+  }
+
+  function registerExpandedTime(label: string) {
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'correct',
+      label: `TEMPO AMPLIADO - ${label}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    setFeedback(`✓ ${label}`);
   }
 
   function weekdayLabel(day: Weekday) {
@@ -1812,6 +1891,10 @@ export default function App() {
     setTemporalEventQuestionId(null);
     setTemporalEvents([]);
     setWeeklyEvents([]);
+    setDayPeriod('morning');
+    setClockHour(8);
+    setRelativeWeek('current');
+    setMonthOffset(0);
     setWeekTaskActive(false);
     setNarrativeTask({ kind: 'first', sceneIds: [] });
     setNarrativeTaskActive(false);
