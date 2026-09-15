@@ -2584,12 +2584,12 @@ export default function App() {
       <a className="skip-link" href="#nexo-workspace">PULAR PARA O CONTEÚDO</a>
       <header className="topbar">
         <div>
-          <p className="eyebrow">PROJETO EU, NÓS E O OUTRO</p>
+          <p className="eyebrow">PROJETO O EU, O OUTRO E O NÓS</p>
           <div className="brand-lockup">
             <h1>NEXO</h1>
             <span className="brand-mark" aria-hidden="true">↔</span>
           </div>
-          <p className="subtitle">Ação, tempo, relações e narrativa visual</p>
+          <p className="subtitle">Sistema Visual de Ação e Narrativa</p>
         </div>
         <button
           className="teacher-button"
@@ -2964,7 +2964,7 @@ export default function App() {
         <section className="session-report-view">
           <header className="report-header">
             <div>
-              <p>PROJETO EU, NÓS E O OUTRO</p>
+              <p>PROJETO O EU, O OUTRO E O NÓS</p>
               <h2>RELATÓRIO DE SESSÃO - NEXO</h2>
             </div>
             <div className="report-actions no-print">
