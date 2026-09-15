@@ -2020,7 +2020,20 @@ export default function App() {
           entity.posture === 'sleeping' ? 'is-sleeping' : '',
         ].join(' ')}
         key={entity.instanceId}
+        role="button"
+        tabIndex={entity.consumed ? -1 : 0}
+        aria-label={`${entity.label}${entity.posture && entity.posture !== 'standing' ? ` - ${entity.posture === 'sitting' ? 'SENTADO' : 'DORMINDO'}` : ''}`}
+        aria-pressed={selectedEntityId === entity.instanceId}
         style={{ left: `${entity.x}%`, top: `${entity.y}%` }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          if (spatialTaskActive && spatialTask.kind === 'identify') {
+            chooseSpatialAnswer(entity.instanceId);
+            return;
+          }
+          setSelectedEntityId(entity.instanceId);
+        }}
         onPointerDown={(event) => {
           event.stopPropagation();
           if (spatialTaskActive && spatialTask.kind === 'identify') {
@@ -2052,7 +2065,8 @@ export default function App() {
   }
 
   return (
-    <main className={`app-shell module-${activeModule}`}>
+    <main className={`app-shell module-${activeModule}`} id="nexo-content">
+      <a className="skip-link" href="#nexo-workspace">PULAR PARA O CONTEÚDO</a>
       <header className="topbar">
         <div>
           <p className="eyebrow">PROJETO EU, NÓS E O OUTRO</p>
@@ -2062,7 +2076,13 @@ export default function App() {
           </div>
           <p className="subtitle">Ação, tempo, relações e narrativa visual</p>
         </div>
-        <button className="teacher-button" type="button" onClick={() => setTeacherOpen((open) => !open)}>
+        <button
+          className="teacher-button"
+          type="button"
+          aria-expanded={teacherOpen}
+          aria-controls="teacher-panel"
+          onClick={() => setTeacherOpen((open) => !open)}
+        >
           {teacherOpen ? 'FECHAR PROFESSORA' : 'MODO PROFESSORA'}
         </button>
       </header>
@@ -2079,6 +2099,7 @@ export default function App() {
             type="button"
             key={id}
             className={activeModule === id ? 'active' : ''}
+            aria-current={activeModule === id ? 'page' : undefined}
             onClick={() => {
               setActiveModule(id as typeof activeModule);
               setReportOpen(id === 'report');
@@ -2090,7 +2111,7 @@ export default function App() {
       </nav>
 
       {teacherOpen && (
-        <section className="teacher-panel">
+        <section className="teacher-panel" id="teacher-panel" aria-label="Configuração pedagógica">
           <div>
             <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
             <h2>MODO PROFESSORA</h2>
@@ -2550,7 +2571,7 @@ export default function App() {
         </section>
       )}
 
-      <section className="workspace">
+      <section className="workspace" id="nexo-workspace" tabIndex={-1}>
         <aside className="library">
           <nav className="category-tabs" aria-label="Biblioteca visual">
             {(['person', 'object', 'place'] as AssetCategory[]).map((item) => (
@@ -4621,10 +4642,19 @@ export default function App() {
               </>
             )}
 
-            {feedback && <div className={feedback.startsWith('❌') ? 'feedback error' : 'feedback success'}>{feedback}</div>}
+            {feedback && (
+              <div
+                className={feedback.startsWith('❌') ? 'feedback error' : 'feedback success'}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {feedback}
+              </div>
+            )}
           </section>
 
-          <footer className="stage-footer">
+          <footer className="stage-footer" aria-label="Respostas e comparação temporal">
             <button type="button" className={compareMode === 'before' ? 'active' : ''} onClick={() => setCompareMode('before')}>ANTES</button>
             <button type="button" className={compareMode === 'now' ? 'active' : ''} onClick={() => setCompareMode('now')}>AGORA</button>
             <button type="button" className={compareMode === 'after' ? 'active' : ''} onClick={() => setCompareMode('after')}>DEPOIS</button>
@@ -4694,6 +4724,11 @@ export default function App() {
             {isReplaying ? '■ PARAR' : '▶ REPRODUZIR'}
           </button>
         </aside>
+      </section>
+
+      <section className="accessibility-note no-print" aria-label="Acessibilidade">
+        <strong>ACESSIBILIDADE</strong>
+        <span>VLibras oferece tradução automática como apoio. As atividades essenciais do NEXO continuam visuais e independem do widget.</span>
       </section>
 
       <aside className="debug-caption" aria-hidden="true">
