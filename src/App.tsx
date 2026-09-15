@@ -3871,6 +3871,102 @@ export default function App() {
             )}
           </section>
 
+          <section className="expanded-time-builder">
+            <div className="builder-title">
+              <p className="section-kicker">TEMPO AMPLIADO</p>
+              <strong>PERÍODO DO DIA - HORA - SEMANA - MÊS</strong>
+            </div>
+
+            <div className="day-period-grid">
+              {(['morning', 'afternoon', 'night'] as DayPeriod[]).map((period) => (
+                <button
+                  type="button"
+                  key={period}
+                  className={dayPeriod === period ? 'active' : ''}
+                  onClick={() => {
+                    setDayPeriod(period);
+                    registerExpandedTime(dayPeriodLabel(period));
+                  }}
+                >
+                  <span>{dayPeriodSymbol(period)}</span>
+                  <strong>{dayPeriodLabel(period)}</strong>
+                </button>
+              ))}
+            </div>
+
+            <div className="clock-builder">
+              <div className="clock-face" aria-label={`${clockHour} horas`}>
+                <span className="clock-number n12">12</span>
+                <span className="clock-number n3">3</span>
+                <span className="clock-number n6">6</span>
+                <span className="clock-number n9">9</span>
+                <span
+                  className="clock-hand hour"
+                  style={{ transform: `translateX(-50%) rotate(${(clockHour % 12) * 30}deg)` }}
+                />
+                <span className="clock-center" />
+              </div>
+              <div className="clock-controls">
+                <label>
+                  <span>HORA</span>
+                  <select
+                    value={clockHour}
+                    onChange={(event) => setClockHour(Number(event.target.value))}
+                  >
+                    {Array.from({ length: 24 }, (_, hour) => (
+                      <option key={hour} value={hour}>{String(hour).padStart(2, '0')}:00</option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" onClick={() => registerExpandedTime(`${String(clockHour).padStart(2, '0')}:00`)}>
+                  REGISTRAR HORA
+                </button>
+              </div>
+            </div>
+
+            <div className="relative-week-grid">
+              {(['previous', 'current', 'next'] as RelativeWeek[]).map((value) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={relativeWeek === value ? 'active' : ''}
+                  onClick={() => {
+                    setRelativeWeek(value);
+                    registerExpandedTime(relativeWeekLabel(value));
+                  }}
+                >
+                  <strong>{relativeWeekLabel(value)}</strong>
+                  <small>{getRelativeWeekRange(value)}</small>
+                </button>
+              ))}
+            </div>
+
+            <div className="month-calendar">
+              <header>
+                <button type="button" onClick={() => setMonthOffset((value) => value - 1)}>←</button>
+                <strong>{getMonthCalendar(monthOffset).label}</strong>
+                <button type="button" onClick={() => setMonthOffset((value) => value + 1)}>→</button>
+              </header>
+              <div className="month-weekdays">
+                {['DOM','SEG','TER','QUA','QUI','SEX','SÁB'].map((label) => <span key={label}>{label}</span>)}
+              </div>
+              <div className="month-days">
+                {getMonthCalendar(monthOffset).days.map((item, index) => (
+                  <div key={index} className={item.isToday ? 'today' : ''}>
+                    {item.day ?? ''}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="month-current"
+                onClick={() => setMonthOffset(0)}
+              >
+                VOLTAR AO MÊS ATUAL
+              </button>
+            </div>
+          </section>
+
           <section className="week-builder">
             <div className="builder-title">
               <p className="section-kicker">SEMANA VISUAL</p>
