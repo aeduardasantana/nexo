@@ -318,6 +318,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   transform: translateY(8px);
 }
 
+.scene-item.is-lying,
 .scene-item.is-sleeping {
   transform: rotate(-8deg);
 }
@@ -844,6 +845,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   opacity: 1;
 }
 
+.verb-lie .verb-person,
 .verb-sleep .verb-person {
   transform-origin: 32px 60px;
   transform: rotate(65deg) translate(8px, -8px);
@@ -1041,6 +1043,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   transform: translate(-50%, -45%) scaleY(.9);
 }
 
+.scene-item.is-lying,
 .scene-item.is-sleeping {
   transform: translate(-50%, -50%) rotate(74deg);
 }

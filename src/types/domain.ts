@@ -18,7 +18,7 @@ export type VerbRule = {
   description: string;
 };
 
-export type Posture = 'standing' | 'sitting' | 'sleeping';
+export type Posture = 'standing' | 'sitting' | 'lying' | 'sleeping';
 
 export type EntityState = SceneAsset & {
   instanceId: string;

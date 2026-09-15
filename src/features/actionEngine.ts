@@ -47,7 +47,7 @@ export function validateAction(
   if (rule.requires.includes('targetPerson') && !draft.targetPersonId) return { message: 'FALTA OUTRA PESSOA', kind: 'incomplete', role: 'targetPerson' };
   if (rule.requires.includes('destination') && !draft.destinationId) return { message: 'FALTA DESTINO', kind: 'incomplete', role: 'destination' };
   if (rule.requires.includes('seat') && !draft.seatId) {
-    return { message: rule.id === 'sleep' ? 'FALTA ONDE DORMIR' : 'FALTA ONDE SENTAR', kind: 'incomplete', role: 'seat' };
+    return { message: rule.id === 'sleep' ? 'FALTA ONDE DORMIR' : rule.id === 'lie' ? 'FALTA ONDE DEITAR' : 'FALTA ONDE SENTAR', kind: 'incomplete', role: 'seat' };
   }
 
   const object = scene.entities.find((entity) => entity.instanceId === draft.objectId);
@@ -60,7 +60,7 @@ export function validateAction(
 
   switch (rule.id) {
     case 'stand':
-      if (actor.posture !== 'sitting') return { message: 'A PESSOA NÃO ESTÁ SENTADA', kind: 'impossible', role: 'actor' };
+      if (!['sitting', 'lying', 'sleeping'].includes(actor.posture ?? 'standing')) return { message: 'A PESSOA JÁ ESTÁ EM PÉ', kind: 'impossible', role: 'actor' };
       break;
     case 'take':
       if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible', role: 'object' };
@@ -85,6 +85,7 @@ export function validateAction(
       if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible', role: 'object' };
       if (object.ownerId && object.ownerId !== actor.instanceId) return { message: 'O OBJETO ESTÁ COM OUTRA PESSOA', kind: 'impossible', role: 'object' };
       break;
+    case 'lie':
     case 'sleep':
       if (!seat || !['CAMA', 'SOFÁ'].includes(seat.label)) return { message: 'ESCOLHA CAMA OU SOFÁ', kind: 'impossible', role: 'seat' };
       break;
@@ -209,6 +210,15 @@ export function executeAction(
         object.consumed = true;
       }
       actor.activity = 'drinking';
+      break;
+    case 'lie':
+      actor.posture = 'lying';
+      actor.activity = 'lying';
+      if (seat) {
+        actor.x = seat.x;
+        actor.y = seat.y;
+        actor.locationId = seat.instanceId;
+      }
       break;
     case 'sleep':
       actor.posture = 'sleeping';

@@ -36,8 +36,12 @@ Transformação: alimento disponível → alimento consumido.
 Requer: personagem + líquido.
 Transformação: líquido disponível → líquido consumido.
 
+## DEITAR
+Requer: personagem + cama ou sofá.
+Transformação: em pé/sentado → deitado. Também pode ser realizado arrastando a pessoa até a cama ou o sofá.
+
 ## DORMIR
-Requer: personagem.
+Requer: personagem + cama ou sofá.
 Transformação: acordado → dormindo.
 
 ## Regra geral de erro
