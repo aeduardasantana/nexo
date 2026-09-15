@@ -97,6 +97,72 @@ export function AssetVisual({ asset, size = 72, className = '' }: AssetVisualPro
           <path d="M70 66 C82 70 85 79 82 88" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
         </svg>
       );
+    case 'door':
+      return (
+        <svg {...common}>
+          <rect x="28" y="16" width="44" height="68" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle cx="61" cy="51" r="3" fill="currentColor" />
+        </svg>
+      );
+    case 'plate':
+      return (
+        <svg {...common}>
+          <circle cx="50" cy="52" r="28" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle cx="50" cy="52" r="17" fill="none" stroke="currentColor" strokeWidth="3" opacity=".6" />
+        </svg>
+      );
+    case 'clothes':
+      return (
+        <svg {...common}>
+          <path d="M35 24 L22 36 L32 47 L38 41 V80 H62 V41 L68 47 L78 36 L65 24 L58 31 H42 Z" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+      );
+    case 'money':
+      return (
+        <svg {...common}>
+          <rect x="18" y="30" width="64" height="40" rx="5" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle cx="50" cy="50" r="10" fill="none" stroke="currentColor" strokeWidth="3" />
+          <path d="M24 38 C31 38 34 35 34 34 M76 62 C69 62 66 65 66 66" fill="none" stroke="currentColor" strokeWidth="3" />
+        </svg>
+      );
+    case 'toothbrush':
+      return (
+        <svg {...common}>
+          <path d="M24 66 L66 28" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+          <path d="M65 28 L79 22 M62 33 L76 27 M59 38 L73 32" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'soap':
+      return (
+        <svg {...common}>
+          <rect x="24" y="34" width="52" height="34" rx="14" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle cx="68" cy="25" r="5" fill="none" stroke="currentColor" strokeWidth="3" />
+          <circle cx="78" cy="16" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      );
+    case 'towel':
+      return (
+        <svg {...common}>
+          <rect x="28" y="20" width="44" height="62" rx="3" fill="none" stroke="currentColor" strokeWidth="4" />
+          <path d="M28 36 H72 M28 65 H72" fill="none" stroke="currentColor" strokeWidth="3" opacity=".6" />
+        </svg>
+      );
+    case 'bag':
+      return (
+        <svg {...common}>
+          <path d="M25 38 H75 L70 78 H30 Z" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+          <path d="M38 38 C38 22 62 22 62 38" fill="none" stroke="currentColor" strokeWidth="4" />
+        </svg>
+      );
+    case 'dog':
+      return (
+        <svg {...common}>
+          <circle cx="50" cy="42" r="20" fill="none" stroke="currentColor" strokeWidth="4" />
+          <path d="M34 29 L23 20 L27 42 M66 29 L77 20 L73 42 M43 48 Q50 54 57 48 M50 62 V78 M38 78 H62" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="43" cy="39" r="2.5" fill="currentColor" />
+          <circle cx="57" cy="39" r="2.5" fill="currentColor" />
+        </svg>
+      );
     case 'home':
       return (
         <svg {...common}>
