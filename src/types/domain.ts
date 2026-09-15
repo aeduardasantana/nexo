@@ -154,6 +154,17 @@ export type CausalTask = {
   resultSceneId?: string;
 };
 
+export type AutobiographicalRecord = {
+  id: string;
+  personId: string;
+  placeId: string;
+  when: TemporalDay;
+  firstSceneId: string;
+  nextSceneId: string;
+  endingSceneId: string;
+  createdAt: string;
+};
+
 
 export type MentalStateKind = 'want' | 'know' | 'understand' | 'like';
 
@@ -265,6 +276,7 @@ export type SessionReport = {
   scenes: SceneState[];
   storyArchive?: SceneState[][];
   personNames?: Record<string, string>;
+  autobiographicalRecords?: AutobiographicalRecord[];
   mediationEvents: MediationEvent[];
   mediationAssessments: MediationAssessment[];
   mentalStates: MentalState[];
