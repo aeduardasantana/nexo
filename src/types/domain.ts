@@ -297,6 +297,7 @@ export type MediationAssessment = {
 
 export type SessionMetadata = {
   participant: string;
+  facilitator: string;
   date: string;
   objective: string;
   notes: string;
