@@ -202,6 +202,10 @@ export function VerbVisual({ verb, size = 76, animated = false }: { verb: VerbRu
         <path className="verb-arrow" d="M50 50 H76 M67 42 L76 50 L67 58" />
         <path className="verb-seat" d="M60 49 V72 H82 M66 72 V84 M81 72 V84" />
         <path className="verb-cup" d="M65 49 H82 L80 68 H67 Z" />
+        <path className="verb-eye" d="M55 34 C64 24 78 24 87 34 C78 44 64 44 55 34 Z M71 34 A4 4 0 1 0 79 34 A4 4 0 1 0 71 34" />
+        <path className="verb-speech" d="M54 20 H88 V42 H70 L61 50 V42 H54 Z" />
+        <path className="verb-door" d="M58 20 H86 V78 H58 Z M77 49 H80" />
+        <path className="verb-return" d="M84 28 C65 22 54 31 54 48 M54 48 L64 38 M54 48 L64 58" />
       </svg>
     </div>
   );
