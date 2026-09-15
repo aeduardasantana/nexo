@@ -5112,3 +5112,299 @@ input[type="radio"] {
     break-inside: avoid;
   }
 }
+
+
+/* Tour do Mediador e Central de Ajuda */
+.mediator-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.mediator-heading > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.mediator-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.mediator-help-actions button {
+  min-height: 38px;
+  border: 1px solid #c7c1b5;
+  border-radius: 8px;
+  background: #fff;
+  padding: 7px 10px;
+  font-size: .58rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.mediator-help-actions button:last-child {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgba(22, 22, 22, .44);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.help-center {
+  width: min(920px, 100%);
+  max-height: min(86vh, 820px);
+  overflow: auto;
+  border-radius: 16px;
+  background: #fffdf9;
+  box-shadow: 0 24px 70px rgba(0,0,0,.22);
+  border: 1px solid #d6d0c5;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.help-center > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2ddd4;
+}
+
+.help-center > header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.help-center > header button {
+  min-height: 38px;
+  border: 1px solid #c7c1b5;
+  border-radius: 8px;
+  background: #fff;
+  padding: 7px 10px;
+  font-size: .58rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.help-menu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.help-menu button {
+  min-height: 40px;
+  border: 1px solid #d0cbc1;
+  border-radius: 8px;
+  background: #fff;
+  font-size: .56rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.help-menu button.active {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.help-content {
+  display: grid;
+  gap: 12px;
+}
+
+.help-purpose {
+  margin: 0;
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  background: #f8f7f3;
+  padding: 10px 12px;
+  font-size: .68rem;
+  line-height: 1.5;
+  font-weight: 760;
+}
+
+.help-content section {
+  display: grid;
+  gap: 8px;
+}
+
+.help-content h3 {
+  margin: 0;
+  font-size: .62rem;
+  letter-spacing: .08em;
+}
+
+.help-content ol,
+.help-content ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 7px;
+}
+
+.help-content li {
+  font-size: .64rem;
+  line-height: 1.45;
+  font-weight: 730;
+}
+
+.help-center > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e2ddd4;
+}
+
+.help-center > footer button {
+  min-height: 42px;
+  border: 1px solid #161616;
+  border-radius: 9px;
+  background: #fff;
+  color: #161616;
+  padding: 8px 12px;
+  font-size: .6rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.help-center > footer .help-tour-button {
+  background: #161616;
+  color: #fff;
+}
+
+.tour-card {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10020;
+  width: min(370px, calc(100vw - 40px));
+  border: 1px solid #161616;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(0,0,0,.2);
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.tour-card > span {
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  color: #6c6860;
+}
+
+.tour-card > strong {
+  font-size: .82rem;
+}
+
+.tour-card > p {
+  margin: 0;
+  font-size: .64rem;
+  line-height: 1.5;
+  font-weight: 740;
+}
+
+.tour-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.tour-actions button {
+  min-height: 40px;
+  border: 1px solid #c7c1b5;
+  border-radius: 8px;
+  background: #fff;
+  font-size: .56rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.tour-actions button:last-child {
+  background: #161616;
+  color: #fff;
+  border-color: #161616;
+}
+
+.tour-highlight {
+  position: relative;
+  z-index: 9995 !important;
+  outline: 4px solid #161616 !important;
+  outline-offset: 6px !important;
+  box-shadow: 0 0 0 9999px rgba(255,255,255,.64), 0 12px 36px rgba(0,0,0,.2) !important;
+  border-radius: 12px;
+}
+
+@media (max-width: 760px) {
+  .mediator-heading {
+    display: grid;
+  }
+
+  .mediator-help-actions {
+    justify-content: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .help-menu {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .help-center > footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .help-center > footer button {
+    width: 100%;
+  }
+
+  .tour-card {
+    left: 12px;
+    right: 12px;
+    bottom: 86px;
+    width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mediator-help-actions,
+  .help-menu,
+  .tour-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .help-overlay {
+    padding: 8px;
+  }
+
+  .help-center {
+    max-height: 92vh;
+    padding: 12px;
+  }
+}
+
+@media print {
+  .help-overlay,
+  .tour-card,
+  .mediator-help-actions {
+    display: none !important;
+  }
+}
