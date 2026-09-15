@@ -343,6 +343,8 @@ export default function App() {
   const [mediationEvents, setMediationEvents] = useState<MediationEvent[]>([]);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [draggingEntityId, setDraggingEntityId] = useState<string | null>(null);
+  const [sceneEditUndo, setSceneEditUndo] = useState<SceneState[]>([]);
+  const [sceneEditRedo, setSceneEditRedo] = useState<SceneState[]>([]);
   const [relationReferenceId, setRelationReferenceId] = useState<string | null>(null);
   const [relationType, setRelationType] = useState<SpatialRelation>('near');
   const [spatialTask, setSpatialTask] = useState<SpatialTask>({
@@ -438,7 +440,12 @@ export default function App() {
     notes: '',
   });
   const sceneRef = useRef<HTMLDivElement | null>(null);
+  const dragStartSceneRef = useRef<SceneState | null>(null);
   const replayTimer = useRef<number | null>(null);
+
+  function cloneScene(scene: SceneState): SceneState {
+    return { ...scene, entities: scene.entities.map((entity) => ({ ...entity })) };
+  }
 
   const currentScene = history[historyIndex];
   const allSessionScenes = [
@@ -981,6 +988,8 @@ export default function App() {
       facilitator: report.metadata.facilitator ?? '',
     });
     setHistory(scenes);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setStoryArchive(report.storyArchive ?? []);
     setPersonNames(report.personNames ?? {});
     setAutobiographicalRecords(report.autobiographicalRecords ?? []);
@@ -2084,6 +2093,8 @@ export default function App() {
       setFeedback('⚠ NÃO FOI POSSÍVEL ADICIONAR - VOLTE PARA A CENA MAIS ATUAL');
       return;
     }
+    setSceneEditUndo((items) => [...items, cloneScene(currentScene)]);
+    setSceneEditRedo([]);
     const entity = {
       ...toEntity(asset, currentScene.entities.length),
       ...(position ? { x: position.x, y: position.y } : {}),
@@ -2157,6 +2168,16 @@ export default function App() {
   }
 
   function handleScenePointerUp() {
+    const beforeDrag = dragStartSceneRef.current;
+    if (beforeDrag && draggingEntityId) {
+      const beforeEntity = beforeDrag.entities.find((entity) => entity.instanceId === draggingEntityId);
+      const afterEntity = currentScene.entities.find((entity) => entity.instanceId === draggingEntityId);
+      if (beforeEntity && afterEntity && (beforeEntity.x !== afterEntity.x || beforeEntity.y !== afterEntity.y)) {
+        setSceneEditUndo((items) => [...items, beforeDrag]);
+        setSceneEditRedo([]);
+      }
+    }
+    dragStartSceneRef.current = null;
     setDraggingEntityId(null);
   }
 
@@ -2166,6 +2187,8 @@ export default function App() {
     if (target.closest('.scene-item')) return;
     const point = pointerToPercent(event.clientX, event.clientY);
     if (!point) return;
+    setSceneEditUndo((items) => [...items, cloneScene(currentScene)]);
+    setSceneEditRedo([]);
     updateEntityPosition(selectedEntityId, point.x, point.y);
   }
 
@@ -2369,6 +2392,8 @@ export default function App() {
     const nextHistory = [...history.slice(0, historyIndex + 1), result.scene];
     setHistory(nextHistory);
     setHistoryIndex(nextHistory.length - 1);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setCompareMode('now');
     setActionIssueRole(null);
     setFeedback(`✓ ${selectedRule.label}`);
@@ -2382,7 +2407,19 @@ export default function App() {
   }
 
   function undo() {
+    if (sceneEditUndo.length > 0) {
+      const previousScene = sceneEditUndo[sceneEditUndo.length - 1];
+      setSceneEditUndo((items) => items.slice(0, -1));
+      setSceneEditRedo((items) => [...items, cloneScene(currentScene)]);
+      setHistory((items) => items.map((scene, index) => index === historyIndex ? previousScene : scene));
+      setSelectedEntityId(null);
+      setDraggingEntityId(null);
+      setFeedback('ALTERAÇÃO VISUAL DESFEITA');
+      return;
+    }
     if (historyIndex === 0) return;
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setHistoryIndex((index) => index - 1);
     setDraft({ verbId: '' });
     setSelectedEntityId(null);
@@ -2392,7 +2429,19 @@ export default function App() {
   }
 
   function redo() {
+    if (sceneEditRedo.length > 0) {
+      const nextScene = sceneEditRedo[sceneEditRedo.length - 1];
+      setSceneEditRedo((items) => items.slice(0, -1));
+      setSceneEditUndo((items) => [...items, cloneScene(currentScene)]);
+      setHistory((items) => items.map((scene, index) => index === historyIndex ? nextScene : scene));
+      setSelectedEntityId(null);
+      setDraggingEntityId(null);
+      setFeedback('ALTERAÇÃO VISUAL REFEITA');
+      return;
+    }
     if (historyIndex >= history.length - 1) return;
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setHistoryIndex((index) => index + 1);
     setDraft({ verbId: '' });
     setSelectedEntityId(null);
@@ -2433,6 +2482,8 @@ export default function App() {
     }
     stopReplay();
     setHistory([initialScene]);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setStoryArchive([]);
     setPersonNames({});
     setHistoryIndex(0);
@@ -2525,6 +2576,8 @@ export default function App() {
       setStoryArchive((stories) => [...stories, history.slice(1)]);
     }
     setHistory([initialScene]);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
     setHistoryIndex(0);
     setDraft({ verbId: '' });
     setActionIssueRole(null);
@@ -2603,6 +2656,7 @@ export default function App() {
           }
           setSelectedEntityId(entity.instanceId);
           if (historyIndex === history.length - 1) {
+            dragStartSceneRef.current = cloneScene(currentScene);
             setDraggingEntityId(entity.instanceId);
             event.currentTarget.setPointerCapture(event.pointerId);
           }
@@ -2611,7 +2665,7 @@ export default function App() {
           if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId);
           }
-          setDraggingEntityId(null);
+          handleScenePointerUp();
         }}
       >
         <AssetVisual asset={entity} size={92} className={entity.activity ? `activity-${entity.activity}` : ''} />
@@ -3360,8 +3414,8 @@ export default function App() {
               </h2>
             </div>
             <div className="stage-actions">
-              <button type="button" onClick={undo} disabled={historyIndex === 0}>↶ VOLTAR</button>
-              <button type="button" onClick={redo} disabled={historyIndex >= history.length - 1}>↷ AVANÇAR</button>
+              <button type="button" onClick={undo} disabled={sceneEditUndo.length === 0 && historyIndex === 0}>↶ VOLTAR</button>
+              <button type="button" onClick={redo} disabled={sceneEditRedo.length === 0 && historyIndex >= history.length - 1}>↷ AVANÇAR</button>
               <button type="button" onClick={clearStory} disabled={history.length === 1}>NOVA HISTÓRIA</button>
             </div>
           </div>

@@ -13,6 +13,7 @@ Cada fluxo crítico deve ter uma alternativa utilizável por toque. Arrastar nã
 | Inclusão na cena | Clique em um cartão adiciona o item à cena | Aprovado na URL pública |
 | Posicionamento por toque | Item selecionado pode ser reposicionado tocando em área vazia do cenário | Aprovado no código; a instrução foi explicitada nesta versão |
 | Arrastar | Cartões podem ser arrastados da biblioteca ao cenário no computador | Implementado nesta versão; requer validação após publicação |
+| Desfazer/refazer visual | Inclusão, arraste e reposicionamento por toque habilitam Voltar; desfazer habilita Avançar | Implementado sem criar uma nova etapa na narrativa |
 | Modo participante | Interface apresenta biblioteca, cenário, história e orientação direta de uso | Ajustado nesta versão |
 | Modo mediador | Painel de sessão, atividade, mediação, salvamento e exportação é exibido ao trocar de modo | Aprovado na URL pública |
 | Persistência local | Indicação de salvamento local aparece no modo mediador | Aprovado na URL pública |
