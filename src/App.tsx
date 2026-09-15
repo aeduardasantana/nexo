@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
 import MissionsReference from './components/MissionsReference';
-import { AssetVisual, VerbVisual } from './components/Visuals';
+import { AssetVisual, ResponseVisual, VerbVisual } from './components/Visuals';
 import { assets } from './data/assets';
 import { verbRules } from './data/verbs';
 import { executeAction } from './features/actionEngine';
@@ -2707,7 +2707,7 @@ export default function App() {
   }
 
   return (
-    <main className={`app-shell module-${activeModule}`} id="nexo-content">
+    <main className={`app-shell module-${activeModule} mode-${interfaceMode}`} id="nexo-content">
       <a className="skip-link" href="#nexo-workspace">PULAR PARA O CONTEÚDO</a>
       <header className="topbar">
         <div>
@@ -2725,7 +2725,13 @@ export default function App() {
               type="button"
               className={interfaceMode === 'participant' ? 'active' : ''}
               aria-pressed={interfaceMode === 'participant'}
-              onClick={() => setInterfaceMode('participant')}
+              onClick={() => {
+                setInterfaceMode('participant');
+                if (activeModule === 'report' || activeModule === 'missions') {
+                  setActiveModule('scenario');
+                  setReportOpen(false);
+                }
+              }}
             >
               PARTICIPANTE
             </button>
@@ -5145,7 +5151,7 @@ export default function App() {
             </div>
           </section>
 
-          <section className="spatial-task-builder">
+          <section className={`spatial-task-builder ${spatialTaskActive ? 'is-active' : ''}`}>
             <div className="builder-title">
               <p className="section-kicker">ATIVIDADE ESPACIAL DIRIGIDA</p>
               <strong>{spatialTaskActive ? spatialTask.instruction : 'CONFIGURAR ATIVIDADE'}</strong>
@@ -5228,6 +5234,23 @@ export default function App() {
             </div>
 
             <div className="spatial-task-preview">
+              {spatialTaskSubject && spatialTaskReference && (
+                <div className={`spatial-instruction-visual relation-${spatialTask.relation}`} aria-hidden="true">
+                  <div className="instruction-subject">
+                    <AssetVisual asset={spatialTaskSubject} size={72} />
+                  </div>
+                  <div className="instruction-relation-mark">
+                    {spatialTask.relation === 'near' ? '↔' :
+                      spatialTask.relation === 'far' ? '⟷' :
+                      spatialTask.relation === 'above' ? '↑' :
+                      spatialTask.relation === 'below' ? '↓' :
+                      spatialTask.relation === 'inside' ? '◎' : '↗'}
+                  </div>
+                  <div className="instruction-reference">
+                    <AssetVisual asset={spatialTaskReference} size={72} />
+                  </div>
+                </div>
+              )}
               {spatialTask.kind === 'place' ? (
                 <>
                   <strong>COLOQUE</strong>
@@ -5253,7 +5276,7 @@ export default function App() {
             </div>
 
             <div className="spatial-task-actions">
-              <button type="button" onClick={startSpatialTask}>
+              <button type="button" className="mediator-only" onClick={startSpatialTask}>
                 {spatialTaskActive ? 'REINICIAR ATIVIDADE' : 'INICIAR ATIVIDADE'}
               </button>
               {spatialTask.kind === 'place' && (
@@ -5507,12 +5530,18 @@ export default function App() {
                 label: 'RESPOSTA INCORRETA',
                 createdAt: new Date().toISOString(),
               }]);
-            }}>❌ ERRADO</button>
+            }} className="mediator-only">❌ ERRADO</button>
             {(activityMode !== 'directed' || directedActivity.allowUnknown) && (
-              <button type="button" onClick={answerUnknown}>NÃO SEI</button>
+              <button type="button" className="response-button" onClick={answerUnknown}>
+                <ResponseVisual type="unknown" size={68} />
+                <span>NÃO SEI</span>
+              </button>
             )}
             {(activityMode !== 'directed' || directedActivity.allowNotUnderstood) && (
-              <button type="button" onClick={answerNotUnderstood}>NÃO ENTENDI</button>
+              <button type="button" className="response-button" onClick={answerNotUnderstood}>
+                <ResponseVisual type="not-understood" size={68} />
+                <span>NÃO ENTENDI</span>
+              </button>
             )}
           </footer>
         </section>
@@ -5560,8 +5589,9 @@ export default function App() {
             disabled={history.length <= 1}
             onClick={isReplaying ? stopReplay : replayStory}
           >
-            {isReplaying ? '■ PARAR' : '▶ REPRODUZIR'}
+            {isReplaying ? '■ PARAR HISTÓRIA' : '▶ REPRODUZIR HISTÓRIA'}
           </button>
+          <small className="replay-help">MOSTRA AS CENAS EM ORDEM, UMA APÓS A OUTRA.</small>
         </aside>
       </section>
 

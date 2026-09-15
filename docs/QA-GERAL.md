@@ -24,6 +24,10 @@ Cada fluxo crítico deve ter uma alternativa utilizável por toque. Arrastar nã
 | Cômodos | Sala, quarto, cozinha, banheiro e rua possuem ilustrações próprias; dentro/fora usa a área do ambiente | Corrigido nesta versão |
 | Semântica dos verbos | OLHAR é ação; VIU/NÃO VIU permanece em perspectiva; VER e TRAZER não aparecem como ações duplicadas | Corrigido nesta versão |
 | Estados e continuidade | Porta aberta/fechada é visível; objeto carregado acompanha o dono; VOLTAR exige local anterior; RESPONDER exige pergunta | Corrigido nesta versão |
+| Relação EM CIMA | Aceita empilhamento vertical com tolerância ampla, sem exigir contato ou posição exata | Corrigido nesta versão |
+| Foco visual do participante | Configurações do mediador ficam ocultas; instrução espacial, NÃO SEI, NÃO ENTENDI e PERGUNTAR possuem representação visual | Corrigido nesta versão |
+| Área do cenário | Área de arraste reduzida em computador e celular | Corrigido nesta versão |
+| Reprodução | Comando renomeado para REPRODUZIR HISTÓRIA e acompanhado de explicação funcional | Corrigido nesta versão |
 | VLibras | Widget é carregado como apoio complementar | Aprovado na URL pública |
 | Responsividade | Estrutura possui organização específica para telas menores | Revisão manual necessária após publicação |
 | Build TypeScript/Vite | `npm install` e `npm run build` no GitHub Actions | Aprovado no deploy da versão 6825303a |

@@ -43,10 +43,10 @@ export function evaluateRelation(
       matched = d >= 45;
       break;
     case 'above':
-      matched = subject.y <= reference.y - 10;
+      matched = subject.y < reference.y - 2 && Math.abs(subject.x - reference.x) <= 20;
       break;
     case 'below':
-      matched = subject.y >= reference.y + 10;
+      matched = subject.y > reference.y + 2 && Math.abs(subject.x - reference.x) <= 20;
       break;
     case 'inside':
       matched = isInsideContainer(subject, reference);

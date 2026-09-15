@@ -128,7 +128,7 @@ button { font: inherit; }
 .stage-actions { display: flex; gap: 8px; }
 
 .stage {
-  min-height: 430px;
+  min-height: 330px;
   flex: 1;
   border: 2px dashed #d6d1c6;
   border-radius: 20px;
@@ -190,7 +190,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   .stage-panel { order: 1; padding: 14px; }
   .library { order: 2; padding: 14px; border-top: 1px solid #dedbd3; }
 
-  .stage { min-height: 52vh; }
+  .stage { min-height: min(42vh, 380px); }
   .stage-heading { flex-direction: column; }
   .stage-actions { width: 100%; }
   .stage-actions button { flex: 1; }
@@ -821,6 +821,14 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   stroke-linejoin: round;
 }
 
+.verb-question {
+  opacity: 0;
+  fill: currentColor;
+  font-family: inherit;
+  font-size: 42px;
+  font-weight: 900;
+}
+
 .verb-take .verb-object,
 .verb-take .verb-arrow,
 .verb-give .verb-object,
@@ -981,7 +989,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 430px;
+  min-height: 330px;
   overflow: hidden;
 }
 
@@ -1049,7 +1057,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 
 @media (max-width: 640px) {
   .spatial-scene {
-    min-height: 52vh;
+    min-height: min(42vh, 380px);
   }
 
   .spatial-scene .scene-item .asset-svg {
@@ -1224,6 +1232,149 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   display: flex;
   gap: 8px;
   margin-top: 10px;
+}
+
+.spatial-instruction-visual {
+  min-width: 230px;
+  min-height: 170px;
+  border: 2px solid #d7d2c9;
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+}
+
+.spatial-instruction-visual.relation-near,
+.spatial-instruction-visual.relation-far {
+  grid-template-columns: 1fr auto 1fr;
+  min-height: 120px;
+}
+
+.spatial-instruction-visual.relation-above,
+.spatial-instruction-visual.relation-below {
+  grid-template-columns: 1fr;
+}
+
+.spatial-instruction-visual.relation-below .instruction-reference {
+  order: 1;
+}
+
+.spatial-instruction-visual.relation-below .instruction-relation-mark {
+  order: 2;
+}
+
+.spatial-instruction-visual.relation-below .instruction-subject {
+  order: 3;
+}
+
+.spatial-instruction-visual.relation-inside,
+.spatial-instruction-visual.relation-outside {
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.instruction-subject,
+.instruction-reference {
+  display: grid;
+  place-items: center;
+}
+
+.instruction-relation-mark {
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.response-button {
+  min-height: 106px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  font-weight: 900;
+}
+
+.response-visual {
+  overflow: visible;
+}
+
+.response-visual text {
+  fill: currentColor;
+  font-family: inherit;
+  font-size: 27px;
+  font-weight: 950;
+}
+
+.replay-help {
+  display: block;
+  margin-top: 7px;
+  color: #6c6860;
+  font-size: .55rem;
+  line-height: 1.4;
+  text-align: center;
+  font-weight: 750;
+}
+
+/* No modo participante, a imagem e a resposta são o foco. */
+.mode-participant .module-nav,
+.mode-participant .relation-builder,
+.mode-participant .mediator-only,
+.mode-participant .spatial-task-builder .relation-controls {
+  display: none !important;
+}
+
+.mode-participant .spatial-task-builder:not(.is-active) {
+  display: none;
+}
+
+.mode-participant .spatial-task-preview {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+}
+
+.mode-participant .spatial-task-preview > strong,
+.mode-participant .spatial-task-preview > span {
+  font-size: .68rem;
+}
+
+.mode-participant .spatial-instruction-visual {
+  width: min(420px, 100%);
+  min-height: 210px;
+  border-width: 3px;
+}
+
+.mode-participant .spatial-instruction-visual .asset-svg {
+  width: 92px;
+  height: 92px;
+}
+
+.mode-participant .library-guide p {
+  color: #77736b;
+  font-size: .58rem;
+  font-weight: 700;
+}
+
+.mode-participant .asset-card .asset-svg,
+.mode-participant .verb-button .verb-visual {
+  width: 68px !important;
+  height: 68px !important;
+}
+
+.mode-participant .stage-footer .response-button {
+  flex: 1 1 180px;
+}
+
+@media (max-width: 640px) {
+  .mode-participant .spatial-instruction-visual {
+    min-height: 180px;
+  }
+
+  .response-button {
+    min-height: 96px;
+  }
 }
 
 .spatial-task-actions button {
@@ -4554,7 +4705,6 @@ body {
 
 .verb-see .verb-eye,
 .verb-look .verb-eye,
-.verb-ask .verb-speech,
 .verb-answer .verb-speech,
 .verb-tell .verb-speech,
 .verb-open .verb-door,
@@ -4567,6 +4717,10 @@ body {
 .verb-leave .verb-arrow,
 .verb-show .verb-object,
 .verb-show .verb-arrow {
+  opacity: 1;
+}
+
+.verb-ask .verb-question {
   opacity: 1;
 }
 
@@ -4589,10 +4743,19 @@ body {
   animation: verbObserve 1.2s ease-in-out infinite;
 }
 
-.verb-ask.is-animated .verb-speech,
 .verb-answer.is-animated .verb-speech,
 .verb-tell.is-animated .verb-speech {
   animation: verbSpeak 1s ease-in-out infinite alternate;
+}
+
+.verb-ask.is-animated .verb-question {
+  animation: verbAsk 1s ease-in-out infinite alternate;
+  transform-origin: 71px 36px;
+}
+
+@keyframes verbAsk {
+  from { transform: scale(.92) rotate(-3deg); }
+  to { transform: scale(1.08) rotate(3deg); }
 }
 
 .verb-open.is-animated .verb-door {

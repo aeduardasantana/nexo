@@ -262,9 +262,37 @@ export function VerbVisual({ verb, size = 76, animated = false }: { verb: VerbRu
         <path className="verb-cup" d="M65 49 H82 L80 68 H67 Z" />
         <path className="verb-eye" d="M55 34 C64 24 78 24 87 34 C78 44 64 44 55 34 Z M71 34 A4 4 0 1 0 79 34 A4 4 0 1 0 71 34" />
         <path className="verb-speech" d="M54 20 H88 V42 H70 L61 50 V42 H54 Z" />
+        <text className="verb-question" x="71" y="48" textAnchor="middle">?</text>
         <path className="verb-door" d="M58 20 H86 V78 H58 Z M77 49 H80" />
         <path className="verb-return" d="M84 28 C65 22 54 31 54 48 M54 48 L64 38 M54 48 L64 58" />
       </svg>
     </div>
+  );
+}
+
+export function ResponseVisual({ type, size = 76 }: { type: 'unknown' | 'not-understood'; size?: number }) {
+  return (
+    <svg
+      className={`response-visual response-${type}`}
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      role="img"
+      aria-hidden="true"
+    >
+      <circle cx="50" cy="31" r="16" fill="currentColor" fillOpacity=".08" stroke="currentColor" strokeWidth="4" />
+      <circle cx="44" cy="28" r="2" fill="currentColor" />
+      <circle cx="56" cy="28" r="2" fill="currentColor" />
+      <path d={type === 'unknown' ? 'M43 38 Q50 34 57 38' : 'M43 38 Q50 42 57 38'} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M50 48 V78 M50 58 L29 68 M29 68 L20 60 M29 68 L21 76 M50 58 L71 68 M71 68 L80 60 M71 68 L79 76 M50 78 L38 94 M50 78 L62 94" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      {type === 'unknown' ? (
+        <>
+          <text x="19" y="31" textAnchor="middle">?</text>
+          <text x="81" y="31" textAnchor="middle">?</text>
+        </>
+      ) : (
+        <text x="76" y="27" textAnchor="middle">?</text>
+      )}
+    </svg>
   );
 }
