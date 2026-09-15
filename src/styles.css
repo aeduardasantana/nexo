@@ -4843,3 +4843,65 @@ input[type="radio"] {
     transition: none !important;
   }
 }
+
+
+/* Persistência local */
+.local-session-status {
+  grid-column: 1 / -1;
+  border: 1px solid #cfc9bf;
+  border-radius: 11px;
+  background: #f8f7f3;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.local-session-status > div {
+  display: grid;
+  gap: 3px;
+}
+
+.local-session-status span {
+  font-size: .58rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  color: #6c6860;
+}
+
+.local-session-status strong {
+  font-size: .72rem;
+}
+
+.local-session-status small {
+  font-size: .56rem;
+  font-weight: 750;
+  color: #6c6860;
+}
+
+.local-session-status button {
+  min-height: 42px;
+  border: 1px solid #161616;
+  border-radius: 9px;
+  background: #fff;
+  color: #161616;
+  padding: 8px 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.import-confirm {
+  border-color: #9a7f59;
+  background: #fffaf1;
+}
+
+@media (max-width: 640px) {
+  .local-session-status {
+    grid-template-columns: 1fr;
+  }
+
+  .local-session-status button {
+    width: 100%;
+  }
+}
