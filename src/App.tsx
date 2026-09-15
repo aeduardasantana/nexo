@@ -25,6 +25,7 @@ import type {
   WeekTask,
   NarrativeTask,
   CausalTask,
+  AutobiographicalRecord,
   MentalState,
   MentalStateKind,
   MentalStateValue,
@@ -145,6 +146,10 @@ export default function App() {
   const [causalTaskActive, setCausalTaskActive] = useState(false);
   const [causalAnswer, setCausalAnswer] = useState<string[]>([]);
   const [causalOptionIds, setCausalOptionIds] = useState<string[]>([]);
+  const [autobiographicalDraft, setAutobiographicalDraft] = useState<Partial<AutobiographicalRecord>>({
+    when: 'today',
+  });
+  const [autobiographicalRecords, setAutobiographicalRecords] = useState<AutobiographicalRecord[]>([]);
   const [mentalStates, setMentalStates] = useState<MentalState[]>([]);
   const [mentalTask, setMentalTask] = useState<MentalTask>({ kind: 'choose_self' });
   const [mentalTaskActive, setMentalTaskActive] = useState(false);
@@ -323,12 +328,69 @@ export default function App() {
     setFeedback('NOMES DAS PESSOAS RESTAURADOS');
   }
 
+  function saveAutobiographicalRecord() {
+    const {
+      personId,
+      placeId,
+      when,
+      firstSceneId,
+      nextSceneId,
+      endingSceneId,
+    } = autobiographicalDraft;
+
+    if (!personId || !placeId || !when || !firstSceneId || !nextSceneId || !endingSceneId) {
+      setFeedback('⚠ COMPLETE QUEM - ONDE - QUANDO - PRIMEIRO - DEPOIS - COMO TERMINOU');
+      return;
+    }
+
+    if (new Set([firstSceneId, nextSceneId, endingSceneId]).size !== 3) {
+      setFeedback('⚠ USE TRÊS CENAS DIFERENTES PARA PRIMEIRO - DEPOIS - COMO TERMINOU');
+      return;
+    }
+
+    const record: AutobiographicalRecord = {
+      id: crypto.randomUUID(),
+      personId,
+      placeId,
+      when,
+      firstSceneId,
+      nextSceneId,
+      endingSceneId,
+      createdAt: new Date().toISOString(),
+    };
+
+    setAutobiographicalRecords((records) => [...records, record]);
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'correct',
+      label: 'NARRATIVA AUTOBIOGRÁFICA - RELATO ORGANIZADO',
+      createdAt: new Date().toISOString(),
+    }]);
+    setAutobiographicalDraft({ when: 'today' });
+    setFeedback('✓ RELATO AUTOBIOGRÁFICO SALVO');
+  }
+
+  function autobiographicalSceneLabel(sceneId?: string) {
+    if (!sceneId) return ' - ';
+    const scene = history.find((item) => item.id === sceneId)
+      ?? storyArchive.flat().find((item) => item.id === sceneId);
+    return scene?.actionLabel ?? 'CENA';
+  }
+
+  function autobiographicalEntityLabel(instanceId?: string) {
+    if (!instanceId) return ' - ';
+    const scene = [currentScene, ...history, ...storyArchive.flat()]
+      .find((item) => item.entities.some((entity) => entity.instanceId === instanceId));
+    return scene?.entities.find((entity) => entity.instanceId === instanceId)?.label ?? ' - ';
+  }
+
   function buildSessionReport(): SessionReport {
     return {
       metadata: sessionMetadata,
       scenes: history,
       storyArchive,
       personNames,
+      autobiographicalRecords,
       mediationEvents,
       mediationAssessments,
       mentalStates,
@@ -376,6 +438,7 @@ export default function App() {
     setHistory(scenes);
     setStoryArchive(report.storyArchive ?? []);
     setPersonNames(report.personNames ?? {});
+    setAutobiographicalRecords(report.autobiographicalRecords ?? []);
     setHistoryIndex(Math.max(0, scenes.length - 1));
     setMediationEvents(report.mediationEvents);
     setMediationAssessments(report.mediationAssessments);
@@ -1699,6 +1762,8 @@ export default function App() {
     setCausalTaskActive(false);
     setCausalAnswer([]);
     setCausalOptionIds([]);
+    setAutobiographicalDraft({ when: 'today' });
+    setAutobiographicalRecords([]);
     setMentalStates([]);
     setMentalTask({ kind: 'choose_self' });
     setMentalTaskActive(false);
@@ -1775,6 +1840,7 @@ export default function App() {
     setCausalTaskActive(false);
     setCausalAnswer([]);
     setCausalOptionIds([]);
+    setAutobiographicalDraft({ when: 'today' });
     setMentalTaskActive(false);
     setPerspectiveTaskActive(false);
     setAccessTaskActive(false);
