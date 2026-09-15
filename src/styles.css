@@ -16,6 +16,30 @@ body {
   min-height: 100vh;
 }
 
+.nexo-recovery {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f4f2ed;
+}
+
+.nexo-recovery > div {
+  width: min(100%, 620px);
+  padding: 28px;
+  border: 1px solid #d7d3ca;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 60px rgba(22, 22, 22, .1);
+}
+
+.nexo-recovery h1 { margin: 8px 0 12px; font-size: clamp(1.5rem, 5vw, 2.4rem); }
+.nexo-recovery p { line-height: 1.5; font-weight: 750; }
+.nexo-recovery > div > div { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.nexo-recovery button { min-height: 46px; padding: 10px 14px; border: 1px solid #161616; border-radius: 10px; background: #161616; color: #fff; font-weight: 850; cursor: pointer; }
+.nexo-recovery button + button { background: #fff; color: #161616; }
+.nexo-recovery small { display: block; color: #666159; line-height: 1.5; }
+
 button { font: inherit; }
 
 .app-shell { min-height: 100vh; }

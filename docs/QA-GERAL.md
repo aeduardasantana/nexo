@@ -19,7 +19,8 @@ Cada fluxo crítico deve ter uma alternativa utilizável por toque. Arrastar nã
 | Avaliação longitudinal | Escala 0-3 e comando de registrar no histórico estão disponíveis | Aprovado na URL pública |
 | VLibras | Widget é carregado como apoio complementar | Aprovado na URL pública |
 | Responsividade | Estrutura possui organização específica para telas menores | Revisão manual necessária após publicação |
-| Build TypeScript/Vite | `npm run build` | Pendente: a instalação de pacotes deste ambiente apresentou arquivos corrompidos/ausentes; não é falha comprovada do projeto |
+| Build TypeScript/Vite | `npm install` e `npm run build` no GitHub Actions | Aprovado no deploy da versão 6825303a |
+| Recuperação de falha | Exceção inesperada durante uma ação não pode resultar em tela branca sem orientação | Proteção adicionada; a sessão anterior é preservada antes da abertura de sessão limpa |
 
 ## Regressão obrigatória após publicação
 
