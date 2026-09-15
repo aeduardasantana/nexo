@@ -114,6 +114,191 @@ type LongitudinalSession = {
 };
 
 type LongitudinalAxis = 'ACTION' | 'TIME' | 'NARRATIVE' | 'RELATION';
+type NexoModule = 'scenario' | 'time' | 'narrative' | 'perspective' | 'report';
+
+const HELP_MODULES: Record<NexoModule | 'general' | 'storage' | 'accessibility', {
+  title: string;
+  purpose: string;
+  howTo: string[];
+  observe: string[];
+}> = {
+  general: {
+    title: 'VISÃO GERAL',
+    purpose: 'Organizar ações, tempo, relações, perspectivas e narrativas por mediação visual.',
+    howTo: [
+      'IDENTIFIQUE PARTICIPANTE, MEDIADOR E OBJETIVO DA SESSÃO.',
+      'ESCOLHA UM MÓDULO CONFORME O OBJETIVO PEDAGÓGICO.',
+      'REGISTRE RESPOSTAS E NÍVEL DE MEDIAÇÃO 0 - 3.',
+      'USE O RELATÓRIO PARA DESCREVER O QUE FOI OBSERVADO.'
+    ],
+    observe: [
+      'INICIATIVA E AUTONOMIA NA ESCOLHA.',
+      'NECESSIDADE DE MODELAGEM OU PISTA.',
+      'CAPACIDADE DE ORGANIZAR RELAÇÕES E SEQUÊNCIAS.'
+    ]
+  },
+  scenario: {
+    title: 'CENÁRIO',
+    purpose: 'Construir ações concretas e relações espaciais por transformação visível da cena.',
+    howTo: [
+      'ADICIONE PESSOAS, OBJETOS, LUGARES OU ANIMAIS.',
+      'ESCOLHA UM VERBO E COMPLETE OS ELEMENTOS EXIGIDOS.',
+      'EXECUTE A AÇÃO E COMPARE ANTES - AGORA - DEPOIS.',
+      'USE AS ATIVIDADES ESPACIAIS PARA POSIÇÃO E RELAÇÃO.'
+    ],
+    observe: [
+      'COMPREENSÃO DA ESTRUTURA DA AÇÃO.',
+      'RELAÇÕES ENTRE AGENTE, OBJETO E DESTINO.',
+      'ORGANIZAÇÃO ESPACIAL.'
+    ]
+  },
+  time: {
+    title: 'TEMPO',
+    purpose: 'Trabalhar referências temporais concretas e progressivamente mais amplas.',
+    howTo: [
+      'COMECE POR ONTEM - HOJE - AMANHÃ.',
+      'TRABALHE MANHÃ - TARDE - NOITE E HORAS.',
+      'USE SEMANA PASSADA - ESTA SEMANA - PRÓXIMA SEMANA.',
+      'RELACIONE EVENTOS REAIS AO CALENDÁRIO.'
+    ],
+    observe: [
+      'LOCALIZAÇÃO TEMPORAL.',
+      'ORDEM ENTRE EVENTOS.',
+      'USO DE REFERÊNCIAS REAIS PARA ORGANIZAR O TEMPO.'
+    ]
+  },
+  narrative: {
+    title: 'NARRATIVA',
+    purpose: 'Organizar cenas em sequência, causalidade e relato autobiográfico.',
+    howTo: [
+      'CONSTRUA PRIMEIRO CENAS SIGNIFICATIVAS.',
+      'TRABALHE PRIMEIRO - DEPOIS - COMO TERMINOU.',
+      'AVANCE PARA PROBLEMA - AÇÃO - RESULTADO.',
+      'USE O RELATO PESSOAL QUANDO HOUVER BASE VISUAL SUFICIENTE.'
+    ],
+    observe: [
+      'ORDEM DE ACONTECIMENTOS.',
+      'CAUSA E CONSEQUÊNCIA.',
+      'ORGANIZAÇÃO DO PRÓPRIO RELATO.'
+    ]
+  },
+  perspective: {
+    title: 'PERSPECTIVA',
+    purpose: 'Trabalhar eu, outro, nós, acesso à informação e diferentes pontos de vista.',
+    howTo: [
+      'REGISTRE ESTADOS DECLARADOS SEM INFERIR O QUE A PESSOA PENSA.',
+      'TRABALHE RELAÇÕES SOCIAIS EU + OUTRO = NÓS.',
+      'USE QUEM VIU / QUEM NÃO VIU PARA ACESSO À INFORMAÇÃO.',
+      'TRABALHE MUDANÇA DE LOCAL E O QUE CADA PESSOA PODE SABER.'
+    ],
+    observe: [
+      'DISTINÇÃO ENTRE PRÓPRIA PERSPECTIVA E PERSPECTIVA DO OUTRO.',
+      'RELAÇÃO ENTRE VER E SABER.',
+      'REPRESENTAÇÃO DE VÍNCULOS SOCIAIS.'
+    ]
+  },
+  report: {
+    title: 'RELATÓRIO',
+    purpose: 'Reunir registros observacionais da sessão e acompanhar mudanças ao longo do tempo.',
+    howTo: [
+      'CONFIRA IDENTIFICAÇÃO, EVENTOS E NÍVEIS DE MEDIAÇÃO.',
+      'REGISTRE A SESSÃO NO HISTÓRICO LONGITUDINAL.',
+      'COMPARE EIXOS APENAS QUANDO HOUVER REGISTROS.',
+      'EXPORTE OU IMPRIMA QUANDO PRECISAR PRESERVAR O REGISTRO.'
+    ],
+    observe: [
+      'DISTRIBUIÇÃO DOS NÍVEIS 0 - 3.',
+      'MUDANÇAS ENTRE SESSÕES.',
+      'CONTEXTO DO MEDIADOR, OBJETIVO E DIFICULDADE.'
+    ]
+  },
+  storage: {
+    title: 'SALVAMENTO E HISTÓRICO',
+    purpose: 'Preservar a sessão no navegador e permitir continuidade sem banco de dados online.',
+    howTo: [
+      'O AUTOSAVE GUARDA A SESSÃO ATUAL NESTE NAVEGADOR.',
+      'USE SALVAR AGORA QUANDO QUISER FORÇAR O REGISTRO.',
+      'REGISTRE SESSÕES CONCLUÍDAS NO HISTÓRICO LONGITUDINAL.',
+      'EXPORTE JSON COMO BACKUP E PARA PORTABILIDADE.'
+    ],
+    observe: [
+      'CTRL + F5 NÃO APAGA O SALVAMENTO LOCAL.',
+      'LIMPAR DADOS DO SITE PODE APAGAR O HISTÓRICO LOCAL.',
+      'OUTRO NAVEGADOR OU DISPOSITIVO NÃO COMPARTILHA O MESMO HISTÓRICO.'
+    ]
+  },
+  accessibility: {
+    title: 'ACESSIBILIDADE',
+    purpose: 'Oferecer apoio visual, teclado, foco e Libras sem tornar o texto ou o VLibras requisito.',
+    howTo: [
+      'USE O VLibras COMO APOIO COMPLEMENTAR.',
+      'A NAVEGAÇÃO PRINCIPAL TAMBÉM FUNCIONA POR TECLADO.',
+      'OS ELEMENTOS DA CENA PODEM SER SELECIONADOS COM ENTER OU ESPAÇO.',
+      'O SISTEMA RESPEITA A PREFERÊNCIA DE REDUÇÃO DE MOVIMENTO.'
+    ],
+    observe: [
+      'O VLibras É TRADUÇÃO AUTOMÁTICA E NÃO SUBSTITUI MEDIAÇÃO EM LIBRAS.',
+      'A INFORMAÇÃO ESSENCIAL DEVE CONTINUAR VISUAL.'
+    ]
+  }
+};
+
+const TOUR_STEPS: Array<{
+  title: string;
+  text: string;
+  target: string;
+  module?: NexoModule;
+  openMediator?: boolean;
+}> = [
+  {
+    title: '1/8 - MODO MEDIADOR',
+    text: 'ABRA ESTE PAINEL PARA CONFIGURAR A SESSÃO, IDENTIFICAR PARTICIPANTE E MEDIADOR E REGISTRAR MEDIAÇÃO.',
+    target: '.teacher-panel',
+    openMediator: true
+  },
+  {
+    title: '2/8 - IDENTIFICAÇÃO DA SESSÃO',
+    text: 'PREENCHA PARTICIPANTE, MEDIADOR, DATA, OBJETIVO E OBSERVAÇÕES.',
+    target: '.session-panel',
+    openMediator: true
+  },
+  {
+    title: '3/8 - CENÁRIO',
+    text: 'MONTE CENAS, ESCOLHA VERBOS, EXECUTE AÇÕES E COMPARE ESTADOS.',
+    target: '.workspace',
+    module: 'scenario'
+  },
+  {
+    title: '4/8 - TEMPO',
+    text: 'TRABALHE ONTEM - HOJE - AMANHÃ, PERÍODOS DO DIA, SEMANAS, HORAS E CALENDÁRIO.',
+    target: '.expanded-time-builder',
+    module: 'time'
+  },
+  {
+    title: '5/8 - NARRATIVA',
+    text: 'ORGANIZE SEQUÊNCIAS, CAUSALIDADE E RELATOS AUTOBIOGRÁFICOS.',
+    target: '.autobiographical-builder',
+    module: 'narrative'
+  },
+  {
+    title: '6/8 - PERSPECTIVA',
+    text: 'TRABALHE EU, OUTRO, NÓS, ACESSO À INFORMAÇÃO E DIFERENTES PONTOS DE VISTA.',
+    target: '.social-builder',
+    module: 'perspective'
+  },
+  {
+    title: '7/8 - MEDIAÇÃO E SALVAMENTO',
+    text: 'REGISTRE O NÍVEL 0 - 3 E CONFIRA O AUTOSAVE LOCAL OU SALVE MANUALMENTE.',
+    target: '.teacher-support',
+    openMediator: true
+  },
+  {
+    title: '8/8 - RELATÓRIO',
+    text: 'REVISE A SESSÃO, REGISTRE NO HISTÓRICO LONGITUDINAL E EXPORTE OU IMPRIMA QUANDO NECESSÁRIO.',
+    target: '.session-report-view',
+    module: 'report'
+  }
+];
 
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
@@ -127,6 +312,9 @@ export default function App() {
   const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after' | 'compare'>('now');
   const [isReplaying, setIsReplaying] = useState(false);
   const [teacherOpen, setTeacherOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTopic, setHelpTopic] = useState<NexoModule | 'general' | 'storage' | 'accessibility'>('general');
+  const [tourStep, setTourStep] = useState<number | null>(null);
   const [activityMode, setActivityMode] = useState<ActivityMode>('free');
   const [directedIssueField, setDirectedIssueField] = useState<'instruction' | 'expected' | null>(null);
   const [directedActivity, setDirectedActivity] = useState<DirectedActivity>({
@@ -340,6 +528,49 @@ export default function App() {
     activityMode,
     directedActivity,
   ]);
+
+  useEffect(() => {
+    document.querySelectorAll('.tour-highlight').forEach((element) => {
+      element.classList.remove('tour-highlight');
+    });
+
+    if (tourStep === null) return;
+
+    const step = TOUR_STEPS[tourStep];
+    if (step.openMediator) setTeacherOpen(true);
+    if (step.module) {
+      setActiveModule(step.module);
+      setReportOpen(step.module === 'report');
+    }
+
+    const timer = window.setTimeout(() => {
+      const target = document.querySelector(step.target);
+      if (target instanceof HTMLElement) {
+        target.classList.add('tour-highlight');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [tourStep]);
+
+  function closeTour() {
+    setTourStep(null);
+    document.querySelectorAll('.tour-highlight').forEach((element) => {
+      element.classList.remove('tour-highlight');
+    });
+  }
+
+  function startTour() {
+    setHelpOpen(false);
+    setTeacherOpen(true);
+    setTourStep(0);
+  }
+
+  function openHelpFor(topic: NexoModule | 'general' | 'storage' | 'accessibility') {
+    setHelpTopic(topic);
+    setHelpOpen(true);
+  }
 
   const visibleAssets = useMemo(
     () => assets
@@ -2396,9 +2627,16 @@ export default function App() {
 
       {teacherOpen && (
         <section className="teacher-panel" id="teacher-panel" aria-label="Configuração pedagógica">
-          <div>
-            <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
-            <h2>MODO MEDIADOR</h2>
+          <div className="mediator-heading">
+            <div>
+              <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
+              <h2>MODO MEDIADOR</h2>
+            </div>
+            <div className="mediator-help-actions no-print">
+              <button type="button" onClick={() => openHelpFor(activeModule)}>AJUDA DESTE MÓDULO</button>
+              <button type="button" onClick={() => openHelpFor('general')}>AJUDA</button>
+              <button type="button" onClick={startTour}>TOUR COMPLETO</button>
+            </div>
           </div>
 
           <label>
@@ -5140,6 +5378,103 @@ export default function App() {
           </button>
         </aside>
       </section>
+
+      {helpOpen && (
+        <div className="help-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="help-title">
+          <section className="help-center">
+            <header>
+              <div>
+                <p className="section-kicker">CENTRAL DE AJUDA</p>
+                <h2 id="help-title">{HELP_MODULES[helpTopic].title}</h2>
+              </div>
+              <button type="button" onClick={() => setHelpOpen(false)} aria-label="Fechar ajuda">FECHAR</button>
+            </header>
+
+            <nav className="help-menu" aria-label="Tópicos de ajuda">
+              {([
+                ['general', 'VISÃO GERAL'],
+                ['scenario', 'CENÁRIO'],
+                ['time', 'TEMPO'],
+                ['narrative', 'NARRATIVA'],
+                ['perspective', 'PERSPECTIVA'],
+                ['report', 'RELATÓRIO'],
+                ['storage', 'SALVAMENTO'],
+                ['accessibility', 'ACESSIBILIDADE'],
+              ] as const).map(([id, label]) => (
+                <button
+                  type="button"
+                  key={id}
+                  className={helpTopic === id ? 'active' : ''}
+                  onClick={() => setHelpTopic(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="help-content">
+              <p className="help-purpose">{HELP_MODULES[helpTopic].purpose}</p>
+              <section>
+                <h3>COMO USAR</h3>
+                <ol>
+                  {HELP_MODULES[helpTopic].howTo.map((item) => <li key={item}>{item}</li>)}
+                </ol>
+              </section>
+              <section>
+                <h3>O QUE OBSERVAR</h3>
+                <ul>
+                  {HELP_MODULES[helpTopic].observe.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </section>
+            </div>
+
+            <footer>
+              {['scenario', 'time', 'narrative', 'perspective', 'report'].includes(helpTopic) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const module = helpTopic as NexoModule;
+                    setActiveModule(module);
+                    setReportOpen(module === 'report');
+                    setHelpOpen(false);
+                  }}
+                >
+                  IR PARA ESTE MÓDULO
+                </button>
+              )}
+              <button type="button" className="help-tour-button" onClick={startTour}>INICIAR TOUR COMPLETO</button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {tourStep !== null && (
+        <div className="tour-card no-print" role="dialog" aria-live="polite" aria-label="Tour do Mediador">
+          <span>TOUR DO MEDIADOR</span>
+          <strong>{TOUR_STEPS[tourStep].title}</strong>
+          <p>{TOUR_STEPS[tourStep].text}</p>
+          <div className="tour-actions">
+            <button
+              type="button"
+              disabled={tourStep === 0}
+              onClick={() => setTourStep((step) => step === null ? null : Math.max(0, step - 1))}
+            >
+              ANTERIOR
+            </button>
+            <button type="button" onClick={closeTour}>ENCERRAR</button>
+            {tourStep < TOUR_STEPS.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => setTourStep((step) => step === null ? null : Math.min(TOUR_STEPS.length - 1, step + 1))}
+              >
+                PRÓXIMO
+              </button>
+            ) : (
+              <button type="button" onClick={closeTour}>CONCLUIR</button>
+            )}
+          </div>
+        </div>
+      )}
 
       <section className="accessibility-note no-print" aria-label="Acessibilidade">
         <strong>ACESSIBILIDADE</strong>
