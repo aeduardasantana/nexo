@@ -4905,3 +4905,210 @@ input[type="radio"] {
     width: 100%;
   }
 }
+
+
+/* Avaliação longitudinal */
+.longitudinal-report {
+  gap: 12px;
+}
+
+.longitudinal-disclaimer {
+  margin: 0;
+  border: 1px solid #d9d4ca;
+  border-radius: 10px;
+  background: #f8f7f3;
+  padding: 10px 12px;
+  font-size: .6rem;
+  line-height: 1.5;
+  font-weight: 780;
+  color: #5f5b54;
+}
+
+.longitudinal-current {
+  border: 1px solid #d7d2c9;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.longitudinal-current strong,
+.longitudinal-current span {
+  font-size: .62rem;
+}
+
+.longitudinal-current button {
+  min-height: 38px;
+  border: 1px solid #161616;
+  border-radius: 8px;
+  background: #161616;
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 850;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.longitudinal-axis-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.longitudinal-axis-grid article {
+  border: 1px solid #d7d2c9;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.longitudinal-axis-grid article > strong {
+  font-size: .64rem;
+}
+
+.longitudinal-axis-grid article > span,
+.longitudinal-axis-grid article > small {
+  font-size: .54rem;
+  font-weight: 780;
+  color: #6c6860;
+}
+
+.longitudinal-axis-grid article > b {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.longitudinal-axis-grid article > div {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.longitudinal-axis-grid article > div span {
+  border: 1px solid #e2ddd4;
+  border-radius: 6px;
+  padding: 4px;
+  text-align: center;
+  font-size: .52rem;
+  font-weight: 800;
+}
+
+.longitudinal-timeline {
+  display: grid;
+  gap: 8px;
+}
+
+.longitudinal-timeline > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.longitudinal-timeline > header strong,
+.longitudinal-timeline > header span {
+  font-size: .6rem;
+}
+
+.longitudinal-timeline > p {
+  margin: 0;
+  font-size: .62rem;
+  color: #6c6860;
+}
+
+.longitudinal-timeline article {
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px;
+  display: grid;
+  gap: 8px;
+}
+
+.longitudinal-session-heading {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.longitudinal-session-heading span,
+.longitudinal-session-heading small {
+  font-size: .56rem;
+  font-weight: 800;
+  color: #6c6860;
+}
+
+.longitudinal-session-heading strong {
+  font-size: .64rem;
+}
+
+.longitudinal-session-heading button {
+  min-height: 32px;
+  border: 1px solid #c9c5bc;
+  border-radius: 7px;
+  background: #fff;
+  font-size: .54rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.longitudinal-session-axes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.longitudinal-session-axes > div {
+  border: 1px solid #e3dfd7;
+  border-radius: 8px;
+  padding: 7px;
+  display: grid;
+  gap: 2px;
+}
+
+.longitudinal-session-axes span,
+.longitudinal-session-axes small {
+  font-size: .52rem;
+  font-weight: 800;
+  color: #6c6860;
+}
+
+.longitudinal-session-axes strong {
+  font-size: .78rem;
+}
+
+@media (max-width: 900px) {
+  .longitudinal-axis-grid,
+  .longitudinal-session-axes {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .longitudinal-current,
+  .longitudinal-axis-grid,
+  .longitudinal-session-axes,
+  .longitudinal-session-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .longitudinal-current button,
+  .longitudinal-session-heading button {
+    width: 100%;
+  }
+}
+
+@media print {
+  .longitudinal-report,
+  .longitudinal-timeline article,
+  .longitudinal-axis-grid article {
+    break-inside: avoid;
+  }
+}
