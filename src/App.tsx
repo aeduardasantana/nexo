@@ -1,6 +1,7 @@
 // @signature edufertanapo
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
+import MissionsReference from './components/MissionsReference';
 import { AssetVisual, VerbVisual } from './components/Visuals';
 import { assets } from './data/assets';
 import { verbRules } from './data/verbs';
@@ -114,7 +115,7 @@ type LongitudinalSession = {
 };
 
 type LongitudinalAxis = 'ACTION' | 'TIME' | 'NARRATIVE' | 'RELATION';
-type NexoModule = 'scenario' | 'time' | 'narrative' | 'perspective' | 'report';
+type NexoModule = 'scenario' | 'time' | 'narrative' | 'perspective' | 'missions' | 'report';
 
 const HELP_MODULES: Record<NexoModule | 'general' | 'storage' | 'accessibility', {
   title: string;
@@ -195,6 +196,21 @@ const HELP_MODULES: Record<NexoModule | 'general' | 'storage' | 'accessibility',
       'DISTINÇÃO ENTRE PRÓPRIA PERSPECTIVA E PERSPECTIVA DO OUTRO.',
       'RELAÇÃO ENTRE VER E SABER.',
       'REPRESENTAÇÃO DE VÍNCULOS SOCIAIS.'
+    ]
+  },
+  missions: {
+    title: 'MISSÕES',
+    purpose: 'Consultar a matriz de referência pedagógica e técnica para futuras missões do NEXO.',
+    howTo: [
+      'CONSULTE O CÓDIGO E O TEXTO OFICIAL DA BNCC.',
+      'LEIA O OBJETIVO FUNCIONAL NEXO SEM LIMITE ETÁRIO.',
+      'VERIFIQUE SE OS RECURSOS ATUAIS JÁ PERMITEM CRIAR MISSÕES.',
+      'USE LACUNAS, EVIDÊNCIAS E PROGRESSÃO COMO REFERÊNCIA PARA DESENVOLVIMENTO FUTURO.'
+    ],
+    observe: [
+      'A PÁGINA É CONSULTIVA E NÃO EXECUTA MISSÕES.',
+      'COBERTURA TÉCNICA NÃO SIGNIFICA CERTIFICAÇÃO CURRICULAR.',
+      'MEDIAÇÃO, COMPLEXIDADE E GENERALIZAÇÃO DEVEM SER ANALISADAS SEPARADAMENTE.'
     ]
   },
   report: {
@@ -406,7 +422,7 @@ export default function App() {
   const [mediationAssessments, setMediationAssessments] = useState<MediationAssessment[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
-  const [activeModule, setActiveModule] = useState<'scenario' | 'time' | 'narrative' | 'perspective' | 'report'>('scenario');
+  const [activeModule, setActiveModule] = useState<NexoModule>('scenario');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [localStorageReady, setLocalStorageReady] = useState(false);
   const [localSavedAt, setLocalSavedAt] = useState<string | null>(null);
@@ -2634,6 +2650,7 @@ export default function App() {
           ['time', 'TEMPO'],
           ['narrative', 'NARRATIVA'],
           ['perspective', 'PERSPECTIVA'],
+          ['missions', 'MISSÕES'],
           ['report', 'RELATÓRIO'],
         ].map(([id, label]) => (
           <button
@@ -2984,6 +3001,10 @@ export default function App() {
             </div>
           </div>
         </section>
+      )}
+
+      {activeModule === 'missions' && (
+        <MissionsReference />
       )}
 
       {reportOpen && (
@@ -5437,6 +5458,7 @@ export default function App() {
                 ['time', 'TEMPO'],
                 ['narrative', 'NARRATIVA'],
                 ['perspective', 'PERSPECTIVA'],
+                ['missions', 'MISSÕES'],
                 ['report', 'RELATÓRIO'],
                 ['storage', 'SALVAMENTO'],
                 ['accessibility', 'ACESSIBILIDADE'],
@@ -5469,7 +5491,7 @@ export default function App() {
             </div>
 
             <footer>
-              {['scenario', 'time', 'narrative', 'perspective', 'report'].includes(helpTopic) && (
+              {['scenario', 'time', 'narrative', 'perspective', 'missions', 'report'].includes(helpTopic) && (
                 <button
                   type="button"
                   onClick={() => {
