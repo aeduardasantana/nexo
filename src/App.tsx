@@ -2534,7 +2534,7 @@ export default function App() {
                   ...current,
                   notes: event.target.value,
                 }))}
-                placeholder="REGISTRO LIVRE DA PROFESSORA"
+                placeholder="REGISTRO LIVRE DO MEDIADOR"
               />
             </label>
 
