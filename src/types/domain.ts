@@ -32,6 +32,8 @@ export type EntityState = SceneAsset & {
 };
 
 export type TemporalDay = 'yesterday' | 'today' | 'tomorrow';
+export type DayPeriod = 'morning' | 'afternoon' | 'night';
+export type RelativeWeek = 'previous' | 'current' | 'next';
 
 export type SceneState = {
   id: string;
@@ -313,6 +315,10 @@ export type SessionReport = {
   informationAccess: InformationAccess[];
   temporalEvents?: TemporalEvent[];
   weeklyEvents?: WeeklyEvent[];
+  dayPeriod?: DayPeriod;
+  clockHour?: number;
+  relativeWeek?: RelativeWeek;
+  monthOffset?: number;
   supportConfig: ActivitySupportConfig;
   activityMode?: ActivityMode;
   directedActivity?: DirectedActivity;
