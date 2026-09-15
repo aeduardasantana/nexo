@@ -5538,6 +5538,22 @@ export default function App() {
         </div>
       )}
 
+      <section className="product-classification no-print" aria-label="Classificação do NEXO">
+        <div>
+          <span>CLASSIFICAÇÃO DO RECURSO</span>
+          <strong>RECURSO DIGITAL DE TECNOLOGIA ASSISTIVA</strong>
+        </div>
+        <p>
+          PARA MEDIAÇÃO VISUAL, COMUNICAÇÃO E APRENDIZAGEM. CONCEBIDO INICIALMENTE PARA
+          A COMUNIDADE SURDA E APLICÁVEL TAMBÉM A CONTEXTOS COM NECESSIDADES COMPLEXAS DE
+          COMUNICAÇÃO E OUTRAS BARREIRAS COMUNICACIONAIS.
+        </p>
+        <small>
+          NÃO É INSTRUMENTO DIAGNÓSTICO E NÃO SUBSTITUI AVALIAÇÃO CLÍNICA, FONOAUDIOLÓGICA,
+          PEDAGÓGICA OU OUTRA AVALIAÇÃO PROFISSIONAL QUANDO NECESSÁRIA.
+        </small>
+      </section>
+
       <section className="accessibility-note no-print" aria-label="Acessibilidade">
         <strong>ACESSIBILIDADE</strong>
         <span>VLibras oferece tradução automática como apoio. As atividades essenciais do NEXO continuam visuais e independem do widget.</span>
@@ -5554,6 +5570,22 @@ export default function App() {
           </span>
         )}
       </aside>
+      <footer className="app-footer">
+        <div>
+          <strong>NEXO - SISTEMA VISUAL DE AÇÃO E NARRATIVA</strong>
+          <span>RECURSO DIGITAL DE TECNOLOGIA ASSISTIVA PARA MEDIAÇÃO VISUAL, COMUNICAÇÃO E APRENDIZAGEM</span>
+        </div>
+        <div>
+          <span>DESENVOLVIDO POR COMPASS ROSE SYSTEMS</span>
+          <a href="mailto:contato@compassrosesystems.com.br">CONTATO E SUPORTE: contato@compassrosesystems.com.br</a>
+        </div>
+        <small>
+          CONCEBIDO INICIALMENTE PARA A COMUNIDADE SURDA. PODE APOIAR OUTROS CONTEXTOS COM BARREIRAS
+          COMUNICACIONAIS E NECESSIDADES COMPLEXAS DE COMUNICAÇÃO. FERRAMENTA PEDAGÓGICA E OBSERVACIONAL,
+          NÃO DIAGNÓSTICA.
+        </small>
+        <small>© 2026 COMPASS ROSE SYSTEMS - TODOS OS DIREITOS RESERVADOS.</small>
+      </footer>
     </main>
   );
 }
