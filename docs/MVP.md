@@ -34,3 +34,14 @@ Entregar a menor versão tecnicamente funcional que permita validar a arquitetur
 ## Regra-mestra
 
 VER → ESCOLHER → AGIR → MUDAR → COMPARAR → SEQUENCIAR → NARRAR
+
+
+## Classificação institucional
+
+O NEXO é documentado como **Recurso Pedagógico Acessível Digital de Mediação Visual e Apoio à Comunicação**, desenvolvido sob princípios de Tecnologia Assistiva, acessibilidade, autonomia e participação.
+
+Foi concebido inicialmente para mediação visual com pessoa surda e pode ser utilizado em outros contextos com necessidades complexas de comunicação ou barreiras comunicacionais, quando seus recursos forem pedagogicamente pertinentes.
+
+O NEXO não é, nesta versão, um sistema completo de Comunicação Aumentativa e Alternativa - CAA, embora possa apoiar estratégias de CAA.
+
+A ferramenta é pedagógica e observacional, não diagnóstica.
