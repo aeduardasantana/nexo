@@ -53,6 +53,19 @@ export function validateAction(
     case 'drink':
       if (!object || !['ÁGUA', 'COPO'].includes(object.label) || object.consumed) return { message: 'ESCOLHA ÁGUA OU COPO', kind: 'impossible', role: 'object' };
       break;
+    case 'see':
+    case 'look':
+    case 'show':
+      if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible', role: 'object' };
+      break;
+    case 'open':
+    case 'close':
+      if (!object || object.id !== 'door') return { message: 'ESCOLHA A PORTA', kind: 'impossible', role: 'object' };
+      break;
+    case 'carry':
+    case 'bring':
+      if (!object || object.consumed) return { message: 'OBJETO INDISPONÍVEL', kind: 'impossible', role: 'object' };
+      break;
     default:
       break;
   }
@@ -158,6 +171,69 @@ export function executeAction(
         actor.x = seat.x;
         actor.y = seat.y;
       }
+      break;
+    case 'see':
+      if (object) moveNear(actor, object, -16, 0);
+      actor.activity = 'seeing';
+      break;
+    case 'look':
+      if (object) moveNear(actor, object, -16, 0);
+      actor.activity = 'looking';
+      break;
+    case 'show':
+      if (object && targetPerson) {
+        moveNear(actor, targetPerson, -18, 0);
+        object.ownerId = actor.instanceId;
+        object.x = actor.x + 8;
+        object.y = actor.y - 4;
+      }
+      actor.activity = 'showing';
+      break;
+    case 'ask':
+      if (targetPerson) moveNear(actor, targetPerson, -18, 0);
+      actor.activity = 'asking';
+      break;
+    case 'answer':
+      if (targetPerson) moveNear(actor, targetPerson, -18, 0);
+      actor.activity = 'answering';
+      break;
+    case 'tell':
+      if (targetPerson) moveNear(actor, targetPerson, -18, 0);
+      actor.activity = 'telling';
+      break;
+    case 'open':
+      if (object) object.activity = 'open';
+      actor.activity = 'opening';
+      break;
+    case 'close':
+      if (object) object.activity = 'closed';
+      actor.activity = 'closing';
+      break;
+    case 'carry':
+    case 'bring':
+      if (object && destination) {
+        actor.locationId = destination.instanceId;
+        moveNear(actor, destination, -12, 2);
+        object.ownerId = actor.instanceId;
+        object.locationId = undefined;
+        object.x = actor.x + 7;
+        object.y = actor.y - 2;
+      }
+      actor.activity = rule.id === 'carry' ? 'carrying' : 'bringing';
+      break;
+    case 'leave':
+      if (destination) {
+        actor.locationId = destination.instanceId;
+        moveNear(actor, destination, -14, 2);
+      }
+      actor.activity = 'leaving';
+      break;
+    case 'return':
+      if (destination) {
+        actor.locationId = destination.instanceId;
+        moveNear(actor, destination, -10, 2);
+      }
+      actor.activity = 'returning';
       break;
     default:
       return { ok: false, error: 'AÇÃO NÃO IMPLEMENTADA', errorKind: 'impossible' };
