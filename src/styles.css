@@ -3565,7 +3565,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
     bottom: 0;
     z-index: 100;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
     border-top: 1px solid #d8d3ca;
@@ -5505,5 +5505,464 @@ input[type="radio"] {
   .mode-status {
     margin: 8px 10px 0;
     display: grid;
+  }
+}
+
+
+/* MISSÕES - referência consultiva */
+.module-missions .workspace,
+.module-missions .session-report-view {
+  display: none;
+}
+
+.module-missions .missions-reference {
+  display: grid;
+}
+
+.missions-reference {
+  margin: 18px 24px 96px;
+  gap: 18px;
+}
+
+.missions-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, .8fr);
+  gap: 16px;
+  align-items: stretch;
+  border: 1px solid #d7d2c9;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px;
+}
+
+.missions-hero h2 {
+  margin: 3px 0 8px;
+  font-size: 1.25rem;
+}
+
+.missions-hero p {
+  margin: 0;
+  max-width: 850px;
+  font-size: .68rem;
+  line-height: 1.55;
+  font-weight: 730;
+  color: #5f5b54;
+}
+
+.missions-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.missions-summary div {
+  border: 1px solid #ddd8cf;
+  border-radius: 12px;
+  background: #f8f7f3;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 110px;
+  padding: 10px;
+  text-align: center;
+}
+
+.missions-summary strong {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.missions-summary span {
+  margin-top: 5px;
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .05em;
+}
+
+.missions-method {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.missions-method article,
+.missions-measurement,
+.missions-progression,
+.missions-theory {
+  border: 1px solid #d7d2c9;
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+}
+
+.missions-method strong,
+.missions-measurement h3,
+.missions-progression h3,
+.missions-theory h3 {
+  margin: 0;
+  font-size: .64rem;
+  letter-spacing: .07em;
+}
+
+.missions-method p,
+.missions-progression > p,
+.missions-theory > p {
+  margin: 6px 0 0;
+  font-size: .6rem;
+  line-height: 1.5;
+  color: #68635b;
+  font-weight: 720;
+}
+
+.missions-measure-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.missions-measure-grid article {
+  border: 1px solid #e1ddd5;
+  border-radius: 10px;
+  background: #f8f7f3;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.missions-measure-grid span {
+  font-size: .54rem;
+  font-weight: 900;
+  color: #6c6860;
+}
+
+.missions-measure-grid strong {
+  font-size: .82rem;
+}
+
+.missions-measure-grid p,
+.missions-caution {
+  margin: 0;
+  font-size: .57rem;
+  line-height: 1.45;
+  font-weight: 720;
+  color: #68635b;
+}
+
+.missions-caution {
+  margin-top: 10px;
+  border-top: 1px solid #e1ddd5;
+  padding-top: 9px;
+  font-weight: 850;
+}
+
+.missions-progression > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.missions-progression > div span {
+  border: 1px solid #ddd8cf;
+  border-radius: 9px;
+  background: #f8f7f3;
+  min-height: 54px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: .54rem;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.missions-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mission-reference-card {
+  border: 1px solid #d7d2c9;
+  border-radius: 15px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.mission-reference-card > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e0dcd4;
+  background: #faf9f6;
+}
+
+.mission-reference-card > header > div {
+  display: grid;
+  gap: 4px;
+}
+
+.mission-reference-card > header strong {
+  font-size: .58rem;
+  color: #666159;
+}
+
+.mission-code {
+  font-size: .92rem;
+  font-weight: 950;
+  letter-spacing: .03em;
+}
+
+.coverage {
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: .52rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.coverage-ready {
+  background: #161616;
+  color: #fff;
+}
+
+.coverage-partial {
+  border: 1px solid #817664;
+  color: #4e473e;
+  background: #f6f1e8;
+}
+
+.coverage-new {
+  border: 1px solid #c7c1b5;
+  background: #fff;
+  color: #5f5b54;
+}
+
+.mission-official,
+.mission-functional {
+  padding: 12px 14px;
+  display: grid;
+  gap: 5px;
+}
+
+.mission-official {
+  border-bottom: 1px solid #eeeae3;
+}
+
+.mission-functional {
+  background: #f8f7f3;
+  border-bottom: 1px solid #e2ddd4;
+}
+
+.mission-official > span,
+.mission-functional > span {
+  font-size: .52rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: #6c6860;
+}
+
+.mission-official p,
+.mission-functional strong {
+  margin: 0;
+  font-size: .67rem;
+  line-height: 1.5;
+}
+
+.mission-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #eeeae3;
+}
+
+.mission-columns section {
+  padding: 12px 14px;
+}
+
+.mission-columns section + section {
+  border-left: 1px solid #eeeae3;
+}
+
+.mission-columns h4 {
+  margin: 0 0 8px;
+  font-size: .56rem;
+  letter-spacing: .07em;
+}
+
+.mission-columns p,
+.mission-columns li {
+  font-size: .58rem;
+  line-height: 1.5;
+  font-weight: 710;
+  color: #625e57;
+}
+
+.mission-columns p {
+  margin: 9px 0 0;
+}
+
+.mission-columns ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.mission-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.mission-tags span {
+  border: 1px solid #d8d3ca;
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: #fff;
+  font-size: .49rem;
+  font-weight: 850;
+}
+
+.mission-scope-note {
+  margin: 0;
+  padding: 10px 14px;
+  background: #fffaf1;
+  border-bottom: 1px solid #eee3cf;
+  font-size: .56rem;
+  line-height: 1.5;
+  font-weight: 800;
+  color: #61584b;
+}
+
+.mission-reference-card > footer {
+  padding: 9px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mission-reference-card > footer > span {
+  font-size: .49rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  color: #6c6860;
+}
+
+.mission-reference-card > footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.mission-reference-card > footer small {
+  border: 1px solid #d8d3ca;
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-size: .48rem;
+  font-weight: 850;
+}
+
+.missions-theory > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.missions-theory article {
+  border: 1px solid #e0dcd4;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 5px;
+}
+
+.missions-theory article strong {
+  font-size: .58rem;
+}
+
+.missions-theory article p,
+.missions-theory article span {
+  margin: 0;
+  font-size: .55rem;
+  line-height: 1.45;
+}
+
+.missions-theory article span {
+  color: #6b665e;
+  font-weight: 710;
+}
+
+.missions-theory article a {
+  justify-self: start;
+  border: 1px solid #161616;
+  border-radius: 7px;
+  padding: 6px 8px;
+  color: #161616;
+  font-size: .52rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .missions-hero,
+  .missions-method,
+  .missions-measure-grid,
+  .missions-progression > div,
+  .missions-theory > div {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .missions-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .missions-reference {
+    margin: 12px 10px 104px;
+  }
+
+  .missions-hero,
+  .missions-summary,
+  .missions-method,
+  .missions-measure-grid,
+  .missions-progression > div,
+  .mission-columns,
+  .missions-theory > div {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-columns section + section {
+    border-left: 0;
+    border-top: 1px solid #eeeae3;
+  }
+
+  .mission-reference-card > header {
+    align-items: flex-start;
+    display: grid;
+  }
+
+  .coverage {
+    justify-self: start;
+    white-space: normal;
+  }
+}
+
+@media print {
+  .missions-reference {
+    margin: 0;
+  }
+
+  .mission-reference-card,
+  .missions-method article,
+  .missions-measurement,
+  .missions-progression,
+  .missions-theory article {
+    break-inside: avoid;
   }
 }
