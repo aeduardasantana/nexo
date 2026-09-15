@@ -5966,3 +5966,114 @@ input[type="radio"] {
     break-inside: avoid;
   }
 }
+
+
+/* Classificação institucional e rodapé */
+.product-classification {
+  margin: 12px 24px 0;
+  border: 1px solid #d7d2c9;
+  border-radius: 12px;
+  background: #f8f7f3;
+  padding: 12px 14px;
+  display: grid;
+  gap: 7px;
+}
+
+.product-classification > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.product-classification span {
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: #6c6860;
+}
+
+.product-classification strong {
+  font-size: .7rem;
+}
+
+.product-classification p,
+.product-classification small {
+  margin: 0;
+  font-size: .58rem;
+  line-height: 1.5;
+  font-weight: 720;
+  color: #5f5b54;
+}
+
+.product-classification small {
+  font-size: .53rem;
+  font-weight: 800;
+}
+
+.app-footer {
+  margin-top: 22px;
+  padding: 18px 24px 92px;
+  border-top: 1px solid #d7d2c9;
+  background: #161616;
+  color: #fff;
+  display: grid;
+  gap: 10px;
+}
+
+.app-footer > div {
+  display: grid;
+  gap: 4px;
+}
+
+.app-footer strong {
+  font-size: .72rem;
+  letter-spacing: .04em;
+}
+
+.app-footer span,
+.app-footer a,
+.app-footer small {
+  font-size: .56rem;
+  line-height: 1.5;
+}
+
+.app-footer a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 800;
+}
+
+.app-footer small {
+  color: #d8d8d8;
+  max-width: 1000px;
+}
+
+@media (max-width: 640px) {
+  .product-classification {
+    margin: 10px 10px 0;
+  }
+
+  .app-footer {
+    padding: 16px 12px 108px;
+  }
+}
+
+@media print {
+  .product-classification {
+    margin: 10px 0 0;
+  }
+
+  .app-footer {
+    padding: 12px 0 0;
+    background: #fff;
+    color: #161616;
+    border-top: 1px solid #161616;
+  }
+
+  .app-footer a,
+  .app-footer small {
+    color: #161616;
+  }
+}
