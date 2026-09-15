@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import type { SceneAsset } from '../types/domain';
 
 export const assets: SceneAsset[] = [
@@ -15,6 +16,16 @@ export const assets: SceneAsset[] = [
   { id: 'key', label: 'CHAVE', category: 'object', symbol: '🔑' },
   { id: 'phone', label: 'TELEFONE', category: 'object', symbol: '📱' },
   { id: 'yarn', label: 'NOVELO', category: 'object', symbol: '🧶' },
+  { id: 'door', label: 'PORTA', category: 'object', symbol: '🚪' },
+  { id: 'plate', label: 'PRATO', category: 'object', symbol: '🍽️' },
+  { id: 'clothes', label: 'ROUPA', category: 'object', symbol: '👕' },
+  { id: 'money', label: 'DINHEIRO', category: 'object', symbol: '💵' },
+  { id: 'toothbrush', label: 'ESCOVA DE DENTE', category: 'object', symbol: '🪥' },
+  { id: 'soap', label: 'SABONETE', category: 'object', symbol: '🧼' },
+  { id: 'towel', label: 'TOALHA', category: 'object', symbol: '🧻' },
+  { id: 'bag', label: 'BOLSA', category: 'object', symbol: '👜' },
+
+  { id: 'dog', label: 'CACHORRO', category: 'animal', symbol: '🐕' },
 
   { id: 'home', label: 'CASA', category: 'place', symbol: '🏠' },
   { id: 'living_room', label: 'SALA', category: 'place', symbol: '🛋️' },
