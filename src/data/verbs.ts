@@ -1,3 +1,4 @@
+// @signature edufertanapo
 import type { VerbRule } from '../types/domain';
 
 export const verbRules: VerbRule[] = [
