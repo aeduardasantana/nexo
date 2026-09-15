@@ -226,6 +226,21 @@ export default function App() {
   );
 
   const people = currentScene.entities.filter((entity) => entity.category === 'person');
+  const storyEntities = history.flatMap((scene) => scene.entities);
+  const autobiographicalPeople = Array.from(
+    new Map(
+      storyEntities
+        .filter((entity) => entity.category === 'person')
+        .map((entity) => [entity.instanceId, entity]),
+    ).values(),
+  );
+  const autobiographicalPlaces = Array.from(
+    new Map(
+      storyEntities
+        .filter((entity) => entity.category === 'place')
+        .map((entity) => [entity.instanceId, entity]),
+    ).values(),
+  );
   const objects = currentScene.entities.filter((entity) => entity.category === 'object');
   const placesAndSeats = currentScene.entities.filter((entity) =>
     entity.category === 'place' || ['CADEIRA', 'SOFÁ', 'CAMA'].includes(entity.label),
@@ -2247,6 +2262,7 @@ export default function App() {
             <div><strong>{mediationEvents.length}</strong><span>EVENTOS</span></div>
             <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0 - 3</span></div>
             <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
+            <div><strong>{autobiographicalRecords.length}</strong><span>RELATOS PESSOAIS</span></div>
           </section>
 
           <section className="report-section">
@@ -2338,6 +2354,37 @@ export default function App() {
                 ))
               )}
             </div>
+          </section>
+
+          <section className="report-section">
+            <h3>NARRATIVAS PESSOAIS</h3>
+            {autobiographicalRecords.length === 0 ? (
+              <p>SEM RELATOS AUTOBIOGRÁFICOS REGISTRADOS.</p>
+            ) : (
+              <div className="report-autobiographical">
+                {autobiographicalRecords.map((record, index) => (
+                  <article key={record.id}>
+                    <header>
+                      <strong>RELATO {index + 1}</strong>
+                      <span>{temporalLabel(record.when)}</span>
+                    </header>
+                    <div>
+                      <span>QUEM</span>
+                      <strong>{autobiographicalEntityLabel(record.personId)}</strong>
+                    </div>
+                    <div>
+                      <span>ONDE</span>
+                      <strong>{autobiographicalEntityLabel(record.placeId)}</strong>
+                    </div>
+                    <ol>
+                      <li><strong>PRIMEIRO</strong> - {autobiographicalSceneLabel(record.firstSceneId)}</li>
+                      <li><strong>DEPOIS</strong> - {autobiographicalSceneLabel(record.nextSceneId)}</li>
+                      <li><strong>COMO TERMINOU</strong> - {autobiographicalSceneLabel(record.endingSceneId)}</li>
+                    </ol>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className="report-section">
@@ -3315,6 +3362,178 @@ export default function App() {
                     })}
                 </div>
               </>
+            )}
+          </section>
+
+          <section className="autobiographical-builder">
+            <div className="builder-title">
+              <p className="section-kicker">NARRATIVA PESSOAL</p>
+              <strong>O QUE ACONTECEU COM VOCÊ?</strong>
+            </div>
+
+            <p className="autobiographical-intro">
+              USE AS CENAS DA HISTÓRIA ATUAL PARA ORGANIZAR UMA EXPERIÊNCIA REAL.
+            </p>
+
+            <div className="autobiographical-grid">
+              <label>
+                <span>QUEM</span>
+                <select
+                  value={autobiographicalDraft.personId ?? ''}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    personId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {autobiographicalPeople.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>ONDE</span>
+                <select
+                  value={autobiographicalDraft.placeId ?? ''}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    placeId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {autobiographicalPlaces.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>QUANDO</span>
+                <select
+                  value={autobiographicalDraft.when ?? 'today'}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    when: event.target.value as TemporalDay,
+                  }))}
+                >
+                  <option value="yesterday">ONTEM</option>
+                  <option value="today">HOJE</option>
+                  <option value="tomorrow">AMANHÃ</option>
+                </select>
+              </label>
+
+              <label>
+                <span>PRIMEIRO</span>
+                <select
+                  value={autobiographicalDraft.firstSceneId ?? ''}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    firstSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>
+                      CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>DEPOIS</span>
+                <select
+                  value={autobiographicalDraft.nextSceneId ?? ''}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    nextSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>
+                      CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>COMO TERMINOU</span>
+                <select
+                  value={autobiographicalDraft.endingSceneId ?? ''}
+                  onChange={(event) => setAutobiographicalDraft((current) => ({
+                    ...current,
+                    endingSceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>
+                      CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="autobiographical-sequence">
+              <div>
+                <span>QUEM</span>
+                <strong>{autobiographicalEntityLabel(autobiographicalDraft.personId)}</strong>
+              </div>
+              <div>
+                <span>ONDE</span>
+                <strong>{autobiographicalEntityLabel(autobiographicalDraft.placeId)}</strong>
+              </div>
+              <div>
+                <span>QUANDO</span>
+                <strong>{temporalLabel(autobiographicalDraft.when)}</strong>
+              </div>
+              <div>
+                <span>1</span>
+                <strong>{autobiographicalSceneLabel(autobiographicalDraft.firstSceneId)}</strong>
+              </div>
+              <div>
+                <span>2</span>
+                <strong>{autobiographicalSceneLabel(autobiographicalDraft.nextSceneId)}</strong>
+              </div>
+              <div>
+                <span>3</span>
+                <strong>{autobiographicalSceneLabel(autobiographicalDraft.endingSceneId)}</strong>
+              </div>
+            </div>
+
+            <button
+              className="autobiographical-save"
+              type="button"
+              onClick={saveAutobiographicalRecord}
+              disabled={history.length < 4}
+            >
+              SALVAR RELATO
+            </button>
+
+            {history.length < 4 && (
+              <p className="autobiographical-note">
+                CRIE PELO MENOS TRÊS CENAS PARA ORGANIZAR PRIMEIRO - DEPOIS - COMO TERMINOU.
+              </p>
+            )}
+
+            {autobiographicalRecords.length > 0 && (
+              <div className="autobiographical-records">
+                {autobiographicalRecords.map((record, index) => (
+                  <article key={record.id}>
+                    <span>RELATO {index + 1}</span>
+                    <strong>
+                      {autobiographicalEntityLabel(record.personId)} - {autobiographicalEntityLabel(record.placeId)} - {temporalLabel(record.when)}
+                    </strong>
+                    <small>
+                      {autobiographicalSceneLabel(record.firstSceneId)} - {autobiographicalSceneLabel(record.nextSceneId)} - {autobiographicalSceneLabel(record.endingSceneId)}
+                    </small>
+                  </article>
+                ))}
+              </div>
             )}
           </section>
 
