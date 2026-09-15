@@ -5055,6 +5055,11 @@ input[type="radio"] {
   font-size: .6rem;
 }
 
+.longitudinal-timeline > header > div {
+  display: grid;
+  gap: 3px;
+}
+
 .longitudinal-timeline > p {
   margin: 0;
   font-size: .62rem;

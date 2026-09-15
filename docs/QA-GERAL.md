@@ -18,6 +18,7 @@ Cada fluxo crítico deve ter uma alternativa utilizável por toque. Arrastar nã
 | Modo mediador | Painel de sessão, atividade, mediação, salvamento e exportação é exibido ao trocar de modo | Aprovado na URL pública |
 | Persistência local | Indicação de salvamento local aparece no modo mediador | Aprovado na URL pública |
 | Avaliação longitudinal | Escala 0-3 e comando de registrar no histórico estão disponíveis | Aprovado na URL pública |
+| Limpeza de dados locais | Nova sessão não arquiva silenciosamente; histórico e todos os dados locais podem ser zerados por comandos explícitos | Aprovado em teste automatizado |
 | VLibras | Widget é carregado como apoio complementar | Aprovado na URL pública |
 | Responsividade | Estrutura possui organização específica para telas menores | Revisão manual necessária após publicação |
 | Build TypeScript/Vite | `npm install` e `npm run build` no GitHub Actions | Aprovado no deploy da versão 6825303a |

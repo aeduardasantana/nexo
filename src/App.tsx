@@ -928,6 +928,16 @@ export default function App() {
     setFeedback('SESSÃO REMOVIDA DO HISTÓRICO LONGITUDINAL');
   }
 
+  function clearLongitudinalHistory() {
+    if (longitudinalSessions.length === 0) return;
+    const confirmed = window.confirm(
+      'APAGAR TODO O HISTÓRICO LONGITUDINAL DESTE NAVEGADOR? ESTA AÇÃO NÃO PODE SER DESFEITA.'
+    );
+    if (!confirmed) return;
+    saveLongitudinalSessions([]);
+    setFeedback('HISTÓRICO LONGITUDINAL APAGADO');
+  }
+
   function buildSessionReport(): SessionReport {
     return {
       metadata: sessionMetadata,
@@ -2477,9 +2487,6 @@ export default function App() {
   }
 
   function startNewSession() {
-    if (hasMeaningfulSessionData()) {
-      archiveSessionForLongitudinal(buildSessionReport(), false);
-    }
     stopReplay();
     setHistory([initialScene]);
     setSceneEditUndo([]);
@@ -2492,6 +2499,7 @@ export default function App() {
     setFeedback(null);
     setSelectedEntityId(null);
     setDraggingEntityId(null);
+    setLastAddedAssetId(null);
     setRelationReferenceId(null);
     setSpatialTaskActive(false);
     setSpatialIssueField(null);
@@ -2568,6 +2576,23 @@ export default function App() {
     setNewSessionConfirmOpen(false);
     setPendingImportReport(null);
     setPendingImportName('');
+  }
+
+  function clearAllLocalData() {
+    const confirmed = window.confirm(
+      'ZERAR A SESSÃO ATUAL E TODO O HISTÓRICO SALVO NESTE NAVEGADOR? ESTA AÇÃO NÃO PODE SER DESFEITA.'
+    );
+    if (!confirmed) return;
+
+    try {
+      window.localStorage.removeItem(LOCAL_SESSION_KEY);
+      window.localStorage.removeItem(LOCAL_HISTORY_KEY);
+    } catch {
+      setLocalStorageStatus('error');
+    }
+    setLongitudinalSessions([]);
+    startNewSession();
+    setFeedback('✓ SESSÃO E HISTÓRICO LOCAL ZERADOS');
   }
 
   function clearStory() {
@@ -2936,6 +2961,9 @@ export default function App() {
               >
                 NOVA SESSÃO
               </button>
+              <button type="button" className="danger-button" onClick={clearAllLocalData}>
+                ZERAR DADOS LOCAIS
+              </button>
               <input
                 ref={importInputRef}
                 className="session-import-input"
@@ -3146,8 +3174,18 @@ export default function App() {
 
             <div className="longitudinal-timeline">
               <header>
-                <strong>LINHA DO TEMPO</strong>
-                <span>{longitudinalSessions.length} SESSÕES ARQUIVADAS NESTE NAVEGADOR</span>
+                <div>
+                  <strong>LINHA DO TEMPO</strong>
+                  <span>{longitudinalSessions.length} SESSÕES ARQUIVADAS NESTE NAVEGADOR</span>
+                </div>
+                <button
+                  type="button"
+                  className="danger-button no-print"
+                  onClick={clearLongitudinalHistory}
+                  disabled={longitudinalSessions.length === 0}
+                >
+                  APAGAR TODO HISTÓRICO
+                </button>
               </header>
               {longitudinalSessions.length === 0 ? (
                 <p>AINDA NÃO HÁ SESSÕES ANTERIORES REGISTRADAS.</p>
