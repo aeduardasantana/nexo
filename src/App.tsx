@@ -98,6 +98,14 @@ function takeOptionsWithExpected<T>(
   return shuffledCopy([expected, ...others.slice(0, Math.max(0, count - 1))]);
 }
 
+const LOCAL_SESSION_KEY = 'nexo.session.v1';
+
+type LocalSessionEnvelope = {
+  schemaVersion: 1;
+  savedAt: string;
+  report: SessionReport;
+};
+
 export default function App() {
   const [category, setCategory] = useState<AssetCategory>('person');
   const [history, setHistory] = useState<SceneState[]>([initialScene]);
@@ -201,6 +209,11 @@ export default function App() {
   const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<'scenario' | 'time' | 'narrative' | 'perspective' | 'report'>('scenario');
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [localStorageReady, setLocalStorageReady] = useState(false);
+  const [localSavedAt, setLocalSavedAt] = useState<string | null>(null);
+  const [localStorageStatus, setLocalStorageStatus] = useState<'loading' | 'saved' | 'empty' | 'error'>('loading');
+  const [pendingImportReport, setPendingImportReport] = useState<SessionReport | null>(null);
+  const [pendingImportName, setPendingImportName] = useState('');
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
     participant: '',
     date: new Date().toISOString().slice(0, 10),
@@ -223,10 +236,81 @@ export default function App() {
     currentScene;
 
   useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(LOCAL_SESSION_KEY);
+      if (!stored) {
+        setLocalStorageStatus('empty');
+        setLocalStorageReady(true);
+        return;
+      }
+
+      const parsed = JSON.parse(stored) as Partial<LocalSessionEnvelope>;
+      if (
+        parsed.schemaVersion !== 1 ||
+        typeof parsed.savedAt !== 'string' ||
+        !isSessionReport(parsed.report)
+      ) {
+        window.localStorage.removeItem(LOCAL_SESSION_KEY);
+        setLocalStorageStatus('empty');
+        setLocalStorageReady(true);
+        return;
+      }
+
+      restoreSessionReport(parsed.report, 'SESSÃO LOCAL RESTAURADA');
+      setLocalSavedAt(parsed.savedAt);
+      setLocalStorageStatus('saved');
+    } catch {
+      setLocalStorageStatus('error');
+    } finally {
+      setLocalStorageReady(true);
+    }
+
     return () => {
       if (replayTimer.current !== null) window.clearInterval(replayTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!localStorageReady) return;
+
+    const timer = window.setTimeout(() => {
+      try {
+        const envelope: LocalSessionEnvelope = {
+          schemaVersion: 1,
+          savedAt: new Date().toISOString(),
+          report: buildSessionReport(),
+        };
+        window.localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(envelope));
+        setLocalSavedAt(envelope.savedAt);
+        setLocalStorageStatus('saved');
+      } catch {
+        setLocalStorageStatus('error');
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    localStorageReady,
+    sessionMetadata,
+    history,
+    storyArchive,
+    personNames,
+    autobiographicalRecords,
+    socialInteractions,
+    mediationEvents,
+    mediationAssessments,
+    mentalStates,
+    informationAccess,
+    temporalEvents,
+    weeklyEvents,
+    dayPeriod,
+    clockHour,
+    relativeWeek,
+    monthOffset,
+    supportConfig,
+    activityMode,
+    directedActivity,
+  ]);
 
   const visibleAssets = useMemo(
     () => assets
@@ -500,7 +584,7 @@ export default function App() {
     );
   }
 
-  function restoreSessionReport(report: SessionReport) {
+  function restoreSessionReport(report: SessionReport, message = 'SESSÃO RESTAURADA') {
     const scenes = report.scenes.length > 0 ? report.scenes : [initialScene];
     setSessionMetadata(report.metadata);
     setHistory(scenes);
@@ -528,7 +612,7 @@ export default function App() {
       allowNotUnderstood: true,
     });
     setDraft({ verbId: '' });
-    setFeedback('SESSÃO RESTAURADA');
+    setFeedback(message);
     setCompareMode('now');
     setReportOpen(false);
     setActiveModule('scenario');
@@ -555,6 +639,54 @@ export default function App() {
     setRelocationSequenceActive(false);
   }
 
+  function hasMeaningfulSessionData() {
+    return Boolean(
+      history.length > 1 ||
+      storyArchive.length > 0 ||
+      mediationEvents.length > 0 ||
+      mediationAssessments.length > 0 ||
+      mentalStates.length > 0 ||
+      informationAccess.length > 0 ||
+      temporalEvents.length > 0 ||
+      weeklyEvents.length > 0 ||
+      autobiographicalRecords.length > 0 ||
+      socialInteractions.length > 0 ||
+      sessionMetadata.participant.trim() ||
+      sessionMetadata.objective.trim() ||
+      sessionMetadata.notes.trim()
+    );
+  }
+
+  function confirmPendingImport() {
+    if (!pendingImportReport) return;
+    restoreSessionReport(pendingImportReport, 'SESSÃO IMPORTADA E RESTAURADA');
+    setPendingImportReport(null);
+    setPendingImportName('');
+  }
+
+  function cancelPendingImport() {
+    setPendingImportReport(null);
+    setPendingImportName('');
+    setFeedback('IMPORTAÇÃO CANCELADA - SESSÃO ATUAL PRESERVADA');
+  }
+
+  function saveLocalSessionNow() {
+    try {
+      const envelope: LocalSessionEnvelope = {
+        schemaVersion: 1,
+        savedAt: new Date().toISOString(),
+        report: buildSessionReport(),
+      };
+      window.localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(envelope));
+      setLocalSavedAt(envelope.savedAt);
+      setLocalStorageStatus('saved');
+      setFeedback('✓ SESSÃO SALVA NESTE NAVEGADOR');
+    } catch {
+      setLocalStorageStatus('error');
+      setFeedback('❌ NÃO FOI POSSÍVEL SALVAR NESTE NAVEGADOR');
+    }
+  }
+
   async function importSessionJson(file: File) {
     try {
       const text = await file.text();
@@ -563,7 +695,13 @@ export default function App() {
         setFeedback('ARQUIVO INVÁLIDO - NÃO É UMA SESSÃO NEXO COMPATÍVEL');
         return;
       }
-      restoreSessionReport(parsed);
+      if (hasMeaningfulSessionData()) {
+        setPendingImportReport(parsed);
+        setPendingImportName(file.name);
+        setFeedback('CONFIRME ANTES DE SUBSTITUIR A SESSÃO ATUAL');
+        return;
+      }
+      restoreSessionReport(parsed, 'SESSÃO IMPORTADA E RESTAURADA');
     } catch {
       setFeedback('ERRO AO LER O ARQUIVO JSON');
     } finally {
@@ -1956,6 +2094,8 @@ export default function App() {
     setReportOpen(false);
     setActiveModule('scenario');
     setNewSessionConfirmOpen(false);
+    setPendingImportReport(null);
+    setPendingImportName('');
   }
 
   function clearStory() {
@@ -2249,6 +2389,27 @@ export default function App() {
               <span>ESTADOS DECLARADOS {mentalStates.length}</span>
             </div>
 
+            <div className="local-session-status" role="status" aria-live="polite">
+              <div>
+                <span>SALVAMENTO LOCAL</span>
+                <strong>
+                  {localStorageStatus === 'loading'
+                    ? 'VERIFICANDO...'
+                    : localStorageStatus === 'error'
+                      ? 'INDISPONÍVEL'
+                      : localStorageStatus === 'saved'
+                        ? 'SALVO AUTOMATICAMENTE'
+                        : 'AINDA SEM SALVAMENTO'}
+                </strong>
+                <small>
+                  {localSavedAt
+                    ? `ÚLTIMO SALVAMENTO ${new Date(localSavedAt).toLocaleString('pt-BR')}`
+                    : 'O NEXO SALVA A SESSÃO NESTE NAVEGADOR.'}
+                </small>
+              </div>
+              <button type="button" onClick={saveLocalSessionNow}>SALVAR AGORA</button>
+            </div>
+
             <div className="session-export">
               <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
               <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
@@ -2290,6 +2451,22 @@ export default function App() {
                   <button type="button" onClick={() => setNewSessionConfirmOpen(false)}>CANCELAR</button>
                   <button type="button" className="danger-button" onClick={startNewSession}>
                     APAGAR E INICIAR NOVA SESSÃO
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pendingImportReport && (
+              <div className="session-confirm import-confirm" role="alertdialog" aria-modal="true" aria-labelledby="import-session-title">
+                <div>
+                  <strong id="import-session-title">SUBSTITUIR A SESSÃO ATUAL?</strong>
+                  <p>O ARQUIVO {pendingImportName || 'JSON'} CONTÉM OUTRA SESSÃO NEXO.</p>
+                  <p>A SESSÃO ATUAL CONTINUA PRESERVADA ATÉ VOCÊ CONFIRMAR.</p>
+                </div>
+                <div className="session-confirm-actions">
+                  <button type="button" onClick={cancelPendingImport}>MANTER SESSÃO ATUAL</button>
+                  <button type="button" className="danger-button" onClick={confirmPendingImport}>
+                    SUBSTITUIR PELA IMPORTADA
                   </button>
                 </div>
               </div>
