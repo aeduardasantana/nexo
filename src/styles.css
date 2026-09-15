@@ -3364,6 +3364,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .week-builder,
 .narrative-task-builder,
 .causal-task-builder,
+.autobiographical-builder,
 .mental-state-builder,
 .perspective-builder,
 .access-builder,
@@ -3398,6 +3399,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-time .relation-builder,
 .module-time .narrative-task-builder,
 .module-time .causal-task-builder,
+.module-time .autobiographical-builder,
 .module-time .mental-state-builder,
 .module-time .perspective-builder,
 .module-time .access-builder,
@@ -3409,6 +3411,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 /* NARRATIVA */
 .module-narrative .narrative-task-builder,
 .module-narrative .causal-task-builder,
+.module-narrative .autobiographical-builder,
 .module-narrative .action-builder {
   display: block;
 }
@@ -3442,7 +3445,8 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .module-perspective .calendar-builder,
 .module-perspective .week-builder,
 .module-perspective .narrative-task-builder,
-.module-perspective .causal-task-builder {
+.module-perspective .causal-task-builder,
+.module-perspective .autobiographical-builder {
   display: none;
 }
 
@@ -3652,6 +3656,7 @@ button:disabled { opacity: .42; cursor: not-allowed; }
   .week-builder,
   .narrative-task-builder,
   .causal-task-builder,
+  .autobiographical-builder,
   .mental-state-builder,
   .perspective-builder,
   .access-builder,
@@ -4091,5 +4096,185 @@ body {
 @media (max-width: 640px) {
   .person-name-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+.autobiographical-builder {
+  border: 1px solid var(--nexo-line, #d9d4ca);
+  border-radius: 16px;
+  padding: 14px;
+  background: #f8f7f3;
+}
+
+.autobiographical-intro,
+.autobiographical-note {
+  margin: 0 0 12px;
+  font-size: .64rem;
+  line-height: 1.45;
+  font-weight: 750;
+  color: #6c6860;
+}
+
+.autobiographical-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.autobiographical-grid label {
+  display: grid;
+  gap: 5px;
+}
+
+.autobiographical-grid label > span {
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+}
+
+.autobiographical-grid select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #c9c5bc;
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px 9px;
+  font-weight: 750;
+}
+
+.autobiographical-sequence {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.autobiographical-sequence > div {
+  min-height: 72px;
+  border: 1px solid #d5d0c6;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.autobiographical-sequence span {
+  font-size: .56rem;
+  font-weight: 850;
+  color: #6c6860;
+}
+
+.autobiographical-sequence strong {
+  font-size: .68rem;
+}
+
+.autobiographical-save {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 10px;
+  border: 1px solid #161616;
+  border-radius: 10px;
+  background: #161616;
+  color: #fff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.autobiographical-records,
+.report-autobiographical {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.autobiographical-records article,
+.report-autobiographical article {
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px;
+  display: grid;
+  gap: 4px;
+}
+
+.autobiographical-records span,
+.autobiographical-records small,
+.report-autobiographical span {
+  font-size: .58rem;
+  font-weight: 800;
+  color: #6c6860;
+}
+
+.autobiographical-records strong {
+  font-size: .68rem;
+}
+
+.report-autobiographical article > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.report-autobiographical article > div {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+}
+
+.report-autobiographical article > div span {
+  font-size: .56rem;
+  font-weight: 850;
+}
+
+.report-autobiographical article > div strong {
+  font-size: .66rem;
+}
+
+.report-autobiographical ol {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: .64rem;
+}
+
+.report-kpis {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .autobiographical-sequence {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .report-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .autobiographical-builder {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .autobiographical-grid,
+  .autobiographical-sequence {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .report-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .report-autobiographical article {
+    break-inside: avoid;
   }
 }
