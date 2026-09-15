@@ -226,6 +226,7 @@ export default function App() {
   const [pendingImportName, setPendingImportName] = useState('');
   const [sessionMetadata, setSessionMetadata] = useState<SessionMetadata>({
     participant: '',
+    facilitator: '',
     date: new Date().toISOString().slice(0, 10),
     objective: '',
     notes: '',
@@ -721,7 +722,10 @@ export default function App() {
 
   function restoreSessionReport(report: SessionReport, message = 'SESSÃO RESTAURADA') {
     const scenes = report.scenes.length > 0 ? report.scenes : [initialScene];
-    setSessionMetadata(report.metadata);
+    setSessionMetadata({
+      ...report.metadata,
+      facilitator: report.metadata.facilitator ?? '',
+    });
     setHistory(scenes);
     setStoryArchive(report.storyArchive ?? []);
     setPersonNames(report.personNames ?? {});
@@ -787,6 +791,7 @@ export default function App() {
       autobiographicalRecords.length > 0 ||
       socialInteractions.length > 0 ||
       sessionMetadata.participant.trim() ||
+      sessionMetadata.facilitator.trim() ||
       sessionMetadata.objective.trim() ||
       sessionMetadata.notes.trim()
     );
@@ -2224,6 +2229,7 @@ export default function App() {
     });
     setSessionMetadata({
       participant: '',
+      facilitator: '',
       date: new Date().toISOString().slice(0, 10),
       objective: '',
       notes: '',
@@ -2361,7 +2367,7 @@ export default function App() {
           aria-controls="teacher-panel"
           onClick={() => setTeacherOpen((open) => !open)}
         >
-          {teacherOpen ? 'FECHAR PROFESSORA' : 'MODO PROFESSORA'}
+          {teacherOpen ? 'FECHAR MEDIADOR' : 'MODO MEDIADOR'}
         </button>
       </header>
 
@@ -2392,7 +2398,7 @@ export default function App() {
         <section className="teacher-panel" id="teacher-panel" aria-label="Configuração pedagógica">
           <div>
             <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
-            <h2>MODO PROFESSORA</h2>
+            <h2>MODO MEDIADOR</h2>
           </div>
 
           <label>
@@ -2481,6 +2487,18 @@ export default function App() {
                   participant: event.target.value.toUpperCase(),
                 }))}
                 placeholder="NOME"
+              />
+            </label>
+
+            <label>
+              <span>MEDIADOR</span>
+              <input
+                value={sessionMetadata.facilitator}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  facilitator: event.target.value.toUpperCase(),
+                }))}
+                placeholder="NOME DO MEDIADOR"
               />
             </label>
 
@@ -2743,7 +2761,10 @@ export default function App() {
 
             <div className="longitudinal-current">
               <strong>SESSÃO ATUAL</strong>
-              <span>{sessionMetadata.date || 'SEM DATA'} - {sessionMetadata.participant || 'PARTICIPANTE NÃO INFORMADO'}</span>
+              <span>
+                {sessionMetadata.date || 'SEM DATA'} - {sessionMetadata.participant || 'PARTICIPANTE NÃO INFORMADO'}
+                {sessionMetadata.facilitator ? ` - MEDIADOR: ${sessionMetadata.facilitator}` : ''}
+              </span>
               <button type="button" className="no-print" onClick={() => archiveSessionForLongitudinal()}>
                 REGISTRAR / ATUALIZAR NO HISTÓRICO
               </button>
@@ -2781,7 +2802,10 @@ export default function App() {
                     <div className="longitudinal-session-heading">
                       <span>SESSÃO {index + 1}</span>
                       <strong>{session.report.metadata.date || 'SEM DATA'}</strong>
-                      <small>{session.report.metadata.participant || 'PARTICIPANTE NÃO INFORMADO'}</small>
+                      <small>
+                        {session.report.metadata.participant || 'PARTICIPANTE NÃO INFORMADO'}
+                        {session.report.metadata.facilitator ? ` - MEDIADOR: ${session.report.metadata.facilitator}` : ''}
+                      </small>
                       <button
                         type="button"
                         className="no-print"
@@ -2950,7 +2974,7 @@ export default function App() {
           </section>
 
           <section className="report-section">
-            <h3>OBSERVAÇÕES DA PROFESSORA</h3>
+            <h3>OBSERVAÇÕES DO MEDIADOR</h3>
             <p className="report-notes">{sessionMetadata.notes || 'SEM OBSERVAÇÕES REGISTRADAS.'}</p>
           </section>
 
