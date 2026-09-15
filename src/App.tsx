@@ -311,7 +311,9 @@ export default function App() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<'before' | 'now' | 'after' | 'compare'>('now');
   const [isReplaying, setIsReplaying] = useState(false);
+  const [interfaceMode, setInterfaceMode] = useState<'participant' | 'mediator'>('participant');
   const [teacherOpen, setTeacherOpen] = useState(false);
+  const [lastAddedAssetId, setLastAddedAssetId] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTopic, setHelpTopic] = useState<NexoModule | 'general' | 'storage' | 'accessibility'>('general');
   const [tourStep, setTourStep] = useState<number | null>(null);
@@ -530,6 +532,10 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    setTeacherOpen(interfaceMode === 'mediator');
+  }, [interfaceMode]);
+
+  useEffect(() => {
     document.querySelectorAll('.tour-highlight').forEach((element) => {
       element.classList.remove('tour-highlight');
     });
@@ -563,6 +569,7 @@ export default function App() {
 
   function startTour() {
     setHelpOpen(false);
+    setInterfaceMode('mediator');
     setTeacherOpen(true);
     setTourStep(0);
   }
@@ -2053,8 +2060,12 @@ export default function App() {
   }
 
   function addToScene(asset: SceneAsset) {
+    if (activeModule !== 'scenario') {
+      setActiveModule('scenario');
+      setReportOpen(false);
+    }
     if (historyIndex !== history.length - 1) {
-      setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA EDITAR');
+      setFeedback('⚠ NÃO FOI POSSÍVEL ADICIONAR - VOLTE PARA A CENA MAIS ATUAL');
       return;
     }
     const entity = toEntity(asset, currentScene.entities.length);
@@ -2066,7 +2077,10 @@ export default function App() {
       current.map((scene, index) => index === historyIndex ? editedScene : scene),
     );
     setCompareMode('now');
-    setFeedback(null);
+    setSelectedEntityId(entity.instanceId);
+    setLastAddedAssetId(asset.id);
+    setFeedback(`✓ ${asset.label} ADICIONADO À CENA`);
+    window.setTimeout(() => setLastAddedAssetId((id) => id === asset.id ? null : id), 1200);
   }
 
   function updateEntityPosition(instanceId: string, x: number, y: number) {
@@ -2591,15 +2605,27 @@ export default function App() {
           </div>
           <p className="subtitle">Sistema Visual de Ação e Narrativa</p>
         </div>
-        <button
-          className="teacher-button"
-          type="button"
-          aria-expanded={teacherOpen}
-          aria-controls="teacher-panel"
-          onClick={() => setTeacherOpen((open) => !open)}
-        >
-          {teacherOpen ? 'FECHAR MEDIADOR' : 'MODO MEDIADOR'}
-        </button>
+        <div className="mode-switch no-print" role="group" aria-label="Modo de uso do NEXO">
+          <span>MODO ATIVO</span>
+          <div>
+            <button
+              type="button"
+              className={interfaceMode === 'participant' ? 'active' : ''}
+              aria-pressed={interfaceMode === 'participant'}
+              onClick={() => setInterfaceMode('participant')}
+            >
+              PARTICIPANTE
+            </button>
+            <button
+              type="button"
+              className={interfaceMode === 'mediator' ? 'active' : ''}
+              aria-pressed={interfaceMode === 'mediator'}
+              onClick={() => setInterfaceMode('mediator')}
+            >
+              MEDIADOR
+            </button>
+          </div>
+        </div>
       </header>
 
       <nav className="module-nav no-print" aria-label="Módulos do NEXO">
@@ -2625,7 +2651,7 @@ export default function App() {
         ))}
       </nav>
 
-      {teacherOpen && (
+      {interfaceMode === 'mediator' && teacherOpen && (
         <section className="teacher-panel" id="teacher-panel" aria-label="Configuração pedagógica">
           <div className="mediator-heading">
             <div>
@@ -3224,6 +3250,15 @@ export default function App() {
         </section>
       )}
 
+      <div className={`mode-status mode-${interfaceMode} no-print`} role="status" aria-live="polite">
+        <strong>{interfaceMode === 'participant' ? 'MODO PARTICIPANTE' : 'MODO MEDIADOR'}</strong>
+        <span>
+          {interfaceMode === 'participant'
+            ? 'USE A BIBLIOTECA E A CENA. CONFIGURAÇÕES E REGISTROS FICAM NO MODO MEDIADOR.'
+            : 'CONFIGURAÇÕES, REGISTROS E AJUDA DO MEDIADOR ESTÃO DISPONÍVEIS.'}
+        </span>
+      </div>
+
       <section className="workspace" id="nexo-workspace" tabIndex={-1}>
         <aside className="library">
           <nav className="category-tabs" aria-label="Biblioteca visual">
@@ -3241,7 +3276,12 @@ export default function App() {
 
           <div className="asset-grid">
             {visibleAssets.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} onSelect={addToScene} />
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                onSelect={addToScene}
+                selected={lastAddedAssetId === asset.id}
+              />
             ))}
           </div>
 
