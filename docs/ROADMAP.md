@@ -37,7 +37,7 @@
 - modo livre
 - modo dirigido
 
-## Fase 6 - Modo professora
+## Fase 6 - Modo mediador
 - limitar opções
 - objetivo
 - nível de mediação
