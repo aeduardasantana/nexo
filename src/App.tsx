@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 57381)
-Total output lines: 5794
-
 // @signature edufertanapo
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AssetCard from './components/AssetCard';
@@ -2242,7 +2239,1715 @@ export default function App() {
     setDraggingEntityId(null);
   }
 
-  function handleSceneBackgroundPointerDown(event: React.PointerEvent<HTML…17381 tokens truncated…NTO INTERNO ALÉM DISSO.
+  function handleSceneBackgroundPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!selectedEntityId || draggingEntityId) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('.scene-item')) return;
+    const point = pointerToPercent(event.clientX, event.clientY);
+    if (!point) return;
+    setSceneEditUndo((items) => [...items, cloneScene(currentScene)]);
+    setSceneEditRedo([]);
+    updateEntityPosition(selectedEntityId, point.x, point.y);
+  }
+
+  function startSpatialTask() {
+    if (!spatialTask.subjectId) {
+      setSpatialIssueField('subject');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA O ELEMENTO DA ATIVIDADE');
+      return;
+    }
+    if (!spatialTask.referenceId) {
+      setSpatialIssueField('reference');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA A REFERÊNCIA');
+      return;
+    }
+    setSpatialIssueField(null);
+    setSpatialTaskActive(true);
+    setSelectedEntityId(spatialTask.kind === 'place' ? spatialTask.subjectId : null);
+    setFeedback(null);
+  }
+
+  function validateSpatialTask() {
+    if (!spatialTaskSubject) {
+      setSpatialIssueField('subject');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA O ELEMENTO DA ATIVIDADE');
+      return;
+    }
+    if (!spatialTaskReference) {
+      setSpatialIssueField('reference');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - ESCOLHA A REFERÊNCIA');
+      return;
+    }
+
+    const result = evaluateRelation(spatialTaskSubject, spatialTaskReference, spatialTask.relation);
+    const correct = result.matched;
+
+    setSpatialIssueField(correct ? null : 'subject');
+    setFeedback(correct ? '✓ CORRETO' : '❌ RESPOSTA INCORRETA - AJUSTE A POSIÇÃO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      errorKind: correct ? undefined : 'incorrect',
+      label: `RELAÇÃO ${result.label}`,
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (correct) setSpatialTaskActive(false);
+  }
+
+  function chooseSpatialAnswer(instanceId: string) {
+    if (!spatialTaskActive || spatialTask.kind !== 'identify') return;
+    const candidate = currentScene.entities.find((entity) => entity.instanceId === instanceId);
+    const reference = spatialTaskReference;
+    if (!candidate || !reference) return;
+
+    const result = evaluateRelation(candidate, reference, spatialTask.relation);
+    const correct = result.matched;
+
+    setSelectedEntityId(instanceId);
+    setSpatialIssueField(correct ? null : 'subject');
+    setFeedback(correct ? '✓ CORRETO' : '❌ RESPOSTA INCORRETA - ESCOLHA OUTRO ELEMENTO');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: correct ? 'correct' : 'error',
+      errorKind: correct ? undefined : 'incorrect',
+      label: `IDENTIFICAR ${result.label}`,
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (correct) setSpatialTaskActive(false);
+  }
+
+  function selectVerb(rule: VerbRule) {
+    setDraft({ verbId: rule.id });
+    setActionIssueRole(null);
+    setFeedback(null);
+  }
+
+  function updateDraft<K extends keyof ActionDraft>(key: K, value: ActionDraft[K]) {
+    setDraft((current) => ({ ...current, [key]: value }));
+
+    const roleByDraftKey: Partial<Record<keyof ActionDraft, 'actor' | 'object' | 'targetPerson' | 'destination' | 'seat'>> = {
+      actorId: 'actor',
+      objectId: 'object',
+      targetPersonId: 'targetPerson',
+      destinationId: 'destination',
+      seatId: 'seat',
+    };
+
+    if (key === 'verbId' || roleByDraftKey[key] === actionIssueRole) {
+      setActionIssueRole(null);
+    }
+    setFeedback(null);
+  }
+
+  function answerUnknown() {
+    const isExpected =
+      activityMode === 'directed' &&
+      directedActivity.allowUnknown &&
+      directedActivity.expectedUnknown === true;
+
+    setFeedback(isExpected ? '✓ NÃO SEI - RESPOSTA VÁLIDA' : 'NÃO SEI');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'unknown',
+      label: isExpected ? 'NÃO SEI - RESPOSTA ESPERADA' : 'NÃO SEI',
+      createdAt: new Date().toISOString(),
+    }]);
+
+    if (isExpected) {
+      setDraft({ verbId: '' });
+    }
+  }
+
+  function answerNotUnderstood() {
+    if (activityMode === 'directed' && !directedActivity.allowNotUnderstood) {
+      setFeedback('NÃO ENTENDI NÃO ESTÁ DISPONÍVEL NESTA ATIVIDADE');
+      return;
+    }
+
+    setFeedback('NÃO ENTENDI - MOSTRE NOVAMENTE');
+    setCompareMode('before');
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'not_understood',
+      label: 'NÃO ENTENDI - REAPRESENTAR',
+      createdAt: new Date().toISOString(),
+    }]);
+  }
+
+  function runAction() {
+    if (activityMode === 'directed' && !directedActivity.instruction.trim()) {
+      setDirectedIssueField('instruction');
+      setFeedback('⚠ ESTRUTURA INCOMPLETA - INFORME A INSTRUÇÃO DA ATIVIDADE');
+      return;
+    }
+
+    setDirectedIssueField(null);
+
+    if (historyIndex !== history.length - 1) {
+      setFeedback('VOLTE PARA A CENA MAIS ATUAL PARA CRIAR UMA NOVA AÇÃO');
+      return;
+    }
+
+    if (!selectedRule) {
+      setFeedback('❌ ESCOLHA UMA AÇÃO');
+      return;
+    }
+
+    if (
+      activityMode === 'directed' &&
+      directedActivity.expectedUnknown
+    ) {
+      setFeedback('❌ RESPOSTA DIFERENTE DO ESPERADO - A RESPOSTA É NÃO SEI');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        errorKind: 'unexpected',
+        label: selectedRule.label,
+        createdAt: new Date().toISOString(),
+      }]);
+      return;
+    }
+
+    if (
+      activityMode === 'directed' &&
+      directedActivity.expectedVerbId &&
+      selectedRule.id !== directedActivity.expectedVerbId
+    ) {
+      setFeedback('❌ RESPOSTA DIFERENTE DO ESPERADO');
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        errorKind: 'unexpected',
+        label: selectedRule.label,
+        createdAt: new Date().toISOString(),
+      }]);
+      return;
+    }
+
+    const result = executeAction(currentScene, draft, selectedRule);
+    if (!result.ok) {
+      const prefix =
+        result.errorKind === 'incomplete'
+          ? '⚠ ESTRUTURA INCOMPLETA'
+          : result.errorKind === 'impossible'
+            ? '❌ COMBINAÇÃO IMPOSSÍVEL'
+            : '❌ ERRADO';
+
+      setActionIssueRole(result.role ?? null);
+      setFeedback(`${prefix} - ${result.error}`);
+      setMediationEvents((events) => [...events, {
+        id: crypto.randomUUID(),
+        type: 'error',
+        errorKind: result.errorKind,
+        label: result.error,
+        createdAt: new Date().toISOString(),
+      }]);
+      return;
+    }
+
+    const nextHistory = [...history.slice(0, historyIndex + 1), result.scene];
+    setHistory(nextHistory);
+    setHistoryIndex(nextHistory.length - 1);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
+    setCompareMode('now');
+    setActionIssueRole(null);
+    setFeedback(`✓ ${selectedRule.label}`);
+    setMediationEvents((events) => [...events, {
+      id: crypto.randomUUID(),
+      type: 'correct',
+      label: selectedRule.label,
+      createdAt: new Date().toISOString(),
+    }]);
+    setDraft({ verbId: '' });
+  }
+
+  function undo() {
+    if (sceneEditUndo.length > 0) {
+      const previousScene = sceneEditUndo[sceneEditUndo.length - 1];
+      setSceneEditUndo((items) => items.slice(0, -1));
+      setSceneEditRedo((items) => [...items, cloneScene(currentScene)]);
+      setHistory((items) => items.map((scene, index) => index === historyIndex ? previousScene : scene));
+      setSelectedEntityId(null);
+      setDraggingEntityId(null);
+      setFeedback('ALTERAÇÃO VISUAL DESFEITA');
+      return;
+    }
+    if (historyIndex === 0) return;
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
+    setHistoryIndex((index) => index - 1);
+    setDraft({ verbId: '' });
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setCompareMode('now');
+    setFeedback(null);
+  }
+
+  function redo() {
+    if (sceneEditRedo.length > 0) {
+      const nextScene = sceneEditRedo[sceneEditRedo.length - 1];
+      setSceneEditRedo((items) => items.slice(0, -1));
+      setSceneEditUndo((items) => [...items, cloneScene(currentScene)]);
+      setHistory((items) => items.map((scene, index) => index === historyIndex ? nextScene : scene));
+      setSelectedEntityId(null);
+      setDraggingEntityId(null);
+      setFeedback('ALTERAÇÃO VISUAL REFEITA');
+      return;
+    }
+    if (historyIndex >= history.length - 1) return;
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
+    setHistoryIndex((index) => index + 1);
+    setDraft({ verbId: '' });
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setCompareMode('now');
+    setFeedback(null);
+  }
+
+  function stopReplay() {
+    if (replayTimer.current !== null) {
+      window.clearInterval(replayTimer.current);
+      replayTimer.current = null;
+    }
+    setIsReplaying(false);
+  }
+
+  function replayStory() {
+    if (history.length <= 1) return;
+    stopReplay();
+    setCompareMode('now');
+    setHistoryIndex(1);
+    setIsReplaying(true);
+
+    let index = 1;
+    replayTimer.current = window.setInterval(() => {
+      index += 1;
+      if (index >= history.length) {
+        stopReplay();
+        return;
+      }
+      setHistoryIndex(index);
+    }, 1400);
+  }
+
+  function startNewSession() {
+    stopReplay();
+    setHistory([initialScene]);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
+    setStoryArchive([]);
+    setPersonNames({});
+    setHistoryIndex(0);
+    setDraft({ verbId: '' });
+    setActionIssueRole(null);
+    setFeedback(null);
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setLastAddedAssetId(null);
+    setRelationReferenceId(null);
+    setSpatialTaskActive(false);
+    setSpatialIssueField(null);
+    setTemporalTaskActive(false);
+    setTemporalOptionDays([]);
+    setTemporalEventQuestionId(null);
+    setTemporalEvents([]);
+    setWeeklyEvents([]);
+    setDayPeriod('morning');
+    setClockHour(8);
+    setRelativeWeek('current');
+    setMonthOffset(0);
+    setWeekTaskActive(false);
+    setNarrativeTask({ kind: 'first', sceneIds: [] });
+    setNarrativeTaskActive(false);
+    setNarrativeAnswer([]);
+    setNarrativeOptionIds([]);
+    setCausalTask({ kind: 'what_after' });
+    setCausalTaskActive(false);
+    setCausalAnswer([]);
+    setCausalOptionIds([]);
+    setAutobiographicalDraft({ when: 'today' });
+    setAutobiographicalRecords([]);
+    setSocialDraft({ role: 'AMIGO', action: 'CONVERSAR' });
+    setSocialInteractions([]);
+    setMentalStates([]);
+    setMentalTask({ kind: 'choose_self' });
+    setMentalTaskActive(false);
+    setMentalTargetLabel('');
+    setPerspectiveTask({ kind: 'same_different' });
+    setPerspectiveTaskActive(false);
+    setInformationAccess([]);
+    setAccessTask({ kind: 'who_saw' });
+    setAccessTaskActive(false);
+    setAccessAnswerPersonIds([]);
+    setHiddenInfoTask({ witnessPersonIds: [] });
+    setHiddenInfoTaskActive(false);
+    setHiddenInfoAnswerPersonIds([]);
+    setRelocationTask({
+      initialWitnessPersonIds: [],
+      sawMovePersonIds: [],
+    });
+    setRelocationTaskActive(false);
+    setRelocationSequence({
+      step: 'current_location',
+      completedSteps: [],
+    });
+    setRelocationSequenceActive(false);
+    setSequenceWitnessAnswer([]);
+    setMediationEvents([]);
+    setMediationAssessments([]);
+    setSupportConfig({
+      difficulty: 1,
+      optionCount: 2,
+      useDistractors: false,
+    });
+    setActivityMode('free');
+    setDirectedActivity({
+      instruction: 'ESCOLHA A AÇÃO',
+      expectedUnknown: false,
+      allowUnknown: true,
+      allowNotUnderstood: true,
+    });
+    setSessionMetadata({
+      participant: '',
+      facilitator: '',
+      date: new Date().toISOString().slice(0, 10),
+      objective: '',
+      notes: '',
+    });
+    setCompareMode('now');
+    setReportOpen(false);
+    setActiveModule('scenario');
+    setNewSessionConfirmOpen(false);
+    setPendingImportReport(null);
+    setPendingImportName('');
+  }
+
+  function clearAllLocalData() {
+    const confirmed = window.confirm(
+      'ZERAR A SESSÃO ATUAL E TODO O HISTÓRICO SALVO NESTE NAVEGADOR? ESTA AÇÃO NÃO PODE SER DESFEITA.'
+    );
+    if (!confirmed) return;
+
+    try {
+      window.localStorage.removeItem(LOCAL_SESSION_KEY);
+      window.localStorage.removeItem(LOCAL_HISTORY_KEY);
+    } catch {
+      setLocalStorageStatus('error');
+    }
+    setLongitudinalSessions([]);
+    startNewSession();
+    setFeedback('✓ SESSÃO E HISTÓRICO LOCAL ZERADOS');
+  }
+
+  function clearStory() {
+    stopReplay();
+    if (history.length > 1) {
+      setStoryArchive((stories) => [...stories, history.slice(1)]);
+    }
+    setHistory([initialScene]);
+    setSceneEditUndo([]);
+    setSceneEditRedo([]);
+    setHistoryIndex(0);
+    setDraft({ verbId: '' });
+    setActionIssueRole(null);
+    setFeedback(null);
+    setSelectedEntityId(null);
+    setDraggingEntityId(null);
+    setRelationReferenceId(null);
+    setSpatialTaskActive(false);
+    setSpatialIssueField(null);
+    setTemporalTaskActive(false);
+    setTemporalOptionDays([]);
+    setTemporalEventQuestionId(null);
+    setWeekTaskActive(false);
+    setWeekOptionDays([]);
+    setNarrativeTaskActive(false);
+    setNarrativeAnswer([]);
+    setNarrativeOptionIds([]);
+    setCausalTaskActive(false);
+    setCausalAnswer([]);
+    setCausalOptionIds([]);
+    setAutobiographicalDraft({ when: 'today' });
+    setSocialDraft({ role: 'AMIGO', action: 'CONVERSAR' });
+    setMentalTaskActive(false);
+    setPerspectiveTaskActive(false);
+    setAccessTaskActive(false);
+    setHiddenInfoTaskActive(false);
+    setRelocationTaskActive(false);
+    setRelocationLocationOptions([]);
+    setSequenceCurrentLocationOptions([]);
+    setSequenceSearchLocationOptions([]);
+    setRelocationSequenceActive(false);
+    setRelocationSequence({ step: 'current_location', completedSteps: [] });
+    setRelocationTask((current) => ({
+      ...current,
+      initialWitnessPersonIds: current.initialWitnessPersonIds ?? [],
+      sawMovePersonIds: current.sawMovePersonIds ?? [],
+    }));
+    setSequenceWitnessAnswer([]);
+    setCompareMode('now');
+  }
+
+  function renderEntity(entity: EntityState) {
+    const owner = entity.ownerId ? displayedScene.entities.find((item) => item.instanceId === entity.ownerId) : undefined;
+    const location = entity.locationId ? displayedScene.entities.find((item) => item.instanceId === entity.locationId) : undefined;
+
+    return (
+      <div
+        className={[
+          'scene-item',
+          selectedEntityId === entity.instanceId ? 'is-selected' : '',
+          draggingEntityId === entity.instanceId ? 'is-dragging' : '',
+          entity.consumed ? 'is-consumed' : '',
+          entity.posture === 'sitting' ? 'is-sitting' : '',
+          entity.posture === 'lying' ? 'is-lying' : '',
+          entity.posture === 'sleeping' ? 'is-sleeping' : '',
+          entity.category === 'place' ? 'is-place' : '',
+        ].join(' ')}
+        key={entity.instanceId}
+        role="button"
+        tabIndex={entity.consumed ? -1 : 0}
+        aria-label={`${entity.label}${entity.posture && entity.posture !== 'standing' ? ` - ${entity.posture === 'sitting' ? 'SENTADO' : entity.posture === 'lying' ? 'DEITADO' : 'DORMINDO'}` : ''}`}
+        aria-pressed={selectedEntityId === entity.instanceId}
+        style={{ left: `${entity.x}%`, top: `${entity.y}%` }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          if (spatialTaskActive && spatialTask.kind === 'identify') {
+            chooseSpatialAnswer(entity.instanceId);
+            return;
+          }
+          setSelectedEntityId(entity.instanceId);
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          if (spatialTaskActive && spatialTask.kind === 'identify') {
+            chooseSpatialAnswer(entity.instanceId);
+            return;
+          }
+          setSelectedEntityId(entity.instanceId);
+          if (historyIndex === history.length - 1) {
+            dragStartSceneRef.current = cloneScene(currentScene);
+            setDraggingEntityId(entity.instanceId);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+          handleScenePointerUp(event.clientX, event.clientY);
+        }}
+      >
+        <AssetVisual asset={entity} size={92} className={entity.activity ? `activity-${entity.activity}` : ''} />
+        <small>{entity.label}</small>
+        {entity.posture && entity.posture !== 'standing' && (
+          <em>{entity.posture === 'sitting' ? 'SENTADO' : entity.posture === 'lying' ? 'DEITADO' : 'DORMINDO'}</em>
+        )}
+        {owner && <em>COM {owner.label}</em>}
+        {location && <em>EM {location.label}</em>}
+      </div>
+    );
+  }
+
+  return (
+    <main className={`app-shell module-${activeModule} mode-${interfaceMode}`} id="nexo-content">
+      <a className="skip-link" href="#nexo-workspace">PULAR PARA O CONTEÚDO</a>
+      <header className="topbar">
+        <div>
+          <p className="eyebrow">PROJETO O EU, O OUTRO E O NÓS</p>
+          <div className="brand-lockup">
+            <h1>NEXO</h1>
+            <span className="brand-mark" aria-hidden="true">↔</span>
+          </div>
+          <p className="subtitle">Sistema Visual de Ação e Narrativa</p>
+        </div>
+        <div className="mode-switch no-print" role="group" aria-label="Modo de uso do NEXO">
+          <span>MODO ATIVO</span>
+          <div>
+            <button
+              type="button"
+              className={interfaceMode === 'participant' ? 'active' : ''}
+              aria-pressed={interfaceMode === 'participant'}
+              onClick={() => {
+                setInterfaceMode('participant');
+                if (activeModule === 'report' || activeModule === 'missions') {
+                  setActiveModule('scenario');
+                  setReportOpen(false);
+                }
+              }}
+            >
+              PARTICIPANTE
+            </button>
+            <button
+              type="button"
+              className={interfaceMode === 'mediator' ? 'active' : ''}
+              aria-pressed={interfaceMode === 'mediator'}
+              onClick={() => setInterfaceMode('mediator')}
+            >
+              MEDIADOR
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <nav className="module-nav no-print" aria-label="Módulos do NEXO">
+        {[
+          ['scenario', 'CENÁRIO'],
+          ['time', 'TEMPO'],
+          ['narrative', 'NARRATIVA'],
+          ['perspective', 'PERSPECTIVA'],
+          ['missions', 'MISSÕES'],
+          ['report', 'RELATÓRIO'],
+        ].map(([id, label]) => (
+          <button
+            type="button"
+            key={id}
+            className={activeModule === id ? 'active' : ''}
+            aria-current={activeModule === id ? 'page' : undefined}
+            onClick={() => {
+              setActiveModule(id as typeof activeModule);
+              setReportOpen(id === 'report');
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {interfaceMode === 'mediator' && teacherOpen && (
+        <section className="teacher-panel" id="teacher-panel" aria-label="Configuração pedagógica">
+          <div className="mediator-heading">
+            <div>
+              <p className="section-kicker">CONFIGURAÇÃO PEDAGÓGICA</p>
+              <h2>MODO MEDIADOR</h2>
+            </div>
+            <div className="mediator-help-actions no-print">
+              <button type="button" onClick={() => openHelpFor(activeModule)}>AJUDA DESTE MÓDULO</button>
+              <button type="button" onClick={() => openHelpFor('general')}>AJUDA</button>
+              <button type="button" onClick={startTour}>TOUR COMPLETO</button>
+            </div>
+          </div>
+
+          <label>
+            <span>TIPO DE ATIVIDADE</span>
+            <select
+              value={activityMode}
+              onChange={(event) => {
+                setActivityMode(event.target.value as ActivityMode);
+                setDirectedIssueField(null);
+                setFeedback(null);
+              }}
+            >
+              <option value="free">LIVRE</option>
+              <option value="directed">DIRIGIDA</option>
+            </select>
+          </label>
+
+          {activityMode === 'directed' && (
+            <>
+              <label className={directedIssueField === 'instruction' ? 'task-field issue' : 'task-field'}>
+                <span>INSTRUÇÃO</span>
+                <input
+                  value={directedActivity.instruction}
+                  onChange={(event) => {
+                    setDirectedActivity((current) => ({ ...current, instruction: event.target.value.toUpperCase() }));
+                    setDirectedIssueField(null);
+                    setFeedback(null);
+                  }}
+                />
+              </label>
+              <label className={directedIssueField === 'expected' ? 'task-field issue' : 'task-field'}>
+                <span>RESPOSTA ESPERADA</span>
+                <select
+                  value={directedActivity.expectedUnknown ? '__unknown__' : (directedActivity.expectedVerbId ?? '')}
+                  onChange={(event) => {
+                    setDirectedIssueField(null);
+                    setFeedback(null);
+                    const value = event.target.value;
+                    setDirectedActivity((current) => ({
+                      ...current,
+                      expectedVerbId: value && value !== '__unknown__' ? value : undefined,
+                      expectedUnknown: value === '__unknown__',
+                    }));
+                  }}
+                >
+                  <option value="">SEM RESPOSTA ÚNICA</option>
+                  <option value="__unknown__">NÃO SEI</option>
+                  {verbRules.map((verb) => <option key={verb.id} value={verb.id}>{verb.label}</option>)}
+                </select>
+              </label>
+
+              <label className="teacher-check">
+                <input
+                  type="checkbox"
+                  checked={directedActivity.allowUnknown}
+                  onChange={(event) => setDirectedActivity((current) => ({
+                    ...current,
+                    allowUnknown: event.target.checked,
+                    expectedUnknown: event.target.checked ? current.expectedUnknown : false,
+                  }))}
+                />
+                <span>PERMITIR NÃO SEI</span>
+              </label>
+
+              <label className="teacher-check">
+                <input
+                  type="checkbox"
+                  checked={directedActivity.allowNotUnderstood}
+                  onChange={(event) => setDirectedActivity((current) => ({
+                    ...current,
+                    allowNotUnderstood: event.target.checked,
+                  }))}
+                />
+                <span>PERMITIR NÃO ENTENDI</span>
+              </label>
+            </>
+          )}
+
+          <div className="session-panel">
+            <label>
+              <span>PARTICIPANTE</span>
+              <input
+                value={sessionMetadata.participant}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  participant: event.target.value.toUpperCase(),
+                }))}
+                placeholder="NOME"
+              />
+            </label>
+
+            <label>
+              <span>MEDIADOR</span>
+              <input
+                value={sessionMetadata.facilitator}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  facilitator: event.target.value.toUpperCase(),
+                }))}
+                placeholder="NOME DO MEDIADOR"
+              />
+            </label>
+
+            <label>
+              <span>DATA</span>
+              <input
+                type="date"
+                value={sessionMetadata.date}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  date: event.target.value,
+                }))}
+              />
+            </label>
+
+            <label className="session-wide">
+              <span>OBJETIVO</span>
+              <input
+                value={sessionMetadata.objective}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  objective: event.target.value.toUpperCase(),
+                }))}
+                placeholder="OBJETIVO DA SESSÃO"
+              />
+            </label>
+
+            <label className="session-wide">
+              <span>OBSERVAÇÕES</span>
+              <textarea
+                value={sessionMetadata.notes}
+                onChange={(event) => setSessionMetadata((current) => ({
+                  ...current,
+                  notes: event.target.value,
+                }))}
+                placeholder="REGISTRO LIVRE DO MEDIADOR"
+              />
+            </label>
+
+            <div className="session-summary">
+              <span>CENAS {allSessionScenes.length}</span>
+              <span>EVENTOS {mediationEvents.length}</span>
+              <span>MEDIAÇÕES {mediationAssessments.length}</span>
+              <span>ESTADOS DECLARADOS {mentalStates.length}</span>
+            </div>
+
+            <div className="local-session-status" role="status" aria-live="polite">
+              <div>
+                <span>SALVAMENTO LOCAL</span>
+                <strong>
+                  {localStorageStatus === 'loading'
+                    ? 'VERIFICANDO...'
+                    : localStorageStatus === 'error'
+                      ? 'INDISPONÍVEL'
+                      : localStorageStatus === 'saved'
+                        ? 'SALVO AUTOMATICAMENTE'
+                        : 'AINDA SEM SALVAMENTO'}
+                </strong>
+                <small>
+                  {localSavedAt
+                    ? `ÚLTIMO SALVAMENTO ${new Date(localSavedAt).toLocaleString('pt-BR')}`
+                    : 'O NEXO SALVA A SESSÃO NESTE NAVEGADOR.'}
+                </small>
+              </div>
+              <button type="button" onClick={saveLocalSessionNow}>SALVAR AGORA</button>
+            </div>
+
+            <div className="session-export">
+              <button type="button" onClick={exportSessionJson}>EXPORTAR JSON</button>
+              <button type="button" onClick={exportSessionCsv}>EXPORTAR CSV</button>
+              <button type="button" onClick={() => importInputRef.current?.click()}>IMPORTAR JSON</button>
+              <button type="button" onClick={() => {
+                setActiveModule('report');
+                setReportOpen(true);
+              }}>VER RELATÓRIO</button>
+              <button type="button" onClick={printSessionReport}>IMPRIMIR / PDF</button>
+              <button type="button" onClick={() => archiveSessionForLongitudinal()}>
+                REGISTRAR NO HISTÓRICO
+              </button>
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => setNewSessionConfirmOpen(true)}
+              >
+                NOVA SESSÃO
+              </button>
+              <button type="button" className="danger-button" onClick={clearAllLocalData}>
+                ZERAR DADOS LOCAIS
+              </button>
+              <input
+                ref={importInputRef}
+                className="session-import-input"
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void importSessionJson(file);
+                }}
+              />
+            </div>
+
+            {newSessionConfirmOpen && (
+              <div className="session-confirm" role="alertdialog" aria-modal="true" aria-labelledby="new-session-title">
+                <div>
+                  <strong id="new-session-title">INICIAR NOVA SESSÃO?</strong>
+                  <p>
+                    ESTA AÇÃO APAGA DA TELA A SESSÃO ATUAL, INCLUINDO HISTÓRIAS, EVENTOS, MEDIAÇÕES, CALENDÁRIO E ESTADOS DECLARADOS.
+                  </p>
+                  <p>EXPORTE O JSON ANTES, CASO QUEIRA GUARDAR ESTA SESSÃO.</p>
+                </div>
+                <div className="session-confirm-actions">
+                  <button type="button" onClick={() => setNewSessionConfirmOpen(false)}>CANCELAR</button>
+                  <button type="button" className="danger-button" onClick={startNewSession}>
+                    APAGAR E INICIAR NOVA SESSÃO
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pendingImportReport && (
+              <div className="session-confirm import-confirm" role="alertdialog" aria-modal="true" aria-labelledby="import-session-title">
+                <div>
+                  <strong id="import-session-title">SUBSTITUIR A SESSÃO ATUAL?</strong>
+                  <p>O ARQUIVO {pendingImportName || 'JSON'} CONTÉM OUTRA SESSÃO NEXO.</p>
+                  <p>A SESSÃO ATUAL CONTINUA PRESERVADA ATÉ VOCÊ CONFIRMAR.</p>
+                </div>
+                <div className="session-confirm-actions">
+                  <button type="button" onClick={cancelPendingImport}>MANTER SESSÃO ATUAL</button>
+                  <button type="button" className="danger-button" onClick={confirmPendingImport}>
+                    SUBSTITUIR PELA IMPORTADA
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="person-customization">
+            <div className="person-customization-heading">
+              <div>
+                <span>PESSOAS</span>
+                <strong>PERSONALIZAR NOMES</strong>
+              </div>
+              <button type="button" onClick={resetPersonNames}>RESTAURAR</button>
+            </div>
+            <div className="person-name-grid">
+              {assets
+                .filter((asset) => asset.category === 'person')
+                .map((person) => (
+                  <label key={person.id}>
+                    <span>{person.label}</span>
+                    <input
+                      value={personNames[person.id] ?? person.label}
+                      onChange={(event) => renamePersonAsset(person.id, event.target.value)}
+                      aria-label={`Nome para ${person.label}`}
+                    />
+                  </label>
+                ))}
+            </div>
+            <small>O NOME MUDA NA TELA, NAS HISTÓRIAS E NO RELATÓRIO. O ID INTERNO NÃO MUDA.</small>
+          </div>
+
+          <div className="teacher-support">
+            <label>
+              <span>DIFICULDADE</span>
+              <select
+                value={supportConfig.difficulty}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  difficulty: Number(event.target.value) as ActivitySupportConfig['difficulty'],
+                }))}
+              >
+                <option value={1}>NÍVEL 1</option>
+                <option value={2}>NÍVEL 2</option>
+                <option value={3}>NÍVEL 3</option>
+              </select>
+            </label>
+
+            <label>
+              <span>OPÇÕES</span>
+              <select
+                value={supportConfig.optionCount}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  optionCount: Number(event.target.value) as ActivitySupportConfig['optionCount'],
+                }))}
+              >
+                <option value={2}>2 OPÇÕES</option>
+                <option value={3}>3 OPÇÕES</option>
+                <option value={4}>4 OPÇÕES</option>
+              </select>
+            </label>
+
+            <label className="teacher-check">
+              <input
+                type="checkbox"
+                checked={supportConfig.useDistractors}
+                onChange={(event) => setSupportConfig((current) => ({
+                  ...current,
+                  useDistractors: event.target.checked,
+                }))}
+              />
+              <span>USAR DISTRATORES</span>
+            </label>
+          </div>
+
+          <div className="teacher-stats">
+            <span>CORRETAS {mediationEvents.filter((event) => event.type === 'correct').length}</span>
+            <span>ERROS {mediationEvents.filter((event) => event.type === 'error').length}</span>
+            <span>NÃO SEI {mediationEvents.filter((event) => event.type === 'unknown').length}</span>
+            <span>NÃO ENTENDI {mediationEvents.filter((event) => event.type === 'not_understood').length}</span>
+          </div>
+
+          <div className="mediation-scale">
+            <span>REGISTRAR MEDIAÇÃO 0 - 3</span>
+            <div>
+              {([0, 1, 2, 3] as MediationLevel[]).map((level) => (
+                <button type="button" key={level} onClick={() => registerMediationAssessment(level)}>
+                  <strong>{level}</strong>
+                  <small>{mediationLevelLabel(level)}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeModule === 'missions' && (
+        <MissionsReference />
+      )}
+
+      {reportOpen && (
+        <section className="session-report-view">
+          <header className="report-header">
+            <div>
+              <p>PROJETO O EU, O OUTRO E O NÓS</p>
+              <h2>RELATÓRIO DE SESSÃO - NEXO</h2>
+            </div>
+            <div className="report-actions no-print">
+              <button type="button" onClick={() => {
+                setReportOpen(false);
+                setActiveModule('scenario');
+              }}>FECHAR</button>
+              <button type="button" onClick={() => window.print()}>IMPRIMIR / PDF</button>
+            </div>
+          </header>
+
+          <section className="report-identification">
+            <div><span>PARTICIPANTE</span><strong>{sessionMetadata.participant || 'NÃO INFORMADO'}</strong></div>
+            <div><span>DATA</span><strong>{sessionMetadata.date || 'NÃO INFORMADA'}</strong></div>
+            <div className="wide"><span>OBJETIVO</span><strong>{sessionMetadata.objective || 'NÃO INFORMADO'}</strong></div>
+          </section>
+
+          <section className="report-kpis">
+            <div><strong>{allSessionScenes.length}</strong><span>CENAS</span></div>
+            <div><strong>{mediationEvents.length}</strong><span>EVENTOS</span></div>
+            <div><strong>{mediationAssessments.length}</strong><span>REGISTROS 0 - 3</span></div>
+            <div><strong>{mentalStates.length}</strong><span>ESTADOS DECLARADOS</span></div>
+            <div><strong>{autobiographicalRecords.length}</strong><span>RELATOS PESSOAIS</span></div>
+            <div><strong>{socialInteractions.length}</strong><span>RELAÇÕES NÓS</span></div>
+          </section>
+
+          <section className="report-section longitudinal-report">
+            <h3>AVALIAÇÃO LONGITUDINAL</h3>
+            <p className="longitudinal-disclaimer">
+              REGISTRO OBSERVACIONAL DE DESEMPENHO COM MEDIAÇÃO. NÃO É DIAGNÓSTICO, NÃO MEDE INTELIGÊNCIA E NÃO AUTORIZA INFERIR COMPREENSÃO APENAS PELA EXPRESSÃO OBSERVADA.
+            </p>
+
+            <div className="longitudinal-current">
+              <strong>SESSÃO ATUAL</strong>
+              <span>
+                {sessionMetadata.date || 'SEM DATA'} - {sessionMetadata.participant || 'PARTICIPANTE NÃO INFORMADO'}
+                {sessionMetadata.facilitator ? ` - MEDIADOR: ${sessionMetadata.facilitator}` : ''}
+              </span>
+              <button type="button" className="no-print" onClick={() => archiveSessionForLongitudinal()}>
+                REGISTRAR / ATUALIZAR NO HISTÓRICO
+              </button>
+            </div>
+
+            <div className="longitudinal-axis-grid">
+              {(['ACTION', 'TIME', 'NARRATIVE', 'RELATION'] as LongitudinalAxis[]).map((axis) => {
+                const stats = longitudinalAxisStats(buildSessionReport(), axis);
+                return (
+                  <article key={axis}>
+                    <strong>{longitudinalAxisLabel(axis)}</strong>
+                    <span>{stats.count} REGISTROS 0 - 3</span>
+                    <b>{stats.average === null ? 'SEM DADO' : stats.average.toFixed(2)}</b>
+                    <small>MÉDIA OBSERVACIONAL</small>
+                    <div>
+                      {stats.counts.map((count, level) => (
+                        <span key={level}>{level}: {count}</span>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="longitudinal-timeline">
+              <header>
+                <div>
+                  <strong>LINHA DO TEMPO</strong>
+                  <span>{longitudinalSessions.length} SESSÕES ARQUIVADAS NESTE NAVEGADOR</span>
+                </div>
+                <button
+                  type="button"
+                  className="danger-button no-print"
+                  onClick={clearLongitudinalHistory}
+                  disabled={longitudinalSessions.length === 0}
+                >
+                  APAGAR TODO HISTÓRICO
+                </button>
+              </header>
+              {longitudinalSessions.length === 0 ? (
+                <p>AINDA NÃO HÁ SESSÕES ANTERIORES REGISTRADAS.</p>
+              ) : (
+                longitudinalSessions.map((session, index) => (
+                  <article key={session.id}>
+                    <div className="longitudinal-session-heading">
+                      <span>SESSÃO {index + 1}</span>
+                      <strong>{session.report.metadata.date || 'SEM DATA'}</strong>
+                      <small>
+                        {session.report.metadata.participant || 'PARTICIPANTE NÃO INFORMADO'}
+                        {session.report.metadata.facilitator ? ` - MEDIADOR: ${session.report.metadata.facilitator}` : ''}
+                      </small>
+                      <button
+                        type="button"
+                        className="no-print"
+                        onClick={() => removeLongitudinalSession(session.id)}
+                      >
+                        REMOVER
+                      </button>
+                    </div>
+                    <div className="longitudinal-session-axes">
+                      {(['ACTION', 'TIME', 'NARRATIVE', 'RELATION'] as LongitudinalAxis[]).map((axis) => {
+                        const stats = longitudinalAxisStats(session.report, axis);
+                        return (
+                          <div key={axis}>
+                            <span>{longitudinalAxisLabel(axis)}</span>
+                            <strong>{stats.average === null ? ' - ' : stats.average.toFixed(2)}</strong>
+                            <small>{stats.count} REG.</small>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>RESPOSTAS REGISTRADAS</h3>
+            <div className="report-response-grid">
+              <div><strong>{mediationCounts().correct}</strong><span>CORRETAS</span></div>
+              <div><strong>{mediationCounts().error}</strong><span>ERROS</span></div>
+              <div><strong>{mediationCounts().unknown}</strong><span>NÃO SEI</span></div>
+              <div><strong>{mediationCounts().notUnderstood}</strong><span>NÃO ENTENDI</span></div>
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ESCALA DE MEDIAÇÃO 0 - 3</h3>
+            <div className="report-mediation-grid">
+              {assessmentCounts().map(({ level, count }) => (
+                <div key={level}>
+                  <strong>{level}</strong>
+                  <span>{mediationLevelLabel(level)}</span>
+                  <em>{count} REGISTRO(S)</em>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ATIVIDADES / EVENTOS DA SESSÃO</h3>
+            <div className="report-event-list">
+              {mediationEvents.length === 0 ? (
+                <p>SEM EVENTOS REGISTRADOS.</p>
+              ) : (
+                mediationEvents.map((event, index) => {
+                  const assessment = [...mediationAssessments].reverse().find((item) => item.sourceEventId === event.id);
+                  return (
+                    <article key={event.id}>
+                      <span>{index + 1}</span>
+                      <div>
+                        <strong>{event.label}</strong>
+                        <small>
+                          {event.type.toUpperCase()}
+                          {event.errorKind ? ` - ${event.errorKind === 'incomplete' ? 'ESTRUTURA INCOMPLETA' : event.errorKind === 'impossible' ? 'COMBINAÇÃO IMPOSSÍVEL' : event.errorKind === 'unexpected' ? 'DIFERENTE DO ESPERADO' : 'RESPOSTA INCORRETA'}` : ''}
+                          {assessment ? ` - MEDIAÇÃO ${assessment.level} - DIFICULDADE ${assessment.difficulty} - ${assessment.optionCount} OPÇÕES` : ''}
+                        </small>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>CENAS TRABALHADAS</h3>
+            <div className="report-scenes">
+              {allSessionScenes.map((scene, index) => (
+                <article key={scene.id}>
+                  <header>
+                    <strong>CENA {index + 1}</strong>
+                    <span>{scene.actionLabel ?? 'SEM AÇÃO NOMEADA'}</span>
+                    <small>{temporalLabel(scene.temporalDay)}</small>
+                  </header>
+                  <div>
+                    {scene.entities
+                      .filter((entity) => !entity.consumed)
+                      .slice(0, 8)
+                      .map((entity) => (
+                        <div key={entity.instanceId}>
+                          <AssetVisual asset={entity} size={42} />
+                          <span>{entity.label}</span>
+                        </div>
+                      ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>ESTADOS DECLARADOS</h3>
+            <div className="report-tags">
+              {mentalStates.length === 0 ? (
+                <span>SEM ESTADOS DECLARADOS.</span>
+              ) : (
+                mentalStates.map((state) => (
+                  <span key={state.id}>
+                    {findLabel(currentScene, state.personId)} - {mentalLabel(state.kind, state.value)}
+                    {state.targetLabel ? ` - ${state.targetLabel}` : ''}
+                  </span>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="report-section">
+            <h3>RELAÇÕES SOCIAIS - NÓS</h3>
+            {socialInteractions.length === 0 ? (
+              <p>SEM RELAÇÕES SOCIAIS REGISTRADAS.</p>
+            ) : (
+              <div className="report-social">
+                {socialInteractions.map((interaction, index) => (
+                  <article key={interaction.id}>
+                    <span>NÓS {index + 1}</span>
+                    <strong>
+                      {autobiographicalEntityLabel(interaction.selfPersonId)} + {autobiographicalEntityLabel(interaction.otherPersonId)}
+                    </strong>
+                    <small>{interaction.role} - {interaction.action}</small>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="report-section">
+            <h3>NARRATIVAS PESSOAIS</h3>
+            {autobiographicalRecords.length === 0 ? (
+              <p>SEM RELATOS AUTOBIOGRÁFICOS REGISTRADOS.</p>
+            ) : (
+              <div className="report-autobiographical">
+                {autobiographicalRecords.map((record, index) => (
+                  <article key={record.id}>
+                    <header>
+                      <strong>RELATO {index + 1}</strong>
+                      <span>{temporalLabel(record.when)}</span>
+                    </header>
+                    <div>
+                      <span>QUEM</span>
+                      <strong>{autobiographicalEntityLabel(record.personId)}</strong>
+                    </div>
+                    <div>
+                      <span>ONDE</span>
+                      <strong>{autobiographicalEntityLabel(record.placeId)}</strong>
+                    </div>
+                    <ol>
+                      <li><strong>PRIMEIRO</strong> - {autobiographicalSceneLabel(record.firstSceneId)}</li>
+                      <li><strong>DEPOIS</strong> - {autobiographicalSceneLabel(record.nextSceneId)}</li>
+                      <li><strong>COMO TERMINOU</strong> - {autobiographicalSceneLabel(record.endingSceneId)}</li>
+                    </ol>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="report-section">
+            <h3>OBSERVAÇÕES DO MEDIADOR</h3>
+            <p className="report-notes">{sessionMetadata.notes || 'SEM OBSERVAÇÕES REGISTRADAS.'}</p>
+          </section>
+
+          <footer className="report-footer">
+            <p>
+              RELATÓRIO DESCRITIVO DE SESSÃO. OS DADOS REPRESENTAM RESPOSTAS E MEDIAÇÕES REGISTRADAS NO NEXO E NÃO CONSTITUEM DIAGNÓSTICO.
+            </p>
+          </footer>
+        </section>
+      )}
+
+      <div className={`mode-status mode-${interfaceMode} no-print`} role="status" aria-live="polite">
+        <strong>{interfaceMode === 'participant' ? 'MODO PARTICIPANTE' : 'MODO MEDIADOR'}</strong>
+        <span>
+          {interfaceMode === 'participant'
+            ? 'USE A BIBLIOTECA E A CENA. CONFIGURAÇÕES E REGISTROS FICAM NO MODO MEDIADOR.'
+            : 'CONFIGURAÇÕES, REGISTROS E AJUDA DO MEDIADOR ESTÃO DISPONÍVEIS.'}
+        </span>
+      </div>
+
+      <section className="workspace" id="nexo-workspace" tabIndex={-1}>
+        <aside className="library">
+          <div className="library-guide" aria-live="polite">
+            <strong>{interfaceMode === 'participant' ? 'COMO MONTAR A CENA' : 'BIBLIOTECA VISUAL'}</strong>
+            <p>
+              {interfaceMode === 'participant'
+                ? '1. TOQUE EM UMA FIGURA. 2. TOQUE NO CENÁRIO PARA MUDAR DE LUGAR. NO COMPUTADOR, TAMBÉM É POSSÍVEL ARRASTAR A FIGURA ATÉ O CENÁRIO.'
+                : 'CLIQUE PARA ADICIONAR NO CENTRO OU ARRASTE ATÉ A POSIÇÃO DESEJADA. DEPOIS, TROQUE PARA PARTICIPANTE PARA A ATIVIDADE.'}
+            </p>
+          </div>
+          <nav className="category-tabs" aria-label="Biblioteca visual">
+            {(['person', 'object', 'place'] as AssetCategory[]).map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={category === item ? 'tab active' : 'tab'}
+                onClick={() => setCategory(item)}
+              >
+                {categoryLabels[item]}
+              </button>
+            ))}
+          </nav>
+
+          <div className="asset-grid">
+            {visibleAssets.map((asset) => (
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                onSelect={addToScene}
+                onDragStart={handleAssetDragStart}
+                selected={lastAddedAssetId === asset.id}
+              />
+            ))}
+          </div>
+
+          <section className="verb-preview">
+            <p className="section-kicker">AÇÕES</p>
+            <div className="verb-grid">
+              {verbRules.map((verb) => (
+                <button
+                  key={verb.id}
+                  type="button"
+                  className={draft.verbId === verb.id ? 'verb-button active' : 'verb-button'}
+                  onClick={() => selectVerb(verb)}
+                >
+                  <VerbVisual verb={verb} size={52} animated={draft.verbId === verb.id} />
+                  <small>{verb.label}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        </aside>
+
+        <section className="stage-panel">
+          <div className="stage-heading">
+            <div>
+              <p className="section-kicker">{activityMode === 'directed' ? 'ATIVIDADE DIRIGIDA' : 'CENÁRIO'}</p>
+              <h2>
+                {activityMode === 'directed'
+                  ? directedActivity.instruction
+                  : (displayedScene.actionLabel ? displayedScene.actionLabel : 'CONSTRUA A CENA')}
+              </h2>
+            </div>
+            <div className="stage-actions">
+              <button type="button" onClick={undo} disabled={sceneEditUndo.length === 0 && historyIndex === 0}>↶ VOLTAR</button>
+              <button type="button" onClick={redo} disabled={sceneEditRedo.length === 0 && historyIndex >= history.length - 1}>↷ AVANÇAR</button>
+              <button type="button" onClick={clearStory} disabled={history.length === 1}>NOVA HISTÓRIA</button>
+            </div>
+          </div>
+
+          {compareMode === 'compare' ? (
+            <div className="compare-stage" aria-live="polite">
+              <section>
+                <strong>ANTES</strong>
+                <div className="mini-stage">
+                  {beforeScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <div className="mini-entity" key={entity.instanceId} style={{ left: `${entity.x}%`, top: `${entity.y}%` }}>
+                      <AssetVisual asset={entity} size={50} />
+                      <small>{entity.label}</small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <div className="compare-arrow" aria-hidden="true">→</div>
+              <section>
+                <strong>DEPOIS</strong>
+                <div className="mini-stage">
+                  {currentScene.entities.filter((entity) => !entity.consumed).map((entity) => (
+                    <div className="mini-entity" key={entity.instanceId} style={{ left: `${entity.x}%`, top: `${entity.y}%` }}>
+                      <AssetVisual asset={entity} size={50} />
+                      <small>{entity.label}</small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div
+              className={isReplaying ? 'stage is-replaying' : 'stage'}
+              aria-live="polite"
+              ref={sceneRef}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleAssetDrop}
+            >
+              {displayedScene.entities.filter((entity) => !entity.consumed).length === 0 ? (
+                <div className="empty-state">
+                  <span aria-hidden="true">＋</span>
+                  <strong>COMECE A CENA</strong>
+                  <p>TOQUE EM UMA PESSOA, OBJETO OU LUGAR NA BIBLIOTECA</p>
+                  <small>NO COMPUTADOR, VOCÊ TAMBÉM PODE ARRASTAR A FIGURA PARA CÁ.</small>
+                </div>
+              ) : (
+                <div
+                  className="spatial-scene"
+                  onPointerMove={handleScenePointerMove}
+                  onPointerUp={(event) => handleScenePointerUp(event.clientX, event.clientY)}
+                  onPointerCancel={() => handleScenePointerUp()}
+                  onPointerDown={handleSceneBackgroundPointerDown}
+                >
+                  <div className="ground-line" aria-hidden="true" />
+                  {displayedScene.entities.filter((entity) => !entity.consumed).map(renderEntity)}
+                  {selectedEntityId && historyIndex === history.length - 1 && (
+                    <div className="move-hint">ARRASTE OU TOQUE NO LOCAL</div>
+                  )}
+                  {selectedEntity && relationReference && (
+                    <div className="relation-badge">
+                      {detectedRelations.length > 0
+                        ? detectedRelations.map((relation) => relation.label).join(' - ')
+                        : 'SEM RELAÇÃO MARCADA'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <section className="relocation-builder">
+            <div className="builder-title">
+              <p className="section-kicker">MUDANÇA DE LOCAL</p>
+              <strong>INFORMAÇÃO DIFERENTE ENTRE PESSOAS</strong>
+            </div>
+
+            <div className="relocation-config">
+              <label>
+                <span>OBJETO</span>
+                <select
+                  value={relocationTask.objectId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    objectId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {objects.filter((object) => !object.consumed).map((object) => (
+                    <option key={object.instanceId} value={object.instanceId}>{object.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL INICIAL</span>
+                <select
+                  value={relocationTask.initialLocationId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    initialLocationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL ATUAL</span>
+                <select
+                  value={relocationTask.currentLocationId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    currentLocationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>PESSOA DA PERGUNTA</span>
+                <select
+                  value={relocationTask.referencePersonId ?? ''}
+                  onChange={(event) => setRelocationTask((current) => ({
+                    ...current,
+                    referencePersonId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {people.map((person) => (
+                    <option key={person.instanceId} value={person.instanceId}>{person.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="relocation-witnesses">
+              <span>QUEM VIU A COLOCAÇÃO INICIAL?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = relocationTask.initialWitnessPersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleInitialWitness(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU O LOCAL INICIAL' : 'NÃO VIU O LOCAL INICIAL'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="relocation-witnesses">
+              <span>QUEM VIU O OBJETO MUDAR DE LOCAL?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = relocationTask.sawMovePersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleSawMove(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU A MUDANÇA' : 'NÃO VIU A MUDANÇA'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="relocation-start-row">
+              <button className="relocation-start" type="button" onClick={startRelocationTask}>
+                {relocationTaskActive ? 'PERGUNTA ISOLADA ATIVA' : 'INICIAR PERGUNTA ISOLADA'}
+              </button>
+              <button className="relocation-start sequence" type="button" onClick={startRelocationSequence}>
+                {relocationSequenceActive ? 'SEQUÊNCIA ATIVA' : 'INICIAR SEQUÊNCIA 3 ETAPAS'}
+              </button>
+            </div>
+
+            {relocationTaskActive && relocationTask.referencePersonId && (
+              <div className="relocation-question">
+                <strong>
+                  ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
+                </strong>
+                <div>
+                  {relocationLocationOptions.map((optionId) => (
+                    <button
+                      type="button"
+                      key={optionId}
+                      onClick={() => answerRelocationTask(optionId === '__unknown__' ? null : optionId)}
+                    >
+                      <span>{optionId === '__unknown__' ? 'NÃO SEI' : findLabel(currentScene, optionId)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(relocationSequenceActive || relocationSequence.completedSteps.length > 0) && (
+              <div className="relocation-sequence">
+                <div className="sequence-progress">
+                  {[
+                    ['current_location', '1. ONDE ESTÁ AGORA?'],
+                    ['who_saw', '2. QUEM VIU?'],
+                    ['person_search', '3. ONDE VAI PROCURAR?'],
+                  ].map(([step, label]) => (
+                    <div
+                      key={step}
+                      className={[
+                        'sequence-step',
+                        relocationSequence.step === step && relocationSequenceActive ? 'active' : '',
+                        relocationSequence.completedSteps.includes(step as RelocationSequenceState['step']) ? 'done' : '',
+                      ].join(' ')}
+                    >
+                      <strong>{label}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                {relocationSequenceActive && relocationSequence.step === 'current_location' && (
+                  <div className="sequence-question">
+                    <strong>
+                      ONDE ESTÁ {findLabel(currentScene, relocationTask.objectId)} AGORA?
+                    </strong>
+                    <div className="sequence-location-options">
+                      {sequenceCurrentLocationOptions.map((locationId) => (
+                        <button type="button" key={locationId} onClick={() => answerSequenceCurrentLocation(locationId)}>
+                          {findLabel(currentScene, locationId)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {relocationSequenceActive && relocationSequence.step === 'who_saw' && (
+                  <div className="sequence-question">
+                    <strong>QUEM VIU O OBJETO MUDAR DE LOCAL?</strong>
+                    <div className="sequence-witness-options">
+                      {getLimitedPeopleOptions(relocationTask.sawMovePersonIds).map((person) => {
+                        const selected = sequenceWitnessAnswer.includes(person.instanceId);
+                        return (
+                          <button
+                            type="button"
+                            key={person.instanceId}
+                            className={selected ? 'active' : ''}
+                            onClick={() => toggleSequenceWitness(person.instanceId)}
+                          >
+                            <AssetVisual asset={person} size={42} />
+                            <span>{person.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button className="sequence-check" type="button" onClick={verifySequenceWitnesses}>
+                      CONFERIR
+                    </button>
+                  </div>
+                )}
+
+                {relocationSequenceActive && relocationSequence.step === 'person_search' && relocationTask.referencePersonId && (
+                  <div className="sequence-question">
+                    <strong>
+                      ONDE {findLabel(currentScene, relocationTask.referencePersonId)} TEM BASE PARA PROCURAR {findLabel(currentScene, relocationTask.objectId)}?
+                    </strong>
+                    <div className="sequence-location-options">
+                      {sequenceSearchLocationOptions.map((optionId) => (
+                        <button
+                          type="button"
+                          key={optionId}
+                          onClick={() => answerSequenceSearchLocation(optionId === '__unknown__' ? null : optionId)}
+                        >
+                          {optionId === '__unknown__' ? 'NÃO SEI' : findLabel(currentScene, optionId)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!relocationSequenceActive && relocationSequence.completedSteps.includes('person_search') && (
+                  <div className="sequence-complete">
+                    <strong>SEQUÊNCIA CONCLUÍDA</strong>
+                    <span>LOCAL ATUAL → ACESSO À MUDANÇA → LOCAL DE PROCURA</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="relocation-summary">
+              <span>ANTES: {findLabel(currentScene, relocationTask.initialLocationId)}</span>
+              <span>AGORA: {findLabel(currentScene, relocationTask.currentLocationId)}</span>
+              <span>
+                VIU O INÍCIO: {relocationTask.initialWitnessPersonIds.length
+                  ? relocationTask.initialWitnessPersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+              <span>
+                VIU A MUDANÇA: {relocationTask.sawMovePersonIds.length
+                  ? relocationTask.sawMovePersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+            </div>
+
+            <p className="access-note">
+              A RESPOSTA USA APENAS O HISTÓRICO DE ACESSO CONFIGURADO: QUEM VIU A MUDANÇA TEM O LOCAL ATUAL; QUEM VIU APENAS O INÍCIO TEM O LOCAL INICIAL; QUEM NÃO VIU NENHUM DOS DOIS NÃO TEM INFORMAÇÃO SUFICIENTE E PODE RESPONDER NÃO SEI.
+            </p>
+          </section>
+
+          <section className="hidden-info-builder">
+            <div className="builder-title">
+              <p className="section-kicker">INFORMAÇÃO PRIVADA</p>
+              <strong>QUEM VIU ONDE O OBJETO FOI COLOCADO?</strong>
+            </div>
+
+            <div className="hidden-info-config">
+              <label>
+                <span>CENA</span>
+                <select
+                  value={hiddenInfoTask.sceneId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    sceneId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {history.slice(1).map((scene, index) => (
+                    <option key={scene.id} value={scene.id}>CENA {index + 1} - {scene.actionLabel ?? 'AÇÃO'}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>OBJETO</span>
+                <select
+                  value={hiddenInfoTask.objectId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    objectId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {objects.filter((object) => !object.consumed).map((object) => (
+                    <option key={object.instanceId} value={object.instanceId}>{object.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>LOCAL</span>
+                <select
+                  value={hiddenInfoTask.locationId ?? ''}
+                  onChange={(event) => setHiddenInfoTask((current) => ({
+                    ...current,
+                    locationId: event.target.value || undefined,
+                  }))}
+                >
+                  <option value="">?</option>
+                  {placesAndSeats.map((place) => (
+                    <option key={place.instanceId} value={place.instanceId}>{place.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="hidden-witnesses">
+              <span>QUEM VIU A COLOCAÇÃO?</span>
+              <div>
+                {people.map((person) => {
+                  const selected = hiddenInfoTask.witnessPersonIds.includes(person.instanceId);
+                  return (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={selected ? 'active' : ''}
+                      onClick={() => toggleHiddenWitness(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={44} />
+                      <strong>{person.label}</strong>
+                      <small>{selected ? 'VIU' : 'NÃO MARCADO'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button className="hidden-info-start" type="button" onClick={startHiddenInfoTask}>
+              {hiddenInfoTaskActive ? 'ATIVIDADE ATIVA' : 'INICIAR ATIVIDADE'}
+            </button>
+
+            {hiddenInfoTaskActive && (
+              <div className="hidden-info-question">
+                <strong>
+                  QUEM TEM BASE PARA SABER ONDE ESTÁ {findLabel(currentScene, hiddenInfoTask.objectId)}?
+                </strong>
+                <div>
+                  {getLimitedPeopleOptions(hiddenInfoTask.witnessPersonIds).map((person) => (
+                    <button
+                      type="button"
+                      key={person.instanceId}
+                      className={hiddenInfoAnswerPersonIds.includes(person.instanceId) ? 'active' : ''}
+                      onClick={() => toggleHiddenInfoAnswer(person.instanceId)}
+                    >
+                      <AssetVisual asset={person} size={46} />
+                      <span>{person.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <button className="sequence-check" type="button" onClick={verifyHiddenInfoAnswer}>
+                  CONFERIR
+                </button>
+              </div>
+            )}
+
+            <div className="hidden-info-summary">
+              <span>OBJETO: {findLabel(currentScene, hiddenInfoTask.objectId)}</span>
+              <span>LOCAL: {findLabel(currentScene, hiddenInfoTask.locationId)}</span>
+              <span>
+                VIRAM: {hiddenInfoTask.witnessPersonIds.length
+                  ? hiddenInfoTask.witnessPersonIds.map((id) => findLabel(currentScene, id)).join(', ')
+                  : 'NINGUÉM MARCADO'}
+              </span>
+            </div>
+
+            <p className="access-note">
+              A RESPOSTA CORRETA É BASEADA EM QUEM TEVE ACESSO À COLOCAÇÃO. O SISTEMA NÃO AFIRMA CONHECIMENTO INTERNO ALÉM DISSO.
             </p>
           </section>
 
