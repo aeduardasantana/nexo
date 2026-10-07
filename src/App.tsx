@@ -5774,20 +5774,14 @@ export default function App() {
         )}
       </aside>
       <footer className="app-footer">
-        <div>
-          <strong>NEXO - SISTEMA VISUAL DE AÇÃO E NARRATIVA</strong>
-          <span>RECURSO PEDAGÓGICO ACESSÍVEL DIGITAL DE MEDIAÇÃO VISUAL E APOIO À COMUNICAÇÃO</span>
-        </div>
-        <div>
-          <span>DESENVOLVIDO POR COMPASS ROSE SYSTEMS</span>
-          <a href="mailto:contato@compassrosesystems.com.br">CONTATO E SUPORTE: contato@compassrosesystems.com.br</a>
-        </div>
-        <small>
-          CONCEBIDO INICIALMENTE PARA MEDIAÇÃO VISUAL COM PESSOA SURDA. PODE APOIAR OUTROS CONTEXTOS
-          COM NECESSIDADES COMPLEXAS DE COMUNICAÇÃO E BARREIRAS COMUNICACIONAIS. DESENVOLVIDO SOB PRINCÍPIOS
-          DE TECNOLOGIA ASSISTIVA E ACESSIBILIDADE. FERRAMENTA PEDAGÓGICA E OBSERVACIONAL, NÃO DIAGNÓSTICA.
-        </small>
-        <small>© 2026 COMPASS ROSE SYSTEMS - TODOS OS DIREITOS RESERVADOS.</small>
+        <p>© 2026 NEXO. Uma solução do GEB Tecnologia.</p>
+        <a
+          href="https://gebtecnologia.grupoeduardabispo.com.br/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Desenvolvido por Compass Rose Systems · GEB Tecnologia
+        </a>
       </footer>
     </main>
   );
