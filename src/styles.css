@@ -6295,41 +6295,33 @@ input[type="radio"] {
 
 .app-footer {
   margin-top: 22px;
-  padding: 18px 24px 92px;
-  border-top: 1px solid #d7d2c9;
+  padding: 18px 24px 22px;
+  border-top: 1px solid #343434;
   background: #161616;
-  color: #fff;
+  color: #d8d8d8;
+  text-align: center;
   display: grid;
-  gap: 10px;
+  gap: 5px;
 }
 
-.app-footer > div {
-  display: grid;
-  gap: 4px;
-}
-
-.app-footer strong {
-  font-size: .72rem;
-  letter-spacing: .04em;
-}
-
-.app-footer span,
-.app-footer a,
-.app-footer small {
-  font-size: .56rem;
-  line-height: 1.5;
+.app-footer p {
+  margin: 0;
+  font-size: .66rem;
+  line-height: 1.45;
 }
 
 .app-footer a {
-  color: #fff;
+  color: #f1f1f1;
   text-decoration: underline;
   text-underline-offset: 2px;
-  font-weight: 800;
+  font-size: .62rem;
+  line-height: 1.45;
+  font-weight: 700;
 }
 
-.app-footer small {
-  color: #d8d8d8;
-  max-width: 1000px;
+.app-footer a:hover,
+.app-footer a:focus-visible {
+  color: #ffffff;
 }
 
 @media (max-width: 640px) {
@@ -6338,7 +6330,7 @@ input[type="radio"] {
   }
 
   .app-footer {
-    padding: 16px 12px 108px;
+    padding: 16px 12px 20px;
   }
 }
 
