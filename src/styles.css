@@ -6294,11 +6294,12 @@ input[type="radio"] {
 }
 
 .app-footer {
-  margin-top: 22px;
-  padding: 18px 24px 22px;
-  border-top: 1px solid #343434;
-  background: #161616;
-  color: #d8d8d8;
+  width: calc(100% - 48px);
+  margin: 22px 24px 0;
+  padding: 18px 0 22px;
+  border-top: 1px solid #d7d2c9;
+  background: transparent;
+  color: #6c6860;
   text-align: center;
   display: grid;
   gap: 5px;
@@ -6311,7 +6312,7 @@ input[type="radio"] {
 }
 
 .app-footer a {
-  color: #f1f1f1;
+  color: #45413b;
   text-decoration: underline;
   text-underline-offset: 2px;
   font-size: .62rem;
@@ -6321,7 +6322,7 @@ input[type="radio"] {
 
 .app-footer a:hover,
 .app-footer a:focus-visible {
-  color: #ffffff;
+  color: #161616;
 }
 
 @media (max-width: 640px) {
@@ -6330,7 +6331,9 @@ input[type="radio"] {
   }
 
   .app-footer {
-    padding: 16px 12px 20px;
+    width: calc(100% - 20px);
+    margin: 18px 10px 0;
+    padding: 16px 0 20px;
   }
 }
 
